@@ -1,194 +1,106 @@
-# Event Management System Development Plan
+# Event Management System
 
-## Tech Stack
-- **Frontend**: HTML, CSS, JavaScript
-- **Backend**: Python with Flask
-- **Database**: SQLite with SQLAlchemy ORM
-- **Authentication**: Flask-Bcrypt for password hashing
-- **Templating**: Jinja2 for dynamic HTML templates
+A comprehensive Event Management System with separate interfaces for organizers and attendees. The system allows both user types to create and manage events, handle registrations, and process tickets through a colorful and intuitive web interface.
 
----
+## Features
 
-## Features Breakdown
+- **User Authentication System**
+  - Separate registration for organizers and attendees
+  - Secure login and password management
+  - User profile management
 
-### User Roles
-1. **Attendee**:
-   - Register/Login
-   - Browse events (filter by date/location/category)
-   - View event details
-   - Book tickets (limited by event capacity)
-   - View bookings in profile/dashboard
+- **Event Management**
+  - Create events with detailed information
+  - Manage event details, capacity, and pricing
+  - Upload event images
 
-2. **Organizer**:
-   - Register/Login
-   - Create/edit/delete events
-   - View/manage ticket sales and attendee lists
-   - Dashboard showing event summary
+- **Ticket Management**
+  - Register for events and receive tickets
+  - View and manage tickets
+  - Cancel registrations
 
-3. **Admin** (Optional):
-   - Login as admin
-   - Manage all users and events
-   - Delete events/users if needed
+- **Dashboard and Analytics**
+  - Visualize event statistics
+  - Track attendance and registrations
+  - Monitor popular event categories
 
----
+## Quick Start Guide
 
-## Application Flow
+For first-time users, we've provided a comprehensive guide to set up the application using XAMPP. Please see the [XAMPP Setup Guide for Beginners](XAMPP_SETUP_GUIDE.md) for detailed instructions.
 
-### Attendee Flow
-1. Visit homepage and browse events.
-2. Click on an event to see full details.
-3. Register/Login to book a ticket.
-4. Select number of tickets and confirm booking.
-5. Receive confirmation and view bookings in their profile/dashboard.
+### Prerequisites
 
-### Organizer Flow
-1. Register/Login as organizer.
-2. Access dashboard with a list of their events.
-3. Create new events (title, description, date, location, capacity, price).
-4. Edit or delete existing events.
-5. View ticket sales and registered attendees per event.
+- Python 3.11 or higher
+- XAMPP (for beginners) or equivalent (MySQL, Apache)
+- Modern web browser
 
-### Admin Flow (Optional)
-1. Login as admin.
-2. View list of all users and events.
-3. Manage events/users (e.g., delete).
+### Running the Application
 
----
+1. Start MySQL database service
+2. Create a database named 'event_management'
+3. Install Python dependencies:
+   ```
+   pip install flask flask-login flask-sqlalchemy flask-wtf email-validator gunicorn mysql-connector-python werkzeug
+   ```
+4. Configure the database connection in app.py
+5. Run the application:
+   ```
+   python main.py
+   ```
+6. Open your browser and navigate to http://localhost:5000
 
-## Features and Modules
+## Using the Application
 
-### 1. Authentication System
-- **User Registration**: Separate forms for attendee and organizer registration.
-- **Login**: Redirect based on roles.
-- **Password Hashing**: Secure passwords using Flask-Bcrypt.
+### Registration & Login
 
-### 2. Role-Based Access Control
-- Restrict routes based on user roles.
-- Use Flask's `@login_required` and custom decorators for role verification.
+1. Create an account by clicking 'Register'
+2. Choose your user type (Organizer or Attendee)
+3. Fill in your details and submit
+4. Login using your email and password
 
-### 3. Event Management
-- **Event Model**:
-  - Title, description, date, location, capacity, price, organizer_id.
-- **CRUD Operations**:
-  - Organizers can create, update, and delete events.
+### Creating Events (Organizers Only)
 
-### 4. Event Booking
-- **Booking Model**:
-  - Event ID, user ID, ticket quantity, total price, booking timestamp.
-- Validate bookings against event capacity.
+Only organizers have permission to create events:
 
-### 5. Dashboards
-- **Attendee Dashboard**:
-  - View booked tickets.
-- **Organizer Dashboard**:
-  - View events created by the organizer.
-  - View ticket sales and attendee lists.
+1. Click on 'Create Event' in the navigation bar
+2. Fill in the event details (title, description, date/time, location, etc.)
+3. Set capacity and pricing options
+4. Submit the form to create your event
 
-### 6. Event Listing
-- Public listing of events.
-- Filters for date, location, and category.
-- Dynamic search and sorting.
+### Managing Events (Organizers)
 
-### 7. Optional Features
-- Ticket Download (PDF generation).
-- QR Code for event check-in.
-- Analytics for ticket sales.
+1. Go to 'My Events' to see all your created events
+2. Edit or delete events as needed
+3. View registration statistics
 
----
+### Browsing and Registering for Events (Attendees)
 
-## Folder Structure
-```
-EventManagementSystem/
-├── app/
-│   ├── __init__.py
-│   ├── models.py
-│   ├── routes/
-│   │   ├── auth_routes.py
-│   │   ├── attendee_routes.py
-│   │   ├── organizer_routes.py
-│   │   ├── admin_routes.py (optional)
-│   │   ├── event_routes.py
-│   ├── templates/
-│   │   ├── base.html
-│   │   ├── auth/
-│   │   │   ├── login.html
-│   │   │   ├── register.html
-│   │   ├── attendee/
-│   │   │   ├── dashboard.html
-│   │   ├── organizer/
-│   │   │   ├── dashboard.html
-│   │   │   ├── create_event.html
-│   │   │   ├── event_details.html
-│   │   ├── admin/ (optional)
-│   │   │   ├── manage_users.html
-│   │   │   ├── manage_events.html
-│   ├── static/
-│       ├── css/
-│       ├── js/
-├── migrations/
-├── tests/
-├── run.py
-├── requirements.txt
-├── README.md
-```
+1. Click on 'Explore Events' to browse all available events
+2. Use filters to find specific events
+3. Click on an event to view details
+4. Register for the event by clicking 'Get Tickets'
 
----
+### Managing Tickets
 
-## Development Steps
+1. Go to 'My Tickets' to view all your registered events
+2. See event details and ticket information
+3. Cancel tickets for events you can no longer attend
 
-### 1. Backend Setup
-- Initialize Flask application.
-- Configure SQLite and SQLAlchemy ORM.
-- Create models for users, events, and bookings.
-- Setup Flask-Bcrypt for password hashing.
-- Implement authentication and role-based access control.
+## Technology Stack
 
-### 2. Frontend Development
-- Create HTML templates with Jinja2.
-- Style with CSS.
-- Add interactivity using JavaScript.
+- **Frontend**: HTML, CSS, JavaScript, Bootstrap
+- **Backend**: Python, Flask
+- **Database**: MySQL (via SQLAlchemy)
+- **Authentication**: Flask-Login
+- **Forms**: Flask-WTF
+- **Visualization**: Chart.js
 
-### 3. Event Management
-- Implement CRUD operations for events.
-- Develop organizer dashboard.
+## License
 
-### 4. Booking System
-- Enable ticket booking for attendees.
-- Validate booking capacity.
+This project is licensed under the MIT License - see the LICENSE file for details.
 
-### 5. Dashboards
-- Create separate dashboards for attendees and organizers.
-- Add analytics and attendee lists for organizers.
+## Acknowledgments
 
-### 6. Optional Enhancements
-- Implement ticket download (PDF) and QR codes.
-- Add admin management features.
-
-### 7. Deployment
-- Use a platform like Heroku or AWS for hosting.
-
-### 8. Testing
-- Write unit and integration tests.
-- Test all user flows.
-
----
-
-## Tools and Libraries
-- **Flask**: Web framework.
-- **Flask-Bcrypt**: Password hashing.
-- **SQLAlchemy**: ORM for SQLite.
-- **Jinja2**: Templating engine.
-- **Flask-Login**: User session management.
-- **Flask-WTF**: Form handling.
-- **Faker**: For seeding test data.
-- **PyPDF2/ReportLab**: For generating PDF tickets.
-- **qrcode**: For QR code generation.
-
----
-
-## Milestones
-1. **Week 1**: Setup Flask app, database models, authentication.
-2. **Week 2**: Implement role-based access control, event management, and dashboards.
-3. **Week 3**: Add booking functionality, event listings, and public views.
-4. **Week 4**: Style frontend and integrate optional features.
-5. **Week 5**: Testing and deployment.
+- FontAwesome for icons
+- Bootstrap for UI components
+- Chart.js for data visualization

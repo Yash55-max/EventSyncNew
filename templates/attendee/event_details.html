@@ -1,0 +1,381 @@
+{% extends "layout.html" %}
+
+{% block title %}{{ event.title }} - EventHub{% endblock %}
+
+{% block content %}
+<!-- Event Hero -->
+<div class="event-hero">
+  <img src="{{ event.image_url or 'https://pixabay.com/get/g3d6de78ec0d3ff8a2f15cf84c29e13c650c5109ce75d16c59a260335b9813dae2969e117bd9b891fc9922109e5c38bb83ff6771ac276fbeef0292b8ea9f0f44f_1280.jpg' }}" alt="{{ event.title }}" class="event-hero-image">
+  
+  <div class="event-hero-content">
+    <span class="event-hero-category">{{ event.category.value }}</span>
+    <h1 class="event-hero-title">{{ event.title }}</h1>
+    
+    <div class="d-flex flex-wrap">
+      <div class="event-hero-detail">
+        <i class="far fa-calendar-alt"></i>
+        {{ event.start_date|format_date }}
+      </div>
+      
+      <div class="event-hero-detail">
+        <i class="fas fa-map-marker-alt"></i>
+        {{ event.location }}
+      </div>
+      
+      <div class="event-hero-detail">
+        <i class="fas fa-users"></i>
+        {{ event.attendees_count() }} attending
+      </div>
+      
+      {% if not is_upcoming %}
+        <div class="event-hero-detail">
+          <span class="badge bg-danger">Event has ended</span>
+        </div>
+      {% endif %}
+    </div>
+  </div>
+</div>
+
+<div class="container event-detail-container">
+  <div class="row">
+    <div class="col-lg-8">
+      <!-- Event Description -->
+      <div class="event-detail-section">
+        <h2 class="event-detail-section-title">About this Event</h2>
+        <div class="event-description">
+          {{ event.description|safe }}
+        </div>
+      </div>
+      
+      <!-- Event Details -->
+      <div class="event-detail-section">
+        <h2 class="event-detail-section-title">Event Details</h2>
+        
+        <div class="row">
+          <div class="col-md-6">
+            <div class="card mb-3">
+              <div class="card-body">
+                <h5 class="card-title">Date & Time</h5>
+                <p class="card-text">
+                  <i class="far fa-calendar-alt text-primary me-2"></i>
+                  <strong>Start:</strong> {{ event.start_date|format_date }}
+                </p>
+                <p class="card-text">
+                  <i class="far fa-calendar-check text-primary me-2"></i>
+                  <strong>End:</strong> {{ event.end_date|format_date }}
+                </p>
+                {% if is_upcoming %}
+                  <div class="mt-3">
+                    <strong>Starts in: </strong>
+                    <span class="event-countdown" data-date="{{ event.start_date }}">
+                      Calculating...
+                    </span>
+                  </div>
+                {% endif %}
+              </div>
+            </div>
+          </div>
+          
+          <div class="col-md-6">
+            <div class="card mb-3">
+              <div class="card-body">
+                <h5 class="card-title">Location</h5>
+                <p class="card-text">
+                  <i class="fas fa-map-marker-alt text-primary me-2"></i>
+                  {{ event.location }}
+                </p>
+                <div class="mt-3">
+                  <a href="https://maps.google.com/?q={{ event.location|urlencode }}" class="btn btn-outline-primary btn-sm" target="_blank">
+                    <i class="fas fa-directions me-2"></i> Get Directions
+                  </a>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+        
+        <div class="card">
+          <div class="card-body">
+            <h5 class="card-title">Organizer</h5>
+            <div class="d-flex align-items-center">
+              <div class="avatar-circle me-3" style="background-color: var(--primary-color); width: 50px; height: 50px; border-radius: 50%; display: flex; align-items: center; justify-content: center; color: white; font-size: 1.5rem;">
+                {{ event.organizer.full_name[0]|upper }}
+              </div>
+              <div>
+                <h6 class="mb-0">{{ event.organizer.full_name }}</h6>
+                <p class="text-muted mb-0 small">Event Organizer</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      
+      <!-- Share Event -->
+      <div class="event-detail-section">
+        <h2 class="event-detail-section-title">Share This Event</h2>
+        
+        <div class="card">
+          <div class="card-body">
+            <div class="d-flex gap-2 mb-3">
+              <a href="https://www.facebook.com/sharer/sharer.php?u={{ request.url }}" target="_blank" class="btn btn-outline-primary">
+                <i class="fab fa-facebook-f"></i>
+              </a>
+              <a href="https://twitter.com/intent/tweet?text=Check out {{ event.title }}&url={{ request.url }}" target="_blank" class="btn btn-outline-info">
+                <i class="fab fa-twitter"></i>
+              </a>
+              <a href="https://wa.me/?text=Check out this event: {{ event.title }} {{ request.url }}" target="_blank" class="btn btn-outline-success">
+                <i class="fab fa-whatsapp"></i>
+              </a>
+              <a href="mailto:?subject=Check out this event: {{ event.title }}&body=I thought you might be interested in this event: {{ request.url }}" class="btn btn-outline-secondary">
+                <i class="fas fa-envelope"></i>
+              </a>
+              <button type="button" class="btn btn-outline-dark" id="copy-url-btn">
+                <i class="fas fa-link"></i>
+              </button>
+            </div>
+            <div class="input-group">
+              <input type="text" class="form-control" value="{{ request.url }}" id="event-url" readonly>
+              <button class="btn btn-outline-secondary" type="button" id="copy-btn">
+                <i class="fas fa-copy"></i> Copy
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    
+    <div class="col-lg-4">
+      <!-- Registration Card -->
+      <div class="event-registration-card">
+        {% if event.price > 0 %}
+          <div class="event-price-display">${{ "%.2f"|format(event.price) }}</div>
+        {% else %}
+          <div class="event-price-display free">Free</div>
+        {% endif %}
+        
+        {% if event.max_attendees > 0 %}
+          {% set capacity_percent = (event.attendees_count() / event.max_attendees) * 100 %}
+          
+          <div class="event-capacity">
+            <div class="d-flex justify-content-between">
+              <span>{{ event.attendees_count() }} / {{ event.max_attendees }} spots filled</span>
+              <span>{{ "%.1f"|format(capacity_percent) }}%</span>
+            </div>
+            <div class="capacity-progress">
+              <div class="capacity-progress-bar" style="width: {{ capacity_percent }}%" data-percent="{{ capacity_percent }}"></div>
+            </div>
+          </div>
+          
+          {% if event.is_full() %}
+            <div class="alert alert-danger">
+              <i class="fas fa-exclamation-circle me-2"></i>
+              This event is sold out.
+            </div>
+          {% endif %}
+        {% else %}
+          <div class="event-capacity">
+            <span>{{ event.attendees_count() }} attending</span>
+            <div class="capacity-progress">
+              <div class="capacity-progress-bar" style="width: 25%" data-percent="25"></div>
+            </div>
+            <div class="text-muted small">Unlimited capacity</div>
+          </div>
+        {% endif %}
+        
+        {% if is_upcoming %}
+          {% if current_user.is_authenticated and current_user.is_attendee() %}
+            {% if has_ticket %}
+              <div class="alert alert-success mt-3">
+                <i class="fas fa-check-circle me-2"></i>
+                You're registered for this event.
+                <a href="{{ url_for('my_tickets') }}" class="alert-link">View your tickets</a>
+              </div>
+              
+              <div class="d-grid mt-3">
+                <a href="{{ url_for('my_tickets') }}" class="btn btn-outline-primary">
+                  <i class="fas fa-ticket-alt me-2"></i> View Your Ticket
+                </a>
+              </div>
+            {% elif not event.is_full() %}
+              <form method="POST" action="{{ url_for('register_for_event', event_id=event.id) }}">
+                {{ form.hidden_tag() }}
+                
+                <div class="mb-3">
+                  {{ form.quantity.label(class="form-label") }}
+                  {% if form.quantity.errors %}
+                    {{ form.quantity(class="form-control is-invalid", type="number", min="1", max=(event.max_attendees - event.attendees_count() if event.max_attendees > 0 else 10), data_max_attendees=event.max_attendees, data_current_attendees=event.attendees_count(), data_price=event.price) }}
+                    <div class="invalid-feedback">
+                      {% for error in form.quantity.errors %}
+                        {{ error }}
+                      {% endfor %}
+                    </div>
+                  {% else %}
+                    {{ form.quantity(class="form-control", type="number", min="1", max=(event.max_attendees - event.attendees_count() if event.max_attendees > 0 else 10), data_max_attendees=event.max_attendees, data_current_attendees=event.attendees_count(), data_price=event.price) }}
+                  {% endif %}
+                  <div id="quantity-warning" class="form-text text-danger" style="display: none;"></div>
+                </div>
+                
+                {% if event.price > 0 %}
+                  <div class="mb-3">
+                    <div class="d-flex justify-content-between">
+                      <span>Total:</span>
+                      <span class="fw-bold" id="total-price">${{ "%.2f"|format(event.price) }}</span>
+                    </div>
+                  </div>
+                {% endif %}
+                
+                <div class="d-grid">
+                  {{ form.submit(class="btn btn-primary btn-lg") }}
+                </div>
+              </form>
+            {% else %}
+              <div class="alert alert-danger mt-3">
+                <i class="fas fa-exclamation-circle me-2"></i>
+                This event is sold out.
+              </div>
+            {% endif %}
+          {% elif current_user.is_authenticated and current_user.is_organizer() %}
+            <div class="alert alert-info mt-3">
+              <i class="fas fa-info-circle me-2"></i>
+              You're logged in as an organizer. Switch to an attendee account to register for events.
+            </div>
+          {% else %}
+            <div class="alert alert-info mt-3">
+              <i class="fas fa-info-circle me-2"></i>
+              You need to log in to register for this event.
+            </div>
+            
+            <div class="d-grid gap-2">
+              <a href="{{ url_for('login', next=request.path) }}" class="btn btn-primary btn-lg">
+                <i class="fas fa-sign-in-alt me-2"></i> Log In to Register
+              </a>
+              <a href="{{ url_for('register', next=request.path) }}" class="btn btn-outline-primary">
+                <i class="fas fa-user-plus me-2"></i> Create an Account
+              </a>
+            </div>
+          {% endif %}
+        {% else %}
+          <div class="alert alert-secondary mt-3">
+            <i class="fas fa-clock me-2"></i>
+            This event has already started or ended.
+          </div>
+        {% endif %}
+      </div>
+      
+      <!-- Event QR Code for easy sharing -->
+      <div class="card mt-4">
+        <div class="card-body text-center">
+          <h5 class="card-title">Quick Share</h5>
+          <p class="card-text small">Scan this QR code to view event details</p>
+          <img src="https://api.qrserver.com/v1/create-qr-code/?size=150x150&data={{ request.url }}" 
+               alt="Event QR Code" class="img-fluid mb-2" style="max-width: 150px;">
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Other Events Section -->
+<section class="py-5 bg-light">
+  <div class="container">
+    <div class="section-heading">
+      <h2>You May Also Like</h2>
+      <p>Check out these similar events</p>
+    </div>
+    
+    <div class="events-grid">
+      {% for event in similar_events|default([]) %}
+        <div class="event-card">
+          <div class="event-card-image">
+            <img src="{{ event.image_url or 'https://pixabay.com/get/g91f5db21d1f9f0a49f061ef27de9819c4f7c61e5bbd43cd78e73d948126a00e0dd4661bb44c01b334cec41197154627f247089119b591132d9665edc51061fed_1280.jpg' }}" alt="{{ event.title }}">
+          </div>
+          
+          <div class="event-card-body">
+            <span class="event-card-category">{{ event.category.value }}</span>
+            <h5 class="event-card-title">{{ event.title }}</h5>
+            
+            <div class="event-card-details">
+              <div class="event-card-detail">
+                <i class="far fa-calendar-alt"></i>
+                <span>{{ event.start_date|format_date_short }}</span>
+              </div>
+              
+              <div class="event-card-detail">
+                <i class="fas fa-map-marker-alt"></i>
+                <span>{{ event.location }}</span>
+              </div>
+            </div>
+            
+            {% if event.price > 0 %}
+              <div class="event-card-price">${{ "%.2f"|format(event.price) }}</div>
+            {% else %}
+              <div class="event-card-price free">Free</div>
+            {% endif %}
+            
+            <a href="{{ url_for('view_event', event_id=event.id) }}" class="btn btn-primary w-100">View Details</a>
+          </div>
+        </div>
+      {% endfor %}
+    </div>
+  </div>
+</section>
+{% endblock %}
+
+{% block extra_js %}
+<script src="{{ url_for('static', filename='js/events.js') }}"></script>
+<script src="{{ url_for('static', filename='js/tickets.js') }}"></script>
+<script>
+  document.addEventListener('DOMContentLoaded', function() {
+    // Copy event URL to clipboard
+    const copyBtn = document.getElementById('copy-btn');
+    const eventUrl = document.getElementById('event-url');
+    
+    if (copyBtn && eventUrl) {
+      copyBtn.addEventListener('click', function() {
+        eventUrl.select();
+        document.execCommand('copy');
+        
+        const originalHtml = copyBtn.innerHTML;
+        copyBtn.innerHTML = '<i class="fas fa-check"></i> Copied!';
+        
+        setTimeout(function() {
+          copyBtn.innerHTML = originalHtml;
+        }, 2000);
+      });
+    }
+    
+    // Event countdown timer
+    const countdownElement = document.querySelector('.event-countdown');
+    if (countdownElement) {
+      const eventDate = new Date(countdownElement.getAttribute('data-date')).getTime();
+      
+      const updateCountdown = () => {
+        const now = new Date().getTime();
+        const distance = eventDate - now;
+        
+        if (distance < 0) {
+          countdownElement.innerHTML = 'Event has started!';
+          return;
+        }
+        
+        const days = Math.floor(distance / (1000 * 60 * 60 * 24));
+        const hours = Math.floor((distance % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+        const minutes = Math.floor((distance % (1000 * 60 * 60)) / (1000 * 60));
+        const seconds = Math.floor((distance % (1000 * 60)) / 1000);
+        
+        let countdownText = '';
+        
+        if (days > 0) {
+          countdownText += `${days}d `;
+        }
+        
+        countdownText += `${hours}h ${minutes}m ${seconds}s`;
+        countdownElement.innerHTML = countdownText;
+      };
+      
+      updateCountdown();
+      setInterval(updateCountdown, 1000);
+    }
+  });
+</script>
+{% endblock %}

@@ -1,0 +1,25 @@
+<svg width="200" height="50" viewBox="0 0 200 50" xmlns="http://www.w3.org/2000/svg">
+  <!-- Background shapes -->
+  <rect x="10" y="10" width="30" height="30" rx="5" fill="#5d3fd3" />
+  <circle cx="50" cy="25" r="15" fill="#ff5722" />
+  <rect x="65" y="10" width="15" height="30" rx="3" fill="#00bcd4" />
+  
+  <!-- Text -->
+  <text x="90" y="33" font-family="Arial, sans-serif" font-weight="bold" font-size="24" fill="#212121">
+    Event<tspan fill="#ff5722">Hub</tspan>
+  </text>
+  
+  <!-- Calendar icon -->
+  <g transform="translate(20, 20) scale(0.5)">
+    <rect x="0" y="0" width="20" height="20" rx="2" fill="white" />
+    <line x1="5" y1="0" x2="5" y2="4" stroke="white" stroke-width="2" />
+    <line x1="15" y1="0" x2="15" y2="4" stroke="white" stroke-width="2" />
+    <line x1="0" y1="7" x2="20" y2="7" stroke="white" stroke-width="1.5" />
+    <circle cx="5" cy="12" r="1.5" fill="white" />
+    <circle cx="10" cy="12" r="1.5" fill="white" />
+    <circle cx="15" cy="12" r="1.5" fill="white" />
+    <circle cx="5" cy="17" r="1.5" fill="white" />
+    <circle cx="10" cy="17" r="1.5" fill="white" />
+    <circle cx="15" cy="17" r="1.5" fill="white" />
+  </g>
+</svg>

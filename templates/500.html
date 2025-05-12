@@ -1,0 +1,46 @@
+{% extends "layout.html" %}
+
+{% block title %}Server Error - EventHub{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+  <div class="row justify-content-center">
+    <div class="col-md-8 text-center">
+      <div class="error-page animate-on-scroll">
+        <div class="mb-4">
+          <i class="fas fa-exclamation-triangle fa-5x text-warning"></i>
+        </div>
+        <h1 class="display-4 mb-4">500 - Server Error</h1>
+        <p class="lead mb-4">Something went wrong on our server. We're working to fix the issue.</p>
+        <div class="d-flex justify-content-center gap-3">
+          <a href="{{ url_for('index') }}" class="btn btn-primary">
+            <i class="fas fa-home me-2"></i> Back to Home
+          </a>
+          <button class="btn btn-outline-primary" onclick="window.location.reload();">
+            <i class="fas fa-sync-alt me-2"></i> Try Again
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+  
+  <div class="row mt-5">
+    <div class="col-md-8 mx-auto">
+      <div class="card">
+        <div class="card-body">
+          <h5 class="card-title">Need help?</h5>
+          <p class="card-text">If the problem persists, please contact our support team.</p>
+          <div class="d-flex gap-3">
+            <a href="mailto:support@eventhub.com" class="btn btn-outline-primary">
+              <i class="fas fa-envelope me-2"></i> Email Support
+            </a>
+            <a href="#" class="btn btn-outline-primary">
+              <i class="fas fa-headset me-2"></i> Live Chat
+            </a>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

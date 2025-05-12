@@ -1,0 +1,266 @@
+{% extends "layout.html" %}
+
+{% block title %}My Tickets - EventHub{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+  <div class="management-heading">
+    <h1>My Tickets</h1>
+    <a href="{{ url_for('attendee_events') }}" class="btn btn-primary">
+      <i class="fas fa-calendar-alt me-2"></i> Explore Events
+    </a>
+  </div>
+  
+  <!-- Tickets Container -->
+  <div class="tickets-container">
+    <!-- Tickets Tabs -->
+    <div class="ticket-tabs">
+      <div class="ticket-tab active" data-tab="upcoming">
+        <i class="fas fa-calendar-day me-2"></i> Upcoming Events
+      </div>
+      <div class="ticket-tab" data-tab="past">
+        <i class="fas fa-calendar-check me-2"></i> Past Events
+      </div>
+    </div>
+    
+    <!-- Upcoming Tickets Section -->
+    <div class="ticket-section" id="upcoming-tickets">
+      {% if upcoming_tickets and upcoming_tickets|length > 0 %}
+        <div class="row g-4 mt-2">
+          {% for ticket in upcoming_tickets %}
+            <div class="col-md-6">
+              <div class="ticket-card" id="ticket-{{ ticket.id }}"
+                  data-event-title="{{ ticket.event.title }}"
+                  data-event-date="{{ ticket.event.start_date|format_date }}"
+                  data-event-location="{{ ticket.event.location }}"
+                  data-attendee-name="{{ ticket.attendee.full_name }}"
+                  data-ticket-number="{{ ticket.ticket_number }}">
+                <div class="ticket-card-header">
+                  <div class="ticket-card-title">{{ ticket.event.title }}</div>
+                  <div class="ticket-card-number">#{{ ticket.ticket_number }}</div>
+                </div>
+                
+                <div class="ticket-card-body">
+                  <div class="ticket-card-row">
+                    <div class="ticket-card-label">Date & Time:</div>
+                    <div class="ticket-card-value">{{ ticket.event.start_date|format_date }}</div>
+                  </div>
+                  
+                  <div class="ticket-card-row">
+                    <div class="ticket-card-label">Location:</div>
+                    <div class="ticket-card-value">{{ ticket.event.location }}</div>
+                  </div>
+                  
+                  <div class="ticket-card-row">
+                    <div class="ticket-card-label">Ticket Type:</div>
+                    <div class="ticket-card-value">
+                      {% if ticket.event.price > 0 %}
+                        Standard - ${{ "%.2f"|format(ticket.event.price) }}
+                      {% else %}
+                        Free Admission
+                      {% endif %}
+                    </div>
+                  </div>
+                  
+                  <div class="ticket-card-row">
+                    <div class="ticket-card-label">Status:</div>
+                    <div class="ticket-card-value">
+                      <span class="badge bg-success">{{ ticket.status.value }}</span>
+                    </div>
+                  </div>
+                  
+                  <div class="mt-3">
+                    <div class="d-flex align-items-center">
+                      <i class="fas fa-clock text-primary me-2"></i>
+                      <strong>Starts in: </strong>
+                      <span class="event-countdown ms-2" data-date="{{ ticket.event.start_date }}">
+                        Calculating...
+                      </span>
+                    </div>
+                  </div>
+                </div>
+                
+                <div class="ticket-card-actions">
+                  <button type="button" class="btn btn-outline-primary print-ticket-btn" data-ticket-id="{{ ticket.id }}">
+                    <i class="fas fa-print me-2"></i> Print Ticket
+                  </button>
+                  
+                  <button type="button" class="btn btn-outline-danger cancel-ticket-btn" 
+                          data-ticket-id="{{ ticket.id }}" 
+                          data-event-title="{{ ticket.event.title }}">
+                    <i class="fas fa-times-circle me-2"></i> Cancel Ticket
+                  </button>
+                </div>
+              </div>
+            </div>
+          {% endfor %}
+        </div>
+      {% else %}
+        <div class="text-center py-5 bg-light rounded mt-3">
+          <div class="text-muted">
+            <i class="fas fa-ticket-alt fa-3x mb-3"></i>
+            <h4>No upcoming tickets</h4>
+            <p class="mb-4">You haven't registered for any upcoming events yet.</p>
+            <a href="{{ url_for('attendee_events') }}" class="btn btn-primary">
+              <i class="fas fa-calendar-alt me-2"></i> Explore Events
+            </a>
+          </div>
+        </div>
+      {% endif %}
+    </div>
+    
+    <!-- Past Tickets Section -->
+    <div class="ticket-section" id="past-tickets" style="display: none;">
+      {% if past_tickets and past_tickets|length > 0 %}
+        <div class="row g-4 mt-2">
+          {% for ticket in past_tickets %}
+            <div class="col-md-6">
+              <div class="ticket-card" id="ticket-{{ ticket.id }}"
+                  data-event-title="{{ ticket.event.title }}"
+                  data-event-date="{{ ticket.event.start_date|format_date }}"
+                  data-event-location="{{ ticket.event.location }}"
+                  data-attendee-name="{{ ticket.attendee.full_name }}"
+                  data-ticket-number="{{ ticket.ticket_number }}">
+                <div class="ticket-card-header" style="background-color: #6c757d;">
+                  <div class="ticket-card-title">{{ ticket.event.title }}</div>
+                  <div class="ticket-card-number">#{{ ticket.ticket_number }}</div>
+                </div>
+                
+                <div class="ticket-card-body">
+                  <div class="ticket-card-row">
+                    <div class="ticket-card-label">Date & Time:</div>
+                    <div class="ticket-card-value">{{ ticket.event.start_date|format_date }}</div>
+                  </div>
+                  
+                  <div class="ticket-card-row">
+                    <div class="ticket-card-label">Location:</div>
+                    <div class="ticket-card-value">{{ ticket.event.location }}</div>
+                  </div>
+                  
+                  <div class="ticket-card-row">
+                    <div class="ticket-card-label">Ticket Type:</div>
+                    <div class="ticket-card-value">
+                      {% if ticket.event.price > 0 %}
+                        Standard - ${{ "%.2f"|format(ticket.event.price) }}
+                      {% else %}
+                        Free Admission
+                      {% endif %}
+                    </div>
+                  </div>
+                  
+                  <div class="ticket-card-row">
+                    <div class="ticket-card-label">Status:</div>
+                    <div class="ticket-card-value">
+                      <span class="badge bg-secondary">Past Event</span>
+                    </div>
+                  </div>
+                </div>
+                
+                <div class="ticket-card-actions">
+                  <button type="button" class="btn btn-outline-primary print-ticket-btn" data-ticket-id="{{ ticket.id }}">
+                    <i class="fas fa-print me-2"></i> Print Ticket
+                  </button>
+                  
+                  <a href="{{ url_for('view_event', event_id=ticket.event.id) }}" class="btn btn-outline-secondary">
+                    <i class="fas fa-info-circle me-2"></i> Event Details
+                  </a>
+                </div>
+              </div>
+            </div>
+          {% endfor %}
+        </div>
+      {% else %}
+        <div class="text-center py-5 bg-light rounded mt-3">
+          <div class="text-muted">
+            <i class="fas fa-history fa-3x mb-3"></i>
+            <h4>No past tickets</h4>
+            <p>You haven't attended any events yet.</p>
+          </div>
+        </div>
+      {% endif %}
+    </div>
+  </div>
+</div>
+
+<!-- Cancel Ticket Modal -->
+<div class="modal fade" id="cancelTicketModal" tabindex="-1" aria-labelledby="cancelTicketModalLabel" aria-hidden="true">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="cancelTicketModalLabel">Cancel Ticket</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body">
+        Are you sure you want to cancel your ticket? This action cannot be undone.
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Keep Ticket</button>
+        <button type="button" class="btn btn-danger">Cancel Ticket</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Print Ticket Modal -->
+<div class="modal fade" id="printTicketModal" tabindex="-1" aria-labelledby="printTicketModalLabel" aria-hidden="true">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="printTicketModalLabel">Print Ticket</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body">
+        <div id="printable-ticket">
+          <!-- Ticket content will be dynamically populated here -->
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+        <button type="button" class="btn btn-primary" id="print-btn">
+          <i class="fas fa-print me-2"></i> Print
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="{{ url_for('static', filename='js/tickets.js') }}"></script>
+<script>
+  document.addEventListener('DOMContentLoaded', function() {
+    // Event countdown timers on tickets
+    const countdownElements = document.querySelectorAll('.event-countdown');
+    countdownElements.forEach(element => {
+      const eventDate = new Date(element.getAttribute('data-date')).getTime();
+      
+      const updateCountdown = () => {
+        const now = new Date().getTime();
+        const distance = eventDate - now;
+        
+        if (distance < 0) {
+          element.innerHTML = 'Event has started!';
+          return;
+        }
+        
+        const days = Math.floor(distance / (1000 * 60 * 60 * 24));
+        const hours = Math.floor((distance % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+        const minutes = Math.floor((distance % (1000 * 60 * 60)) / (1000 * 60));
+        const seconds = Math.floor((distance % (1000 * 60)) / 1000);
+        
+        let countdownText = '';
+        
+        if (days > 0) {
+          countdownText += `${days}d `;
+        }
+        
+        countdownText += `${hours}h ${minutes}m ${seconds}s`;
+        element.innerHTML = countdownText;
+      };
+      
+      updateCountdown();
+      setInterval(updateCountdown, 1000);
+    });
+  });
+</script>
+{% endblock %}

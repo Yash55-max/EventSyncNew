@@ -1,0 +1,320 @@
+{% extends "layout.html" %}
+
+{% block title %}EventHub - Discover Amazing Events{% endblock %}
+
+{% block content %}
+<!-- Hero Section -->
+<section class="hero">
+  <div class="container">
+    <div class="row align-items-center">
+      <div class="col-lg-6 animate-on-scroll">
+        <h1>Discover and Create Amazing Events</h1>
+        <p>Join thousands of people attending and organizing events. Find the perfect event for you or create your own event in minutes.</p>
+        <div class="d-flex gap-3">
+          <a href="{{ url_for('attendee_events') }}" class="btn btn-light">Explore Events</a>
+          {% if current_user.is_authenticated and current_user.is_organizer() %}
+            <a href="{{ url_for('create_event') }}" class="btn btn-secondary">Create Event</a>
+          {% elif current_user.is_authenticated and current_user.is_attendee() %}
+            <a href="{{ url_for('my_tickets') }}" class="btn btn-secondary">My Tickets</a>
+          {% else %}
+            <a href="{{ url_for('register') }}" class="btn btn-secondary">Join Now</a>
+          {% endif %}
+        </div>
+      </div>
+      <div class="col-lg-6 d-none d-lg-block animate-on-scroll">
+        <img src="https://pixabay.com/get/gab65d49b27d25e5d28944b7aca9fe4337a763d5993eb380556d8146bac58dd3fa07ebd4f12a3dfe1a76ccf4d5a20b4dd2a7516ed4a8fc79ec45c94f0f6ab0f05_1280.jpg" alt="Event Management" class="img-fluid rounded-lg shadow-lg">
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- Features Section -->
+<section class="py-5">
+  <div class="container">
+    <div class="section-heading">
+      <h2>Why Choose EventHub</h2>
+      <p>The all-in-one platform for event management, ticketing, and promotion</p>
+    </div>
+    
+    <div class="row g-4">
+      <div class="col-md-4 animate-on-scroll">
+        <div class="card h-100">
+          <div class="card-body text-center p-4">
+            <div class="mb-3 text-primary">
+              <i class="fas fa-calendar-plus fa-3x"></i>
+            </div>
+            <h3 class="card-title h5">Easy Event Creation</h3>
+            <p class="card-text">Create and manage events with our intuitive interface. Set up tickets, manage registrations, and track attendees all in one place.</p>
+          </div>
+        </div>
+      </div>
+      
+      <div class="col-md-4 animate-on-scroll">
+        <div class="card h-100">
+          <div class="card-body text-center p-4">
+            <div class="mb-3 text-secondary">
+              <i class="fas fa-ticket-alt fa-3x"></i>
+            </div>
+            <h3 class="card-title h5">Seamless Ticketing</h3>
+            <p class="card-text">Sell tickets with ease. Our platform handles registration and provides digital tickets for your attendees. No more paper tickets!</p>
+          </div>
+        </div>
+      </div>
+      
+      <div class="col-md-4 animate-on-scroll">
+        <div class="card h-100">
+          <div class="card-body text-center p-4">
+            <div class="mb-3 text-accent">
+              <i class="fas fa-chart-line fa-3x"></i>
+            </div>
+            <h3 class="card-title h5">Detailed Analytics</h3>
+            <p class="card-text">Get insights into your event performance. Track registrations, attendance, and engagement to improve future events.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- Upcoming Events Section -->
+<section class="py-5 bg-light">
+  <div class="container">
+    <div class="section-heading">
+      <h2>Upcoming Events</h2>
+      <p>Discover exciting events happening near you</p>
+    </div>
+    
+    <div class="row g-4">
+      {% if upcoming_events %}
+        {% for event in upcoming_events %}
+          <div class="col-lg-4 col-md-6 animate-on-scroll">
+            <div class="event-card card">
+              <img src="{{ event.image_url or 'https://pixabay.com/get/g3d6de78ec0d3ff8a2f15cf84c29e13c650c5109ce75d16c59a260335b9813dae2969e117bd9b891fc9922109e5c38bb83ff6771ac276fbeef0292b8ea9f0f44f_1280.jpg' }}" 
+                   class="card-img-top" alt="{{ event.title }}">
+              
+              <div class="card-body">
+                <span class="badge bg-primary mb-2">{{ event.category.value }}</span>
+                <h5 class="card-title">{{ event.title }}</h5>
+                
+                <div class="event-date mb-2">
+                  <i class="far fa-calendar-alt me-2"></i>
+                  {{ event.start_date|format_date }}
+                </div>
+                
+                <div class="event-location mb-3">
+                  <i class="fas fa-map-marker-alt me-2"></i>
+                  {{ event.location }}
+                </div>
+                
+                {% if event.price > 0 %}
+                  <div class="event-price">${{ "%.2f"|format(event.price) }}</div>
+                {% else %}
+                  <div class="event-price text-success">Free</div>
+                {% endif %}
+                
+                <a href="{{ url_for('view_event', event_id=event.id) }}" class="btn btn-outline-primary">View Details</a>
+              </div>
+            </div>
+          </div>
+        {% endfor %}
+      {% else %}
+        <div class="col-12 text-center py-5">
+          <div class="text-muted">
+            <i class="fas fa-calendar-times fa-3x mb-3"></i>
+            <h4>No upcoming events available</h4>
+            <p>Check back soon for exciting events!</p>
+          </div>
+        </div>
+      {% endif %}
+    </div>
+    
+    <div class="text-center mt-4">
+      <a href="{{ url_for('attendee_events') }}" class="btn btn-primary">View All Events</a>
+    </div>
+  </div>
+</section>
+
+<!-- Popular Events Section -->
+<section class="py-5">
+  <div class="container">
+    <div class="section-heading">
+      <h2>Popular Events</h2>
+      <p>Events that are trending among attendees</p>
+    </div>
+    
+    <div class="row g-4">
+      {% if popular_events %}
+        {% for event in popular_events %}
+          <div class="col-lg-4 col-md-6 animate-on-scroll">
+            <div class="event-card card">
+              <img src="{{ event.image_url or 'https://pixabay.com/get/g91f5db21d1f9f0a49f061ef27de9819c4f7c61e5bbd43cd78e73d948126a00e0dd4661bb44c01b334cec41197154627f247089119b591132d9665edc51061fed_1280.jpg' }}" 
+                   class="card-img-top" alt="{{ event.title }}">
+              
+              <div class="card-body">
+                <span class="badge bg-secondary mb-2">{{ event.category.value }}</span>
+                <h5 class="card-title">{{ event.title }}</h5>
+                
+                <div class="event-date mb-2">
+                  <i class="far fa-calendar-alt me-2"></i>
+                  {{ event.start_date|format_date }}
+                </div>
+                
+                <div class="event-location mb-3">
+                  <i class="fas fa-map-marker-alt me-2"></i>
+                  {{ event.location }}
+                </div>
+                
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                  {% if event.price > 0 %}
+                    <div class="event-price">${{ "%.2f"|format(event.price) }}</div>
+                  {% else %}
+                    <div class="event-price text-success">Free</div>
+                  {% endif %}
+                  
+                  <div class="text-muted small">
+                    <i class="fas fa-users me-1"></i>
+                    {{ event.attendees_count() }} attending
+                  </div>
+                </div>
+                
+                <a href="{{ url_for('view_event', event_id=event.id) }}" class="btn btn-outline-primary">View Details</a>
+              </div>
+            </div>
+          </div>
+        {% endfor %}
+      {% else %}
+        <div class="col-12 text-center py-5">
+          <div class="text-muted">
+            <i class="fas fa-star-half-alt fa-3x mb-3"></i>
+            <h4>No popular events available</h4>
+            <p>Be the first to create a trending event!</p>
+          </div>
+        </div>
+      {% endif %}
+    </div>
+  </div>
+</section>
+
+<!-- Organizer/Attendee CTA Section -->
+<section class="py-5 bg-primary text-white">
+  <div class="container">
+    <div class="row align-items-center">
+      <div class="col-lg-6 mb-4 mb-lg-0">
+        <h2>Ready to create your own event?</h2>
+        <p class="lead">Join thousands of organizers using EventHub to create and manage successful events. Our platform makes it easy to set up registration, sell tickets, and track attendance.</p>
+        <a href="{{ url_for('register', user_type='organizer') }}" class="btn btn-light">Become an Organizer</a>
+      </div>
+      <div class="col-lg-6">
+        <div class="card bg-white p-4 text-dark">
+          <div class="card-body">
+            <h3>Why Organize with EventHub?</h3>
+            <ul class="list-unstyled mt-4">
+              <li class="mb-3 d-flex align-items-center">
+                <i class="fas fa-check-circle text-success me-3 fa-lg"></i>
+                <span>Easy-to-use event creation tools</span>
+              </li>
+              <li class="mb-3 d-flex align-items-center">
+                <i class="fas fa-check-circle text-success me-3 fa-lg"></i>
+                <span>Automated registration and ticketing</span>
+              </li>
+              <li class="mb-3 d-flex align-items-center">
+                <i class="fas fa-check-circle text-success me-3 fa-lg"></i>
+                <span>Detailed analytics and reporting</span>
+              </li>
+              <li class="mb-3 d-flex align-items-center">
+                <i class="fas fa-check-circle text-success me-3 fa-lg"></i>
+                <span>Marketing and promotion tools</span>
+              </li>
+              <li class="d-flex align-items-center">
+                <i class="fas fa-check-circle text-success me-3 fa-lg"></i>
+                <span>24/7 support for organizers</span>
+              </li>
+            </ul>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- Testimonials Section -->
+<section class="py-5">
+  <div class="container">
+    <div class="section-heading">
+      <h2>What Our Users Say</h2>
+      <p>Hear from organizers and attendees who love using EventHub</p>
+    </div>
+    
+    <div class="row">
+      <div class="col-lg-4 col-md-6 mb-4 animate-on-scroll">
+        <div class="card h-100">
+          <div class="card-body p-4">
+            <div class="d-flex mb-4">
+              <div class="text-warning">
+                <i class="fas fa-star"></i>
+                <i class="fas fa-star"></i>
+                <i class="fas fa-star"></i>
+                <i class="fas fa-star"></i>
+                <i class="fas fa-star"></i>
+              </div>
+            </div>
+            <p class="card-text fst-italic">"EventHub made organizing my conference a breeze. The ticketing system is intuitive and the attendee management tools are incredibly helpful. Highly recommended!"</p>
+            <div class="d-flex align-items-center">
+              <div>
+                <h6 class="card-title mb-0">Sarah Johnson</h6>
+                <small class="text-muted">Tech Conference Organizer</small>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      
+      <div class="col-lg-4 col-md-6 mb-4 animate-on-scroll">
+        <div class="card h-100">
+          <div class="card-body p-4">
+            <div class="d-flex mb-4">
+              <div class="text-warning">
+                <i class="fas fa-star"></i>
+                <i class="fas fa-star"></i>
+                <i class="fas fa-star"></i>
+                <i class="fas fa-star"></i>
+                <i class="fas fa-star"></i>
+              </div>
+            </div>
+            <p class="card-text fst-italic">"I've been using EventHub to find networking events in my industry. The platform is so easy to use and I love the digital tickets feature. No more printing tickets!"</p>
+            <div class="d-flex align-items-center">
+              <div>
+                <h6 class="card-title mb-0">Michael Chen</h6>
+                <small class="text-muted">Regular Event Attendee</small>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      
+      <div class="col-lg-4 col-md-6 mb-4 animate-on-scroll">
+        <div class="card h-100">
+          <div class="card-body p-4">
+            <div class="d-flex mb-4">
+              <div class="text-warning">
+                <i class="fas fa-star"></i>
+                <i class="fas fa-star"></i>
+                <i class="fas fa-star"></i>
+                <i class="fas fa-star"></i>
+                <i class="fas fa-star-half-alt"></i>
+              </div>
+            </div>
+            <p class="card-text fst-italic">"As an event organizer, I appreciate the detailed analytics EventHub provides. It helps me understand my audience better and improve my workshops. The support team is also amazing!"</p>
+            <div class="d-flex align-items-center">
+              <div>
+                <h6 class="card-title mb-0">Olivia Martinez</h6>
+                <small class="text-muted">Workshop Host</small>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+{% endblock %}

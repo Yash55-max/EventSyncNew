@@ -1,0 +1,266 @@
+{% extends "layout.html" %}
+
+{% block title %}
+  {% if edit_mode %}Edit Event{% else %}Create Event{% endif %} - EventHub
+{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+  <div class="management-heading">
+    <h1>{% if edit_mode %}Edit Event{% else %}Create New Event{% endif %}</h1>
+    <a href="{{ url_for('attendee_events') }}" class="btn btn-outline-primary">
+      <i class="fas fa-arrow-left me-2"></i> Back to Events
+    </a>
+  </div>
+  
+  <div class="event-form-container">
+    <form method="POST" class="event-form" novalidate>
+      {{ form.hidden_tag() }}
+      
+      <!-- Basic Information -->
+      <div class="event-form-section">
+        <h3 class="event-form-section-title">Event Information</h3>
+        
+        <div class="row g-3">
+          <div class="col-md-8">
+            <div class="mb-3">
+              {{ form.title.label(class="form-label") }}
+              {% if form.title.errors %}
+                {{ form.title(class="form-control is-invalid") }}
+                <div class="invalid-feedback">
+                  {% for error in form.title.errors %}
+                    {{ error }}
+                  {% endfor %}
+                </div>
+              {% else %}
+                {{ form.title(class="form-control", placeholder="Enter event title") }}
+              {% endif %}
+            </div>
+          </div>
+          
+          <div class="col-md-4">
+            <div class="mb-3">
+              {{ form.category.label(class="form-label") }}
+              {% if form.category.errors %}
+                {{ form.category(class="form-select is-invalid") }}
+                <div class="invalid-feedback">
+                  {% for error in form.category.errors %}
+                    {{ error }}
+                  {% endfor %}
+                </div>
+              {% else %}
+                {{ form.category(class="form-select") }}
+              {% endif %}
+            </div>
+          </div>
+        </div>
+        
+        <div class="mb-3">
+          {{ form.description.label(class="form-label") }}
+          {% if form.description.errors %}
+            {{ form.description(class="form-control is-invalid", rows=6) }}
+            <div class="invalid-feedback">
+              {% for error in form.description.errors %}
+                {{ error }}
+              {% endfor %}
+            </div>
+          {% else %}
+            {{ form.description(class="form-control", rows=6, placeholder="Describe your event...") }}
+          {% endif %}
+          <div class="form-text">Provide a detailed description of your event to attract attendees.</div>
+        </div>
+      </div>
+      
+      <!-- Date and Location -->
+      <div class="event-form-section">
+        <h3 class="event-form-section-title">Date & Location</h3>
+        
+        <div class="row g-3">
+          <div class="col-md-6">
+            <div class="mb-3">
+              {{ form.start_date.label(class="form-label") }}
+              {% if form.start_date.errors %}
+                {{ form.start_date(class="form-control is-invalid", type="datetime-local") }}
+                <div class="invalid-feedback">
+                  {% for error in form.start_date.errors %}
+                    {{ error }}
+                  {% endfor %}
+                </div>
+              {% else %}
+                {{ form.start_date(class="form-control", type="datetime-local") }}
+              {% endif %}
+            </div>
+          </div>
+          
+          <div class="col-md-6">
+            <div class="mb-3">
+              {{ form.end_date.label(class="form-label") }}
+              {% if form.end_date.errors %}
+                {{ form.end_date(class="form-control is-invalid", type="datetime-local") }}
+                <div class="invalid-feedback">
+                  {% for error in form.end_date.errors %}
+                    {{ error }}
+                  {% endfor %}
+                </div>
+              {% else %}
+                {{ form.end_date(class="form-control", type="datetime-local") }}
+              {% endif %}
+            </div>
+          </div>
+        </div>
+        
+        <div class="mb-3">
+          {{ form.location.label(class="form-label") }}
+          {% if form.location.errors %}
+            {{ form.location(class="form-control is-invalid") }}
+            <div class="invalid-feedback">
+              {% for error in form.location.errors %}
+                {{ error }}
+              {% endfor %}
+            </div>
+          {% else %}
+            {{ form.location(class="form-control", placeholder="Enter event location") }}
+          {% endif %}
+          <div class="form-text">Provide the full address or venue name where the event will take place.</div>
+        </div>
+      </div>
+      
+      <!-- Event Details -->
+      <div class="event-form-section">
+        <h3 class="event-form-section-title">Event Details</h3>
+        
+        <div class="row g-3">
+          <div class="col-md-6">
+            <div class="mb-3">
+              {{ form.max_attendees.label(class="form-label") }}
+              {% if form.max_attendees.errors %}
+                {{ form.max_attendees(class="form-control is-invalid", type="number", min="0") }}
+                <div class="invalid-feedback">
+                  {% for error in form.max_attendees.errors %}
+                    {{ error }}
+                  {% endfor %}
+                </div>
+              {% else %}
+                {{ form.max_attendees(class="form-control", type="number", min="0") }}
+              {% endif %}
+              <div class="form-text">Set to 0 for unlimited attendees.</div>
+            </div>
+          </div>
+          
+          <div class="col-md-6">
+            <div class="mb-3">
+              {{ form.price.label(class="form-label") }}
+              {% if form.price.errors %}
+                {{ form.price(class="form-control is-invalid", type="number", min="0", step="0.01") }}
+                <div class="invalid-feedback">
+                  {% for error in form.price.errors %}
+                    {{ error }}
+                  {% endfor %}
+                </div>
+              {% else %}
+                {{ form.price(class="form-control", type="number", min="0", step="0.01") }}
+              {% endif %}
+              <div class="form-text">Set to 0 for free events.</div>
+            </div>
+          </div>
+        </div>
+        
+        <div class="mb-3">
+          {{ form.image_url.label(class="form-label") }}
+          {% if form.image_url.errors %}
+            {{ form.image_url(class="form-control is-invalid") }}
+            <div class="invalid-feedback">
+              {% for error in form.image_url.errors %}
+                {{ error }}
+              {% endfor %}
+            </div>
+          {% else %}
+            {{ form.image_url(class="form-control", placeholder="Enter image URL") }}
+          {% endif %}
+          <div class="form-text">Enter a URL for the event image. Recommended size: 1200x630 pixels.</div>
+          
+          <div id="image-preview" class="mt-3" style="display: none;"></div>
+        </div>
+      </div>
+      
+      <div class="d-grid gap-2 d-md-flex justify-content-md-end mt-4">
+        <a href="{{ url_for('attendee_events') }}" class="btn btn-outline-secondary me-md-2">Cancel</a>
+        {{ form.submit(class="btn btn-primary btn-lg") }}
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- Preview Modal -->
+<div class="modal fade" id="previewModal" tabindex="-1" aria-labelledby="previewModalLabel" aria-hidden="true">
+  <div class="modal-dialog modal-lg">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="previewModalLabel">Event Preview</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body">
+        <div id="preview-content">
+          <!-- Preview content will be dynamically inserted here -->
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="{{ url_for('static', filename='js/events.js') }}"></script>
+<script>
+  document.addEventListener('DOMContentLoaded', function() {
+    // Set minimum date for start_date to today
+    const startDateInput = document.getElementById('start_date');
+    if (startDateInput) {
+      const today = new Date();
+      today.setMinutes(today.getMinutes() - today.getTimezoneOffset());
+      startDateInput.min = today.toISOString().slice(0, 16);
+      
+      {% if not edit_mode %}
+      // Set a default start date (current time + 1 day)
+      if (!startDateInput.value) {
+        const tomorrow = new Date();
+        tomorrow.setDate(tomorrow.getDate() + 1);
+        tomorrow.setMinutes(tomorrow.getMinutes() - tomorrow.getTimezoneOffset());
+        startDateInput.value = tomorrow.toISOString().slice(0, 16);
+      }
+      {% endif %}
+    }
+    
+    // Ensure end_date is after start_date
+    const endDateInput = document.getElementById('end_date');
+    if (startDateInput && endDateInput) {
+      startDateInput.addEventListener('change', function() {
+        endDateInput.min = this.value;
+        
+        // If end date is before start date, update it
+        if (endDateInput.value && new Date(endDateInput.value) <= new Date(this.value)) {
+          // Set end date to start date + 1 hour
+          const endDate = new Date(this.value);
+          endDate.setHours(endDate.getHours() + 1);
+          endDateInput.value = endDate.toISOString().slice(0, 16);
+        }
+      });
+      
+      {% if not edit_mode %}
+      // Set a default end date (start date + 2 hours)
+      if (startDateInput.value && !endDateInput.value) {
+        const endDate = new Date(startDateInput.value);
+        endDate.setHours(endDate.getHours() + 2);
+        endDateInput.value = endDate.toISOString().slice(0, 16);
+      }
+      {% endif %}
+      
+      // Trigger change event to set initial min value for end_date
+      startDateInput.dispatchEvent(new Event('change'));
+    }
+  });
+</script>
+{% endblock %}

@@ -1,0 +1,241 @@
+{% extends "layout.html" %}
+
+{% block title %}Explore Events - EventHub{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+  <div class="management-heading">
+    <h1>Explore Events</h1>
+    <div class="d-flex">
+      <div class="search-form">
+        <form method="GET" action="{{ url_for('attendee_events') }}" class="d-flex">
+          <div class="input-group">
+            <input type="text" name="query" class="form-control" placeholder="Search events..." value="{{ request.args.get('query', '') }}">
+            <button class="btn btn-primary" type="submit">
+              <i class="fas fa-search"></i>
+            </button>
+            <span class="clear-search" style="display: none; position: absolute; right: 60px; top: 50%; transform: translateY(-50%); cursor: pointer; z-index: 10;">
+              <i class="fas fa-times-circle"></i>
+            </span>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+  
+  <!-- Filters -->
+  <div class="events-filter-container mb-4">
+    <h5 class="events-filter-title">Filter Events</h5>
+    <form method="GET" action="{{ url_for('attendee_events') }}">
+      <div class="row g-3">
+        <div class="col-md-4">
+          <div class="mb-3">
+            {{ form.category.label(class="form-label") }}
+            {{ form.category(class="form-select") }}
+          </div>
+        </div>
+        
+        <div class="col-md-4">
+          <div class="mb-3">
+            {{ form.date_from.label(class="form-label") }}
+            {{ form.date_from(class="form-control", type="date") }}
+          </div>
+        </div>
+        
+        <div class="col-md-4">
+          <div class="mb-3">
+            {{ form.date_to.label(class="form-label") }}
+            {{ form.date_to(class="form-control", type="date") }}
+          </div>
+        </div>
+      </div>
+      
+      <div class="d-flex justify-content-between">
+        <button type="submit" class="btn btn-primary">
+          <i class="fas fa-filter me-2"></i> Apply Filters
+        </button>
+        
+        <a href="{{ url_for('attendee_events') }}" class="btn btn-outline-secondary">
+          <i class="fas fa-sync-alt me-2"></i> Reset Filters
+        </a>
+      </div>
+    </form>
+  </div>
+  
+  <!-- Events Grid -->
+  <div class="events-grid">
+    {% if events and events|length > 0 %}
+      {% for event in events %}
+        <div class="event-card">
+          <div class="event-card-image">
+            <img src="{{ event.image_url or 'https://pixabay.com/get/g91f5db21d1f9f0a49f061ef27de9819c4f7c61e5bbd43cd78e73d948126a00e0dd4661bb44c01b334cec41197154627f247089119b591132d9665edc51061fed_1280.jpg' }}" alt="{{ event.title }}">
+          </div>
+          
+          <div class="event-card-body">
+            <span class="event-card-category">{{ event.category.value }}</span>
+            <h5 class="event-card-title">{{ event.title }}</h5>
+            
+            <div class="event-card-details">
+              <div class="event-card-detail">
+                <i class="far fa-calendar-alt"></i>
+                <span>{{ event.start_date|format_date_short }}</span>
+              </div>
+              
+              <div class="event-card-detail">
+                <i class="fas fa-map-marker-alt"></i>
+                <span>{{ event.location }}</span>
+              </div>
+              
+              <div class="event-card-detail">
+                <i class="fas fa-users"></i>
+                <span>{{ event.attendees_count() }} attending</span>
+              </div>
+            </div>
+            
+            {% if event.price > 0 %}
+              <div class="event-card-price">${{ "%.2f"|format(event.price) }}</div>
+            {% else %}
+              <div class="event-card-price free">Free</div>
+            {% endif %}
+            
+            <a href="{{ url_for('view_event', event_id=event.id) }}" class="btn btn-primary w-100">View Details</a>
+          </div>
+        </div>
+      {% endfor %}
+    {% else %}
+      <div class="col-12 text-center py-5 bg-light rounded">
+        <div class="text-muted">
+          <i class="fas fa-calendar-times fa-3x mb-3"></i>
+          <h4>No events found</h4>
+          {% if request.args %}
+            <p>Try adjusting your search filters.</p>
+            <a href="{{ url_for('attendee_events') }}" class="btn btn-outline-primary mt-2">Clear All Filters</a>
+          {% else %}
+            <p>There are no upcoming events at the moment. Check back soon!</p>
+          {% endif %}
+        </div>
+      </div>
+    {% endif %}
+  </div>
+</div>
+
+<!-- Featured Categories Section -->
+<section class="py-5 bg-light">
+  <div class="container">
+    <div class="section-heading">
+      <h2>Browse by Category</h2>
+      <p>Discover events that match your interests</p>
+    </div>
+    
+    <div class="row g-4">
+      <div class="col-md-4 col-lg-3 col-6">
+        <a href="{{ url_for('attendee_events', category='CONFERENCE') }}" class="text-decoration-none">
+          <div class="card text-center h-100">
+            <div class="card-body py-4">
+              <div class="mb-3 text-primary">
+                <i class="fas fa-microphone fa-3x"></i>
+              </div>
+              <h5>Conferences</h5>
+            </div>
+          </div>
+        </a>
+      </div>
+      
+      <div class="col-md-4 col-lg-3 col-6">
+        <a href="{{ url_for('attendee_events', category='WORKSHOP') }}" class="text-decoration-none">
+          <div class="card text-center h-100">
+            <div class="card-body py-4">
+              <div class="mb-3 text-success">
+                <i class="fas fa-chalkboard-teacher fa-3x"></i>
+              </div>
+              <h5>Workshops</h5>
+            </div>
+          </div>
+        </a>
+      </div>
+      
+      <div class="col-md-4 col-lg-3 col-6">
+        <a href="{{ url_for('attendee_events', category='SEMINAR') }}" class="text-decoration-none">
+          <div class="card text-center h-100">
+            <div class="card-body py-4">
+              <div class="mb-3 text-info">
+                <i class="fas fa-book-reader fa-3x"></i>
+              </div>
+              <h5>Seminars</h5>
+            </div>
+          </div>
+        </a>
+      </div>
+      
+      <div class="col-md-4 col-lg-3 col-6">
+        <a href="{{ url_for('attendee_events', category='CONCERT') }}" class="text-decoration-none">
+          <div class="card text-center h-100">
+            <div class="card-body py-4">
+              <div class="mb-3 text-danger">
+                <i class="fas fa-music fa-3x"></i>
+              </div>
+              <h5>Concerts</h5>
+            </div>
+          </div>
+        </a>
+      </div>
+      
+      <div class="col-md-4 col-lg-3 col-6">
+        <a href="{{ url_for('attendee_events', category='EXHIBITION') }}" class="text-decoration-none">
+          <div class="card text-center h-100">
+            <div class="card-body py-4">
+              <div class="mb-3 text-warning">
+                <i class="fas fa-palette fa-3x"></i>
+              </div>
+              <h5>Exhibitions</h5>
+            </div>
+          </div>
+        </a>
+      </div>
+      
+      <div class="col-md-4 col-lg-3 col-6">
+        <a href="{{ url_for('attendee_events', category='PARTY') }}" class="text-decoration-none">
+          <div class="card text-center h-100">
+            <div class="card-body py-4">
+              <div class="mb-3" style="color: #9c27b0;">
+                <i class="fas fa-glass-cheers fa-3x"></i>
+              </div>
+              <h5>Parties</h5>
+            </div>
+          </div>
+        </a>
+      </div>
+      
+      <div class="col-md-4 col-lg-3 col-6">
+        <a href="{{ url_for('attendee_events', category='NETWORKING') }}" class="text-decoration-none">
+          <div class="card text-center h-100">
+            <div class="card-body py-4">
+              <div class="mb-3" style="color: #ff9800;">
+                <i class="fas fa-handshake fa-3x"></i>
+              </div>
+              <h5>Networking</h5>
+            </div>
+          </div>
+        </a>
+      </div>
+      
+      <div class="col-md-4 col-lg-3 col-6">
+        <a href="{{ url_for('attendee_events', category='OTHER') }}" class="text-decoration-none">
+          <div class="card text-center h-100">
+            <div class="card-body py-4">
+              <div class="mb-3 text-secondary">
+                <i class="fas fa-star fa-3x"></i>
+              </div>
+              <h5>Other</h5>
+            </div>
+          </div>
+        </a>
+      </div>
+    </div>
+  </div>
+</section>
+{% endblock %}
+
+{% block extra_js %}
+<script src="{{ url_for('static', filename='js/events.js') }}"></script>
+{% endblock %}

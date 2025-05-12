@@ -1,0 +1,233 @@
+{% extends "layout.html" %}
+
+{% block title %}Organizer Dashboard - EventHub{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+  <div class="management-heading">
+    <h1>Organizer Dashboard</h1>
+    <a href="{{ url_for('create_event') }}" class="btn btn-primary">
+      <i class="fas fa-plus me-2"></i> Create New Event
+    </a>
+  </div>
+  
+  <!-- Stats Overview -->
+  <div class="row g-4 mb-5">
+    <div class="col-xl-3 col-md-6">
+      <div class="dashboard-card">
+        <div class="dashboard-card-icon bg-purple mb-3">
+          <i class="fas fa-calendar-alt"></i>
+        </div>
+        <div class="dashboard-card-count counter-value" data-target="{{ stats.total_events }}">{{ stats.total_events }}</div>
+        <div class="dashboard-card-label">Total Events</div>
+      </div>
+    </div>
+    
+    <div class="col-xl-3 col-md-6">
+      <div class="dashboard-card">
+        <div class="dashboard-card-icon bg-green mb-3">
+          <i class="fas fa-calendar-day"></i>
+        </div>
+        <div class="dashboard-card-count counter-value" data-target="{{ stats.upcoming_events }}">{{ stats.upcoming_events }}</div>
+        <div class="dashboard-card-label">Upcoming Events</div>
+      </div>
+    </div>
+    
+    <div class="col-xl-3 col-md-6">
+      <div class="dashboard-card">
+        <div class="dashboard-card-icon bg-cyan mb-3">
+          <i class="fas fa-users"></i>
+        </div>
+        <div class="dashboard-card-count counter-value" data-target="{{ stats.total_tickets }}">{{ stats.total_tickets }}</div>
+        <div class="dashboard-card-label">Total Attendees</div>
+      </div>
+    </div>
+    
+    <div class="col-xl-3 col-md-6">
+      <div class="dashboard-card">
+        <div class="dashboard-card-icon bg-orange mb-3">
+          <i class="fas fa-money-bill-wave"></i>
+        </div>
+        <div class="dashboard-card-count">
+          $<span class="counter-value" data-target="{{ stats.total_revenue }}">{{ stats.total_revenue }}</span>
+        </div>
+        <div class="dashboard-card-label">Revenue Generated</div>
+      </div>
+    </div>
+  </div>
+  
+  <!-- Charts Section -->
+  <div class="row g-4 mb-5">
+    <div class="col-lg-6">
+      <div class="chart-container">
+        <h3 class="chart-title">Events Overview</h3>
+        <canvas id="eventStatsChart" 
+                data-total="{{ stats.total_events }}" 
+                data-upcoming="{{ stats.upcoming_events }}" 
+                data-ongoing="{{ stats.ongoing_events }}" 
+                data-past="{{ stats.past_events }}">
+        </canvas>
+      </div>
+    </div>
+    
+    <div class="col-lg-6">
+      <div class="chart-container">
+        <h3 class="chart-title">Attendee Growth</h3>
+        <canvas id="attendeeGrowthChart" data-total-tickets="{{ stats.total_tickets }}"></canvas>
+      </div>
+    </div>
+    
+    {% if events and events|length > 0 %}
+    <div class="col-lg-6">
+      <div class="chart-container">
+        <h3 class="chart-title">Category Distribution</h3>
+        <!-- This data would normally be provided by the backend -->
+        <canvas id="categoryDistributionChart" data-categories='{"Conference": 5, "Workshop": 3, "Seminar": 2, "Exhibition": 1}'></canvas>
+      </div>
+    </div>
+    
+    <div class="col-lg-6">
+      <div class="chart-container">
+        <h3 class="chart-title">Recent Revenue</h3>
+        <canvas id="revenueChart"></canvas>
+      </div>
+    </div>
+    {% endif %}
+  </div>
+  
+  <!-- Recent Events -->
+  <div class="mb-5">
+    <div class="management-heading">
+      <h2>Recent Events</h2>
+      <a href="{{ url_for('manage_events') }}" class="btn btn-outline-primary btn-sm">View All Events</a>
+    </div>
+    
+    <div class="event-list">
+      {% if events and events|length > 0 %}
+        {% for event in events %}
+          <div class="event-item" data-status="{{ 'upcoming' if event.is_upcoming() else 'ongoing' if event.is_ongoing() else 'past' }}">
+            <img src="{{ event.image_url or 'https://pixabay.com/get/g3d6de78ec0d3ff8a2f15cf84c29e13c650c5109ce75d16c59a260335b9813dae2969e117bd9b891fc9922109e5c38bb83ff6771ac276fbeef0292b8ea9f0f44f_1280.jpg' }}" alt="{{ event.title }}" class="event-item-image">
+            
+            <div class="event-item-content">
+              <h5 class="event-item-title">{{ event.title }}</h5>
+              
+              <div class="event-item-details">
+                <div class="event-item-detail">
+                  <i class="far fa-calendar-alt me-1"></i>
+                  <span>{{ event.start_date|format_date_short }}</span>
+                </div>
+                
+                <div class="event-item-detail">
+                  <i class="fas fa-map-marker-alt me-1"></i>
+                  <span>{{ event.location }}</span>
+                </div>
+                
+                <div class="event-item-detail">
+                  <i class="fas fa-users me-1"></i>
+                  <span>{{ event.attendees_count() }} attendees</span>
+                </div>
+              </div>
+              
+              <div class="mt-2">
+                {% if event.is_upcoming() %}
+                  <span class="event-status upcoming">Upcoming</span>
+                {% elif event.is_ongoing() %}
+                  <span class="event-status ongoing">Ongoing</span>
+                {% else %}
+                  <span class="event-status past">Past</span>
+                {% endif %}
+                
+                <span class="badge bg-secondary ms-2">{{ event.category.value }}</span>
+              </div>
+            </div>
+            
+            <div class="event-item-actions">
+              <a href="{{ url_for('event_details', event_id=event.id) }}" class="btn btn-outline-primary btn-sm mb-2">
+                <i class="fas fa-info-circle me-1"></i> Details
+              </a>
+              
+              <a href="{{ url_for('edit_event', event_id=event.id) }}" class="btn btn-outline-secondary btn-sm">
+                <i class="fas fa-edit me-1"></i> Edit
+              </a>
+            </div>
+          </div>
+        {% endfor %}
+      {% else %}
+        <div class="text-center py-5 bg-light rounded">
+          <div class="text-muted">
+            <i class="fas fa-calendar-plus fa-3x mb-3"></i>
+            <h4>No events yet</h4>
+            <p class="mb-4">Get started by creating your first event</p>
+            <a href="{{ url_for('create_event') }}" class="btn btn-primary">
+              <i class="fas fa-plus me-2"></i> Create New Event
+            </a>
+          </div>
+        </div>
+      {% endif %}
+    </div>
+  </div>
+  
+  <!-- Tips & Resources -->
+  <div class="row">
+    <div class="col-lg-12">
+      <div class="card shadow-md">
+        <div class="card-header bg-primary text-white">
+          <h4 class="mb-0"><i class="fas fa-lightbulb me-2"></i> Tips for Successful Events</h4>
+        </div>
+        <div class="card-body">
+          <div class="row">
+            <div class="col-md-6">
+              <ul class="list-unstyled">
+                <li class="mb-3 d-flex">
+                  <div class="text-primary me-3"><i class="fas fa-check-circle"></i></div>
+                  <div>
+                    <strong>Promote Early:</strong> Start marketing your event at least 4-6 weeks in advance.
+                  </div>
+                </li>
+                <li class="mb-3 d-flex">
+                  <div class="text-primary me-3"><i class="fas fa-check-circle"></i></div>
+                  <div>
+                    <strong>Detailed Descriptions:</strong> Provide clear information about what attendees can expect.
+                  </div>
+                </li>
+                <li class="mb-3 d-flex">
+                  <div class="text-primary me-3"><i class="fas fa-check-circle"></i></div>
+                  <div>
+                    <strong>Eye-catching Images:</strong> Use high-quality images to make your event stand out.
+                  </div>
+                </li>
+              </ul>
+            </div>
+            <div class="col-md-6">
+              <ul class="list-unstyled">
+                <li class="mb-3 d-flex">
+                  <div class="text-primary me-3"><i class="fas fa-check-circle"></i></div>
+                  <div>
+                    <strong>Social Media:</strong> Share your event across all your social platforms.
+                  </div>
+                </li>
+                <li class="mb-3 d-flex">
+                  <div class="text-primary me-3"><i class="fas fa-check-circle"></i></div>
+                  <div>
+                    <strong>Early Bird Pricing:</strong> Offer discounted tickets for early registrations.
+                  </div>
+                </li>
+                <li class="mb-3 d-flex">
+                  <div class="text-primary me-3"><i class="fas fa-check-circle"></i></div>
+                  <div>
+                    <strong>Follow Up:</strong> Send thank you emails and request feedback after the event.
+                  </div>
+                </li>
+              </ul>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="{{ url_for('static', filename='js/dashboard.js') }}"></script>
+{% endblock %}
