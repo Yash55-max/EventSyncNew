@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-Test script to verify Sustainability and Assessment features are working
+Test script to verify SuStainability and Assessment features are working
 """
 
 import requests
