@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Icon Generator</title>
+    <style>
+        body { font-family: Arial, sans-serif; padding: 20px; }
+        canvas { border: 1px solid #ccc; margin: 10px; }
+        button { padding: 10px 20px; margin: 5px; background: #6f42c1; color: white; border: none; cursor: pointer; }
+        button:hover { background: #5a2d91; }
+    </style>
+</head>
+<body>
+    <h1>EVENTSYNC Icon Generator</h1>
+    <p>This will generate PNG icons from the SVG for the PWA manifest.</p>
+    
+    <div id="canvases"></div>
+    <button onclick="generateIcons()">Generate Icons</button>
+    <button onclick="downloadAll()">Download All</button>
+    
+    <script>
+        const sizes = [16, 32, 72, 96, 128, 144, 152, 180, 192, 384, 512];
+        let generatedIcons = {};
+        
+        function generateIcons() {
+            const svgString = `<?xml version="1.0" encoding="UTF-8"?>
+<svg width="512" height="512" viewBox="0 0 512 512" xmlns="http://www.w3.org/2000/svg">
+  <!-- Background Circle -->
+  <circle cx="256" cy="256" r="256" fill="#6f42c1"/>
+  
+  <!-- Calendar Icon -->
+  <rect x="128" y="160" width="256" height="192" rx="16" ry="16" fill="white"/>
+  <rect x="128" y="160" width="256" height="48" rx="16" ry="16" fill="#4c2c92"/>
+  
+  <!-- Calendar Rings -->
+  <circle cx="192" cy="128" r="8" fill="white"/>
+  <circle cx="256" cy="128" r="8" fill="white"/>
+  <circle cx="320" cy="128" r="8" fill="white"/>
+  <rect x="188" y="112" width="8" height="32" fill="white"/>
+  <rect x="252" y="112" width="8" height="32" fill="white"/>
+  <rect x="316" y="112" width="8" height="32" fill="white"/>
+  
+  <!-- Calendar Grid -->
+  <line x1="160" y1="240" x2="352" y2="240" stroke="#e0e0e0" stroke-width="1"/>
+  <line x1="160" y1="280" x2="352" y2="280" stroke="#e0e0e0" stroke-width="1"/>
+  <line x1="160" y1="320" x2="352" y2="320" stroke="#e0e0e0" stroke-width="1"/>
+  <line x1="192" y1="208" x2="192" y2="352" stroke="#e0e0e0" stroke-width="1"/>
+  <line x1="224" y1="208" x2="224" y2="352" stroke="#e0e0e0" stroke-width="1"/>
+  <line x1="256" y1="208" x2="256" y2="352" stroke="#e0e0e0" stroke-width="1"/>
+  <line x1="288" y1="208" x2="288" y2="352" stroke="#e0e0e0" stroke-width="1"/>
+  <line x1="320" y1="208" x2="320" y2="352" stroke="#e0e0e0" stroke-width="1"/>
+  
+  <!-- Event Dots -->
+  <circle cx="208" cy="256" r="4" fill="#6f42c1"/>
+  <circle cx="272" cy="256" r="4" fill="#28a745"/>
+  <circle cx="304" cy="296" r="4" fill="#dc3545"/>
+  <circle cx="176" cy="296" r="4" fill="#ffc107"/>
+  
+  <!-- Text -->
+  <text x="256" y="420" text-anchor="middle" font-family="Arial, sans-serif" font-size="36" font-weight="bold" fill="white">EVENTSYNC</text>
+</svg>`;
+            
+            const canvasContainer = document.getElementById('canvases');
+            canvasContainer.innerHTML = '';
+            
+            sizes.forEach(size => {
+                const canvas = document.createElement('canvas');
+                canvas.width = size;
+                canvas.height = size;
+                canvas.title = `${size}x${size}`;
+                
+                const ctx = canvas.getContext('2d');
+                const img = new Image();
+                
+                img.onload = function() {
+                    ctx.drawImage(img, 0, 0, size, size);
+                    generatedIcons[size] = canvas.toDataURL('image/png');
+                    
+                    // Add download link
+                    const link = document.createElement('a');
+                    link.href = generatedIcons[size];
+                    link.download = `icon-${size}x${size}.png`;
+                    link.textContent = `Download ${size}x${size}`;
+                    link.style.display = 'block';
+                    link.style.margin = '5px 0';
+                    
+                    const container = document.createElement('div');
+                    container.style.display = 'inline-block';
+                    container.style.margin = '10px';
+                    container.style.textAlign = 'center';
+                    
+                    container.appendChild(canvas);
+                    container.appendChild(link);
+                    canvasContainer.appendChild(container);
+                };
+                
+                const blob = new Blob([svgString], {type: 'image/svg+xml'});
+                const url = URL.createObjectURL(blob);
+                img.src = url;
+            });
+        }
+        
+        function downloadAll() {
+            Object.keys(generatedIcons).forEach(size => {
+                const link = document.createElement('a');
+                link.href = generatedIcons[size];
+                link.download = `icon-${size}x${size}.png`;
+                document.body.appendChild(link);
+                link.click();
+                document.body.removeChild(link);
+            });
+        }
+        
+        // Auto-generate on load
+        window.onload = generateIcons;
+    </script>
+</body>
+</html>

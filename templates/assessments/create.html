@@ -1,0 +1,651 @@
+{% extends "base.html" %}
+
+{% block title %}Create New Assessment{% endblock %}
+
+{% block extra_css %}
+<style>
+    .create-card {
+        background: white;
+        border-radius: 15px;
+        box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+        padding: 2rem;
+        margin-bottom: 2rem;
+    }
+    .option-card {
+        background: white;
+        border: 2px solid #e9ecef;
+        border-radius: 10px;
+        padding: 1.5rem;
+        margin-bottom: 1rem;
+        transition: all 0.3s ease;
+        cursor: pointer;
+        position: relative;
+    }
+    .option-card:hover {
+        border-color: #3498db;
+        box-shadow: 0 5px 15px rgba(52, 152, 219, 0.1);
+        transform: translateY(-2px);
+    }
+    .option-card.selected {
+        border-color: #3498db;
+        background: linear-gradient(135deg, #3498db10, #2980b910);
+        box-shadow: 0 5px 20px rgba(52, 152, 219, 0.2);
+    }
+    .option-card .check-mark {
+        position: absolute;
+        top: 10px;
+        right: 10px;
+        width: 20px;
+        height: 20px;
+        border-radius: 50%;
+        background: #3498db;
+        color: white;
+        display: none;
+        align-items: center;
+        justify-content: center;
+        font-size: 12px;
+    }
+    .option-card.selected .check-mark {
+        display: flex;
+    }
+    .difficulty-icon {
+        width: 50px;
+        height: 50px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin-bottom: 1rem;
+    }
+    .difficulty-beginner { background: linear-gradient(135deg, #2ecc71, #27ae60); }
+    .difficulty-intermediate { background: linear-gradient(135deg, #f39c12, #e67e22); }
+    .difficulty-advanced { background: linear-gradient(135deg, #e74c3c, #c0392b); }
+    .category-icon {
+        width: 60px;
+        height: 60px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin-bottom: 1rem;
+        color: white;
+        font-size: 1.5rem;
+    }
+    .category-planning { background: linear-gradient(135deg, #3498db, #2980b9); }
+    .category-marketing { background: linear-gradient(135deg, #9b59b6, #8e44ad); }
+    .category-budget { background: linear-gradient(135deg, #2ecc71, #27ae60); }
+    .category-crisis { background: linear-gradient(135deg, #e74c3c, #c0392b); }
+    .category-logistics { background: linear-gradient(135deg, #f39c12, #e67e22); }
+    .btn-create {
+        background: linear-gradient(135deg, #3498db 0%, #2980b9 100%);
+        border: none;
+        color: white;
+        padding: 1rem 2rem;
+        border-radius: 50px;
+        font-weight: 600;
+        font-size: 1.1rem;
+        transition: all 0.3s ease;
+    }
+    .btn-create:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 5px 20px rgba(52, 152, 219, 0.3);
+        color: white;
+    }
+    .assessment-preview {
+        background: #f8f9fa;
+        border-radius: 10px;
+        padding: 1.5rem;
+        border-left: 4px solid #3498db;
+    }
+    .step-indicator {
+        display: flex;
+        justify-content: center;
+        margin-bottom: 2rem;
+    }
+    .step {
+        width: 40px;
+        height: 40px;
+        border-radius: 50%;
+        background: #ecf0f1;
+        color: #95a5a6;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin: 0 1rem;
+        position: relative;
+        font-weight: bold;
+    }
+    .step.active {
+        background: #3498db;
+        color: white;
+    }
+    .step.completed {
+        background: #2ecc71;
+        color: white;
+    }
+    .step::after {
+        content: '';
+        position: absolute;
+        width: 40px;
+        height: 2px;
+        background: #ecf0f1;
+        left: 100%;
+        top: 50%;
+        transform: translateY(-50%);
+    }
+    .step.completed::after {
+        background: #2ecc71;
+    }
+    .step:last-child::after {
+        display: none;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <!-- Header -->
+    <div class="row mb-4">
+        <div class="col-12 text-center">
+            <h1 class="display-4 text-dark font-weight-bold">
+                <i class="fas fa-plus-circle text-primary mr-3"></i>
+                Create New Assessment
+            </h1>
+            <p class="lead text-muted">Design a personalized challenge to improve your event planning skills</p>
+        </div>
+    </div>
+
+    <!-- Step Indicator -->
+    <div class="step-indicator">
+        <div class="step active" id="step1">1</div>
+        <div class="step" id="step2">2</div>
+        <div class="step" id="step3">3</div>
+    </div>
+
+    <form id="assessmentForm">
+        <!-- Step 1: Assessment Type -->
+        <div class="create-card" id="typeStep">
+            <h3 class="text-center mb-4">
+                <i class="fas fa-clipboard-list text-primary mr-2"></i>
+                Choose Assessment Type
+            </h3>
+            <p class="text-center text-muted mb-4">Select the type of challenge you'd like to take</p>
+
+            <div class="row">
+                <div class="col-lg-6 col-md-12 mb-3">
+                    <div class="option-card" onclick="selectOption('type', 'mock_event_planning')">
+                        <div class="check-mark"><i class="fas fa-check"></i></div>
+                        <div class="text-center">
+                            <div class="category-icon category-planning mx-auto">
+                                <i class="fas fa-calendar-alt"></i>
+                            </div>
+                            <h5 class="font-weight-bold text-dark">Mock Event Planning</h5>
+                            <p class="text-muted">
+                                Plan a complete event from scratch, making strategic decisions about 
+                                venue, budget, marketing, and logistics.
+                            </p>
+                            <div class="mt-3">
+                                <span class="badge badge-info mr-2">Comprehensive</span>
+                                <span class="badge badge-success">Real-world scenarios</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-lg-6 col-md-12 mb-3">
+                    <div class="option-card" onclick="selectOption('type', 'interactive_challenge')">
+                        <div class="check-mark"><i class="fas fa-check"></i></div>
+                        <div class="text-center">
+                            <div class="category-icon category-crisis mx-auto">
+                                <i class="fas fa-puzzle-piece"></i>
+                            </div>
+                            <h5 class="font-weight-bold text-dark">Interactive Challenge</h5>
+                            <p class="text-muted">
+                                Solve specific event planning problems through interactive 
+                                scenarios with immediate AI feedback.
+                            </p>
+                            <div class="mt-3">
+                                <span class="badge badge-warning mr-2">Problem-solving</span>
+                                <span class="badge badge-primary">AI Feedback</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="text-center mt-4">
+                <button type="button" class="btn btn-create" onclick="nextStep()" disabled id="typeNext">
+                    Continue <i class="fas fa-arrow-right ml-2"></i>
+                </button>
+            </div>
+        </div>
+
+        <!-- Step 2: Difficulty & Category -->
+        <div class="create-card" id="detailsStep" style="display: none;">
+            <h3 class="text-center mb-4">
+                <i class="fas fa-cog text-primary mr-2"></i>
+                Configure Your Challenge
+            </h3>
+
+            <!-- Difficulty Selection -->
+            <div class="mb-5">
+                <h5 class="text-center mb-3">Select Difficulty Level</h5>
+                <div class="row">
+                    <div class="col-lg-4 col-md-12 mb-3">
+                        <div class="option-card text-center" onclick="selectOption('difficulty', 'beginner')">
+                            <div class="check-mark"><i class="fas fa-check"></i></div>
+                            <div class="difficulty-icon difficulty-beginner mx-auto">
+                                <i class="fas fa-seedling text-white"></i>
+                            </div>
+                            <h6 class="font-weight-bold">Beginner</h6>
+                            <p class="small text-muted">Perfect for newcomers to event planning</p>
+                            <ul class="list-unstyled small text-left">
+                                <li><i class="fas fa-check text-success mr-2"></i>Simple scenarios</li>
+                                <li><i class="fas fa-check text-success mr-2"></i>Clear guidance</li>
+                                <li><i class="fas fa-check text-success mr-2"></i>Basic concepts</li>
+                            </ul>
+                        </div>
+                    </div>
+                    <div class="col-lg-4 col-md-12 mb-3">
+                        <div class="option-card text-center" onclick="selectOption('difficulty', 'intermediate')">
+                            <div class="check-mark"><i class="fas fa-check"></i></div>
+                            <div class="difficulty-icon difficulty-intermediate mx-auto">
+                                <i class="fas fa-chart-line text-white"></i>
+                            </div>
+                            <h6 class="font-weight-bold">Intermediate</h6>
+                            <p class="small text-muted">For those with some event planning experience</p>
+                            <ul class="list-unstyled small text-left">
+                                <li><i class="fas fa-check text-warning mr-2"></i>Moderate complexity</li>
+                                <li><i class="fas fa-check text-warning mr-2"></i>Multiple considerations</li>
+                                <li><i class="fas fa-check text-warning mr-2"></i>Strategic thinking</li>
+                            </ul>
+                        </div>
+                    </div>
+                    <div class="col-lg-4 col-md-12 mb-3">
+                        <div class="option-card text-center" onclick="selectOption('difficulty', 'advanced')">
+                            <div class="check-mark"><i class="fas fa-check"></i></div>
+                            <div class="difficulty-icon difficulty-advanced mx-auto">
+                                <i class="fas fa-rocket text-white"></i>
+                            </div>
+                            <h6 class="font-weight-bold">Advanced</h6>
+                            <p class="small text-muted">Challenging scenarios for experienced planners</p>
+                            <ul class="list-unstyled small text-left">
+                                <li><i class="fas fa-check text-danger mr-2"></i>Complex situations</li>
+                                <li><i class="fas fa-check text-danger mr-2"></i>Crisis management</li>
+                                <li><i class="fas fa-check text-danger mr-2"></i>Expert-level decisions</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Category Selection -->
+            <div class="mb-4">
+                <h5 class="text-center mb-3">Focus Area</h5>
+                <div class="row">
+                    <div class="col-lg-4 col-md-6 mb-3">
+                        <div class="option-card text-center" onclick="selectOption('category', 'planning')">
+                            <div class="check-mark"><i class="fas fa-check"></i></div>
+                            <div class="category-icon category-planning mx-auto">
+                                <i class="fas fa-calendar-alt"></i>
+                            </div>
+                            <h6 class="font-weight-bold">Event Planning</h6>
+                            <p class="small text-muted">Core planning skills and strategy</p>
+                        </div>
+                    </div>
+                    <div class="col-lg-4 col-md-6 mb-3">
+                        <div class="option-card text-center" onclick="selectOption('category', 'marketing')">
+                            <div class="check-mark"><i class="fas fa-check"></i></div>
+                            <div class="category-icon category-marketing mx-auto">
+                                <i class="fas fa-bullhorn"></i>
+                            </div>
+                            <h6 class="font-weight-bold">Marketing</h6>
+                            <p class="small text-muted">Promotion and audience engagement</p>
+                        </div>
+                    </div>
+                    <div class="col-lg-4 col-md-6 mb-3">
+                        <div class="option-card text-center" onclick="selectOption('category', 'budget_management')">
+                            <div class="check-mark"><i class="fas fa-check"></i></div>
+                            <div class="category-icon category-budget mx-auto">
+                                <i class="fas fa-dollar-sign"></i>
+                            </div>
+                            <h6 class="font-weight-bold">Budget Management</h6>
+                            <p class="small text-muted">Financial planning and cost control</p>
+                        </div>
+                    </div>
+                    <div class="col-lg-4 col-md-6 mb-3">
+                        <div class="option-card text-center" onclick="selectOption('category', 'crisis_management')">
+                            <div class="check-mark"><i class="fas fa-check"></i></div>
+                            <div class="category-icon category-crisis mx-auto">
+                                <i class="fas fa-exclamation-triangle"></i>
+                            </div>
+                            <h6 class="font-weight-bold">Crisis Management</h6>
+                            <p class="small text-muted">Handling unexpected situations</p>
+                        </div>
+                    </div>
+                    <div class="col-lg-4 col-md-6 mb-3">
+                        <div class="option-card text-center" onclick="selectOption('category', 'logistics')">
+                            <div class="check-mark"><i class="fas fa-check"></i></div>
+                            <div class="category-icon category-logistics mx-auto">
+                                <i class="fas fa-truck"></i>
+                            </div>
+                            <h6 class="font-weight-bold">Logistics</h6>
+                            <p class="small text-muted">Operations and coordination</p>
+                        </div>
+                    </div>
+                    <div class="col-lg-4 col-md-6 mb-3">
+                        <div class="option-card text-center" onclick="selectOption('category', 'sustainability')">
+                            <div class="check-mark"><i class="fas fa-check"></i></div>
+                            <div class="category-icon category-planning mx-auto">
+                                <i class="fas fa-leaf"></i>
+                            </div>
+                            <h6 class="font-weight-bold">Sustainability</h6>
+                            <p class="small text-muted">Eco-friendly event practices</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="text-center">
+                <button type="button" class="btn btn-outline-secondary mr-3" onclick="prevStep()">
+                    <i class="fas fa-arrow-left mr-2"></i>Back
+                </button>
+                <button type="button" class="btn btn-create" onclick="nextStep()" disabled id="detailsNext">
+                    Continue <i class="fas fa-arrow-right ml-2"></i>
+                </button>
+            </div>
+        </div>
+
+        <!-- Step 3: Review & Create -->
+        <div class="create-card" id="reviewStep" style="display: none;">
+            <h3 class="text-center mb-4">
+                <i class="fas fa-eye text-primary mr-2"></i>
+                Review Your Assessment
+            </h3>
+
+            <div class="assessment-preview">
+                <div class="row">
+                    <div class="col-md-6">
+                        <h6 class="font-weight-bold text-dark">Assessment Type:</h6>
+                        <p class="text-muted" id="reviewType">-</p>
+                    </div>
+                    <div class="col-md-6">
+                        <h6 class="font-weight-bold text-dark">Difficulty:</h6>
+                        <p class="text-muted" id="reviewDifficulty">-</p>
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-md-6">
+                        <h6 class="font-weight-bold text-dark">Focus Area:</h6>
+                        <p class="text-muted" id="reviewCategory">-</p>
+                    </div>
+                    <div class="col-md-6">
+                        <h6 class="font-weight-bold text-dark">Estimated Duration:</h6>
+                        <p class="text-muted" id="reviewDuration">30-45 minutes</p>
+                    </div>
+                </div>
+
+                <hr class="my-3">
+
+                <div class="mb-3">
+                    <h6 class="font-weight-bold text-dark">What to Expect:</h6>
+                    <ul class="list-unstyled" id="reviewExpectations">
+                        <li><i class="fas fa-check text-success mr-2"></i>Realistic event planning scenarios</li>
+                        <li><i class="fas fa-check text-success mr-2"></i>Multiple decision points with consequences</li>
+                        <li><i class="fas fa-check text-success mr-2"></i>AI-powered feedback and suggestions</li>
+                        <li><i class="fas fa-check text-success mr-2"></i>Skill assessment and improvement areas</li>
+                    </ul>
+                </div>
+            </div>
+
+            <div class="text-center mt-4">
+                <button type="button" class="btn btn-outline-secondary mr-3" onclick="prevStep()">
+                    <i class="fas fa-arrow-left mr-2"></i>Back
+                </button>
+                <button type="button" class="btn btn-create" onclick="createAssessment()">
+                    <i class="fas fa-play mr-2"></i>Start Assessment
+                </button>
+            </div>
+        </div>
+    </form>
+
+    <!-- Loading Modal -->
+    <div class="modal fade" id="creatingModal" tabindex="-1" role="dialog">
+        <div class="modal-dialog modal-sm modal-dialog-centered" role="document">
+            <div class="modal-content">
+                <div class="modal-body text-center py-4">
+                    <div class="spinner-border text-primary mb-3" role="status"></div>
+                    <p class="mb-0">Creating your personalized assessment...</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    let currentStep = 1;
+    let selectedOptions = {};
+
+    function selectOption(type, value) {
+        // Remove previous selection of this type
+        document.querySelectorAll(`[onclick*="${type}"]`).forEach(card => {
+            card.classList.remove('selected');
+        });
+        
+        // Select new option
+        event.currentTarget.classList.add('selected');
+        selectedOptions[type] = value;
+        
+        // Enable next button if all required options for current step are selected
+        validateStep();
+    }
+
+    function validateStep() {
+        let nextButton;
+        let isValid = false;
+
+        if (currentStep === 1) {
+            nextButton = document.getElementById('typeNext');
+            isValid = selectedOptions.type;
+        } else if (currentStep === 2) {
+            nextButton = document.getElementById('detailsNext');
+            isValid = selectedOptions.difficulty && selectedOptions.category;
+        }
+
+        if (nextButton) {
+            nextButton.disabled = !isValid;
+        }
+    }
+
+    function nextStep() {
+        if (currentStep < 3) {
+            // Hide current step
+            const currentStepElement = getCurrentStepElement();
+            currentStepElement.style.display = 'none';
+            
+            // Update step indicator
+            document.getElementById(`step${currentStep}`).classList.remove('active');
+            document.getElementById(`step${currentStep}`).classList.add('completed');
+            
+            currentStep++;
+            
+            // Show next step
+            const nextStepElement = getCurrentStepElement();
+            nextStepElement.style.display = 'block';
+            document.getElementById(`step${currentStep}`).classList.add('active');
+            
+            // Update review if on step 3
+            if (currentStep === 3) {
+                updateReview();
+            }
+        }
+    }
+
+    function prevStep() {
+        if (currentStep > 1) {
+            // Hide current step
+            const currentStepElement = getCurrentStepElement();
+            currentStepElement.style.display = 'none';
+            
+            // Update step indicator
+            document.getElementById(`step${currentStep}`).classList.remove('active');
+            
+            currentStep--;
+            
+            // Show previous step
+            const prevStepElement = getCurrentStepElement();
+            prevStepElement.style.display = 'block';
+            document.getElementById(`step${currentStep}`).classList.remove('completed');
+            document.getElementById(`step${currentStep}`).classList.add('active');
+        }
+    }
+
+    function getCurrentStepElement() {
+        const stepElements = {
+            1: document.getElementById('typeStep'),
+            2: document.getElementById('detailsStep'),
+            3: document.getElementById('reviewStep')
+        };
+        return stepElements[currentStep];
+    }
+
+    function updateReview() {
+        const typeMap = {
+            'mock_event_planning': 'Mock Event Planning',
+            'interactive_challenge': 'Interactive Challenge'
+        };
+        
+        const difficultyMap = {
+            'beginner': 'Beginner',
+            'intermediate': 'Intermediate',
+            'advanced': 'Advanced'
+        };
+        
+        const categoryMap = {
+            'planning': 'Event Planning',
+            'marketing': 'Marketing & Promotion',
+            'budget_management': 'Budget Management',
+            'crisis_management': 'Crisis Management',
+            'logistics': 'Logistics & Operations',
+            'sustainability': 'Sustainability'
+        };
+
+        document.getElementById('reviewType').textContent = typeMap[selectedOptions.type] || '-';
+        document.getElementById('reviewDifficulty').textContent = difficultyMap[selectedOptions.difficulty] || '-';
+        document.getElementById('reviewCategory').textContent = categoryMap[selectedOptions.category] || '-';
+
+        // Update duration based on difficulty
+        const durationMap = {
+            'beginner': '20-30 minutes',
+            'intermediate': '30-45 minutes',
+            'advanced': '45-60 minutes'
+        };
+        document.getElementById('reviewDuration').textContent = durationMap[selectedOptions.difficulty] || '30-45 minutes';
+
+        // Update expectations based on type and difficulty
+        updateExpectations();
+    }
+
+    function updateExpectations() {
+        const expectations = document.getElementById('reviewExpectations');
+        expectations.innerHTML = '';
+
+        let items = [];
+        
+        if (selectedOptions.type === 'mock_event_planning') {
+            items = [
+                'Complete end-to-end event planning scenario',
+                'Multiple decision points with real consequences',
+                'Budget constraints and resource management',
+                'Stakeholder communication challenges'
+            ];
+        } else {
+            items = [
+                'Focused problem-solving challenges',
+                'Interactive decision-making scenarios',
+                'Immediate AI feedback on choices',
+                'Skill-building exercises'
+            ];
+        }
+
+        if (selectedOptions.difficulty === 'advanced') {
+            items.push('Crisis management situations');
+            items.push('Complex stakeholder dynamics');
+        }
+
+        items.push('Personalized skill assessment');
+        items.push('Achievement badges and progress tracking');
+
+        items.forEach(item => {
+            const li = document.createElement('li');
+            li.innerHTML = `<i class="fas fa-check text-success mr-2"></i>${item}`;
+            expectations.appendChild(li);
+        });
+    }
+
+    function createAssessment() {
+        // Show loading modal
+        $('#creatingModal').modal('show');
+
+        // Prepare assessment data
+        const assessmentData = {
+            assessment_type: selectedOptions.type,
+            difficulty: selectedOptions.difficulty,
+            category: selectedOptions.category
+        };
+
+        // Make API call to create assessment
+        fetch('/assessments/create', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify(assessmentData)
+        })
+        .then(response => response.json())
+        .then(data => {
+            $('#creatingModal').modal('hide');
+            
+            if (data.success) {
+                // Redirect to assessment
+                window.location.href = data.redirect_url;
+            } else {
+                alert('Error creating assessment: ' + data.error);
+            }
+        })
+        .catch(error => {
+            $('#creatingModal').modal('hide');
+            console.error('Error:', error);
+            alert('Network error occurred. Please try again.');
+        });
+    }
+
+    // Pre-fill from URL parameters if available
+    document.addEventListener('DOMContentLoaded', function() {
+        const urlParams = new URLSearchParams(window.location.search);
+        const category = urlParams.get('category');
+        const difficulty = urlParams.get('difficulty');
+
+        if (category || difficulty) {
+            // Auto-select mock event planning and move to step 2
+            selectedOptions.type = 'mock_event_planning';
+            document.querySelector('[onclick*="mock_event_planning"]').classList.add('selected');
+            
+            nextStep();
+
+            if (difficulty) {
+                selectedOptions.difficulty = difficulty;
+                document.querySelector(`[onclick*="${difficulty}"]`).classList.add('selected');
+            }
+            
+            if (category) {
+                selectedOptions.category = category;
+                document.querySelector(`[onclick*="${category}"]`).classList.add('selected');
+            }
+
+            validateStep();
+        }
+    });
+</script>
+{% endblock %}

@@ -1,0 +1,589 @@
+<!-- QR Code Scanner Component -->
+<div class="qr-scanner-container" id="qrScannerContainer" style="display: none;">
+    <div class="scanner-overlay">
+        <div class="scanner-modal">
+            <div class="scanner-header">
+                <h3><i class="fas fa-qrcode"></i> QR Code Scanner</h3>
+                <button class="close-scanner" onclick="closeQRScanner()">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            
+            <div class="scanner-body">
+                <!-- Video element for camera feed -->
+                <video id="qr-video" autoplay muted playsinline></video>
+                
+                <!-- Canvas for capturing frames -->
+                <canvas id="qr-canvas" style="display: none;"></canvas>
+                
+                <!-- Scanner overlay with targeting box -->
+                <div class="scanner-overlay-box">
+                    <div class="scanner-corners">
+                        <div class="corner top-left"></div>
+                        <div class="corner top-right"></div>
+                        <div class="corner bottom-left"></div>
+                        <div class="corner bottom-right"></div>
+                    </div>
+                    <div class="scanner-instructions">
+                        Position QR code within the frame
+                    </div>
+                </div>
+                
+                <!-- Manual input fallback -->
+                <div class="manual-input" style="display: none;" id="manualInput">
+                    <h4>Enter UPI ID or Payment Details</h4>
+                    <input type="text" id="manualUpiId" placeholder="Enter UPI ID (e.g., name@paytm)" class="form-control">
+                    <input type="number" id="manualAmount" placeholder="Enter Amount (₹)" class="form-control" step="0.01">
+                    <button onclick="processManualInput()" class="btn btn-primary">Process Payment</button>
+                </div>
+            </div>
+            
+            <div class="scanner-footer">
+                <button onclick="toggleManualInput()" class="btn btn-secondary">
+                    <i class="fas fa-keyboard"></i> Manual Entry
+                </button>
+                <button onclick="switchCamera()" class="btn btn-outline-secondary" id="switchCameraBtn" style="display: none;">
+                    <i class="fas fa-sync-alt"></i> Switch Camera
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+.qr-scanner-container {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    z-index: 10000;
+    background: rgba(0, 0, 0, 0.8);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.scanner-overlay {
+    position: relative;
+    width: 100%;
+    height: 100%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.scanner-modal {
+    background: white;
+    border-radius: 20px;
+    max-width: 500px;
+    width: 90%;
+    max-height: 90%;
+    overflow: hidden;
+    box-shadow: 0 20px 40px rgba(0,0,0,0.3);
+}
+
+.scanner-header {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    padding: 20px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.scanner-header h3 {
+    margin: 0;
+    font-size: 1.2em;
+}
+
+.close-scanner {
+    background: none;
+    border: none;
+    color: white;
+    font-size: 1.5em;
+    cursor: pointer;
+    padding: 5px;
+    border-radius: 50%;
+    transition: background 0.3s;
+}
+
+.close-scanner:hover {
+    background: rgba(255,255,255,0.2);
+}
+
+.scanner-body {
+    position: relative;
+    padding: 0;
+    min-height: 300px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+}
+
+#qr-video {
+    width: 100%;
+    height: auto;
+    max-height: 400px;
+    object-fit: cover;
+    background: #000;
+}
+
+.scanner-overlay-box {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 250px;
+    height: 250px;
+    border: 2px solid rgba(255,255,255,0.5);
+    border-radius: 20px;
+    pointer-events: none;
+}
+
+.scanner-corners {
+    position: relative;
+    width: 100%;
+    height: 100%;
+}
+
+.corner {
+    position: absolute;
+    width: 30px;
+    height: 30px;
+    border: 3px solid #2ecc71;
+}
+
+.corner.top-left {
+    top: -3px;
+    left: -3px;
+    border-right: none;
+    border-bottom: none;
+    border-top-left-radius: 20px;
+}
+
+.corner.top-right {
+    top: -3px;
+    right: -3px;
+    border-left: none;
+    border-bottom: none;
+    border-top-right-radius: 20px;
+}
+
+.corner.bottom-left {
+    bottom: -3px;
+    left: -3px;
+    border-right: none;
+    border-top: none;
+    border-bottom-left-radius: 20px;
+}
+
+.corner.bottom-right {
+    bottom: -3px;
+    right: -3px;
+    border-left: none;
+    border-top: none;
+    border-bottom-right-radius: 20px;
+}
+
+.scanner-instructions {
+    position: absolute;
+    bottom: -40px;
+    left: 50%;
+    transform: translateX(-50%);
+    color: white;
+    font-size: 0.9em;
+    text-align: center;
+    white-space: nowrap;
+    background: rgba(0,0,0,0.7);
+    padding: 8px 16px;
+    border-radius: 20px;
+}
+
+.manual-input {
+    padding: 20px;
+    text-align: center;
+}
+
+.manual-input input {
+    margin: 10px 0;
+    width: 100%;
+    max-width: 300px;
+}
+
+.scanner-footer {
+    padding: 20px;
+    display: flex;
+    justify-content: space-between;
+    gap: 10px;
+    background: #f8f9fa;
+}
+
+.scanner-footer .btn {
+    flex: 1;
+    padding: 10px;
+    border-radius: 10px;
+    border: none;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s;
+}
+
+.scanner-footer .btn-secondary {
+    background: #6c757d;
+    color: white;
+}
+
+.scanner-footer .btn-outline-secondary {
+    background: transparent;
+    color: #6c757d;
+    border: 2px solid #6c757d;
+}
+
+.scanner-footer .btn:hover {
+    transform: translateY(-1px);
+}
+
+@media (max-width: 768px) {
+    .scanner-modal {
+        width: 95%;
+        height: 95%;
+        border-radius: 15px;
+    }
+    
+    .scanner-overlay-box {
+        width: 200px;
+        height: 200px;
+    }
+    
+    .corner {
+        width: 25px;
+        height: 25px;
+    }
+    
+    .scanner-footer {
+        flex-direction: column;
+    }
+}
+
+/* Scanning animation */
+@keyframes scan-line {
+    0% { top: 0%; opacity: 1; }
+    50% { opacity: 0.8; }
+    100% { top: 100%; opacity: 0; }
+}
+
+.scanner-overlay-box::after {
+    content: '';
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 2px;
+    background: linear-gradient(90deg, transparent, #2ecc71, transparent);
+    animation: scan-line 2s linear infinite;
+}
+</style>
+
+<script>
+class QRScanner {
+    constructor() {
+        this.video = null;
+        this.canvas = null;
+        this.context = null;
+        this.stream = null;
+        this.scanning = false;
+        this.facingMode = 'environment'; // Start with rear camera
+        this.qrCode = null;
+        
+        // Initialize QR code library (you'll need to include a QR scanning library)
+        this.initializeQRScanner();
+    }
+    
+    initializeQRScanner() {
+        this.video = document.getElementById('qr-video');
+        this.canvas = document.getElementById('qr-canvas');
+        this.context = this.canvas.getContext('2d');
+        
+        // Check if QR scanner library is available
+        if (typeof QrScanner !== 'undefined') {
+            this.qrScanner = new QrScanner(
+                this.video,
+                (result) => this.onScanSuccess(result),
+                {
+                    highlightScanRegion: true,
+                    highlightCodeOutline: true,
+                    preferredCamera: 'environment'
+                }
+            );
+        } else {
+            console.warn('QR Scanner library not loaded, using fallback method');
+        }
+    }
+    
+    async startScanning() {
+        try {
+            if (this.qrScanner) {
+                await this.qrScanner.start();
+            } else {
+                // Fallback to basic camera access
+                await this.startCamera();
+                this.scanFrame();
+            }
+            this.scanning = true;
+            
+            // Show switch camera button if multiple cameras available
+            const devices = await navigator.mediaDevices.enumerateDevices();
+            const cameras = devices.filter(device => device.kind === 'videoinput');
+            if (cameras.length > 1) {
+                document.getElementById('switchCameraBtn').style.display = 'block';
+            }
+        } catch (error) {
+            console.error('Failed to start camera:', error);
+            this.showManualInput();
+        }
+    }
+    
+    async startCamera() {
+        const constraints = {
+            video: {
+                facingMode: this.facingMode,
+                width: { ideal: 1280 },
+                height: { ideal: 720 }
+            }
+        };
+        
+        try {
+            this.stream = await navigator.mediaDevices.getUserMedia(constraints);
+            this.video.srcObject = this.stream;
+        } catch (error) {
+            console.error('Camera access denied:', error);
+            throw error;
+        }
+    }
+    
+    stopScanning() {
+        this.scanning = false;
+        
+        if (this.qrScanner) {
+            this.qrScanner.stop();
+        }
+        
+        if (this.stream) {
+            this.stream.getTracks().forEach(track => track.stop());
+            this.stream = null;
+        }
+    }
+    
+    async switchCamera() {
+        this.facingMode = this.facingMode === 'environment' ? 'user' : 'environment';
+        
+        if (this.qrScanner) {
+            const cameras = await QrScanner.listCameras();
+            const currentCamera = await this.qrScanner.getCamera();
+            const nextCameraIndex = (cameras.findIndex(c => c.id === currentCamera.id) + 1) % cameras.length;
+            await this.qrScanner.setCamera(cameras[nextCameraIndex].id);
+        } else {
+            this.stopScanning();
+            await this.startScanning();
+        }
+    }
+    
+    scanFrame() {
+        if (!this.scanning) return;
+        
+        if (this.video.readyState === this.video.HAVE_ENOUGH_DATA) {
+            this.canvas.width = this.video.videoWidth;
+            this.canvas.height = this.video.videoHeight;
+            this.context.drawImage(this.video, 0, 0);
+            
+            // Try to decode QR code from canvas
+            const imageData = this.context.getImageData(0, 0, this.canvas.width, this.canvas.height);
+            
+            // If jsQR is available, use it for decoding
+            if (typeof jsQR !== 'undefined') {
+                const qrCode = jsQR(imageData.data, imageData.width, imageData.height);
+                if (qrCode) {
+                    this.onScanSuccess(qrCode.data);
+                    return;
+                }
+            }
+        }
+        
+        requestAnimationFrame(() => this.scanFrame());
+    }
+    
+    onScanSuccess(result) {
+        console.log('QR Code scanned:', result);
+        
+        // Check if it's a UPI URL
+        if (result.startsWith('upi://pay')) {
+            this.processUPIPayment(result);
+        } else {
+            // Try to extract payment information
+            this.processGenericQRCode(result);
+        }
+    }
+    
+    processUPIPayment(upiUrl) {
+        try {
+            const url = new URL(upiUrl);
+            const params = new URLSearchParams(url.search);
+            
+            const paymentInfo = {
+                pa: params.get('pa'), // Payee address
+                pn: params.get('pn'), // Payee name
+                am: params.get('am'), // Amount
+                cu: params.get('cu'), // Currency
+                tn: params.get('tn')  // Transaction note
+            };
+            
+            this.showPaymentConfirmation(paymentInfo);
+        } catch (error) {
+            console.error('Failed to parse UPI URL:', error);
+            alert('Invalid UPI QR code format');
+        }
+    }
+    
+    processGenericQRCode(data) {
+        // Try to extract payment information from generic QR codes
+        const patterns = {
+            upiId: /([a-zA-Z0-9._-]+@[a-zA-Z0-9.-]+)/,
+            amount: /₹?\s*(\d+(?:\.\d{2})?)/,
+            mobile: /(\+91)?[-\s]?([6-9]\d{9})/
+        };
+        
+        const extractedInfo = {};
+        
+        for (const [key, pattern] of Object.entries(patterns)) {
+            const match = data.match(pattern);
+            if (match) {
+                extractedInfo[key] = match[1] || match[0];
+            }
+        }
+        
+        if (Object.keys(extractedInfo).length > 0) {
+            this.showPaymentConfirmation(extractedInfo);
+        } else {
+            alert('Could not extract payment information from QR code');
+        }
+    }
+    
+    showPaymentConfirmation(paymentInfo) {
+        this.stopScanning();
+        closeQRScanner();
+        
+        // Trigger payment processing with extracted information
+        if (window.processScannedPayment) {
+            window.processScannedPayment(paymentInfo);
+        } else {
+            // Fallback: show alert with payment info
+            const info = Object.entries(paymentInfo)
+                .map(([key, value]) => `${key}: ${value}`)
+                .join('\n');
+            alert(`Payment Information:\n${info}`);
+        }
+    }
+    
+    showManualInput() {
+        document.getElementById('manualInput').style.display = 'block';
+        this.video.style.display = 'none';
+    }
+}
+
+// Global scanner instance
+let qrScanner = null;
+
+function openQRScanner() {
+    document.getElementById('qrScannerContainer').style.display = 'flex';
+    
+    if (!qrScanner) {
+        qrScanner = new QRScanner();
+    }
+    
+    setTimeout(() => {
+        qrScanner.startScanning();
+    }, 100);
+}
+
+function closeQRScanner() {
+    document.getElementById('qrScannerContainer').style.display = 'none';
+    
+    if (qrScanner) {
+        qrScanner.stopScanning();
+    }
+}
+
+function toggleManualInput() {
+    const manualInput = document.getElementById('manualInput');
+    const video = document.getElementById('qr-video');
+    
+    if (manualInput.style.display === 'none') {
+        manualInput.style.display = 'block';
+        video.style.display = 'none';
+        if (qrScanner) {
+            qrScanner.stopScanning();
+        }
+    } else {
+        manualInput.style.display = 'none';
+        video.style.display = 'block';
+        if (qrScanner) {
+            qrScanner.startScanning();
+        }
+    }
+}
+
+function switchCamera() {
+    if (qrScanner) {
+        qrScanner.switchCamera();
+    }
+}
+
+function processManualInput() {
+    const upiId = document.getElementById('manualUpiId').value.trim();
+    const amount = document.getElementById('manualAmount').value.trim();
+    
+    if (!upiId && !amount) {
+        alert('Please enter UPI ID or amount');
+        return;
+    }
+    
+    const paymentInfo = {};
+    if (upiId) paymentInfo.pa = upiId;
+    if (amount) paymentInfo.am = amount;
+    
+    closeQRScanner();
+    
+    if (window.processScannedPayment) {
+        window.processScannedPayment(paymentInfo);
+    } else {
+        alert(`Manual Payment Info:\nUPI ID: ${upiId}\nAmount: ₹${amount}`);
+    }
+}
+
+// Close scanner when clicking outside
+document.addEventListener('click', function(event) {
+    const container = document.getElementById('qrScannerContainer');
+    const modal = container?.querySelector('.scanner-modal');
+    
+    if (container && container.style.display === 'flex' && 
+        !modal.contains(event.target) && event.target !== container) {
+        closeQRScanner();
+    }
+});
+
+// Handle ESC key to close scanner
+document.addEventListener('keydown', function(event) {
+    if (event.key === 'Escape') {
+        closeQRScanner();
+    }
+});
+</script>
+
+<!-- Include QR Scanner Libraries (optional) -->
+<!-- You can include these libraries for better QR scanning capabilities -->
+<!--
+<script src="https://cdn.jsdelivr.net/npm/qr-scanner@1.4.2/qr-scanner.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/jsqr@1.4.0/dist/jsQR.js"></script>
+-->

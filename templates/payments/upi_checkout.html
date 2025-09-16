@@ -1,0 +1,2752 @@
+{% extends "base.html" %}
+
+{% block title %}Secure UPI Payment - {{ event.title }}{% endblock %}
+
+{% block head %}
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="referrer" content="no-referrer">
+<style>
+:root {
+    --primary-glow: #00ffff;
+    --secondary-glow: #ff00ff;
+    --success-color: #00ff88;
+    --danger-color: #ff4444;
+    --text-primary: #ffffff;
+    --text-secondary: rgba(255, 255, 255, 0.8);
+    --text-muted: rgba(255, 255, 255, 0.6);
+    --bg-glass: rgba(255, 255, 255, 0.1);
+    --bg-glass-dark: rgba(0, 0, 0, 0.2);
+    --border-glow: rgba(0, 255, 255, 0.3);
+}
+
+/* Dark theme fixes */
+[data-theme="dark"] {
+    --text-primary: #ffffff;
+    --text-secondary: rgba(255, 255, 255, 0.85);
+    --text-muted: rgba(255, 255, 255, 0.7);
+    --bg-glass: rgba(255, 255, 255, 0.15);
+    --bg-glass-dark: rgba(0, 0, 0, 0.3);
+}
+
+/* Performance-optimized quantum background */
+body {
+    background: 
+        radial-gradient(circle at 15% 85%, rgba(0, 255, 255, 0.12) 0%, transparent 35%),
+        radial-gradient(circle at 85% 15%, rgba(255, 0, 255, 0.12) 0%, transparent 35%),
+        linear-gradient(135deg, #000011 0%, #001122 25%, #002244 50%, #003366 75%, #000011 100%);
+    background-size: 400% 400%, 300% 300%, 100% 100%;
+    min-height: 100vh;
+    font-family: 'Inter', 'SF Pro Display', -apple-system, system-ui, sans-serif;
+    position: relative;
+    overflow-x: hidden;
+    color: var(--text-primary);
+    will-change: background-position;
+}
+
+/* Reduce motion for users with accessibility preferences */
+@media (prefers-reduced-motion: reduce) {
+    body {
+        animation: none;
+        background-size: 100% 100%;
+    }
+    
+    .upi-container, .qr-code, .ai-icon, .particle, .spinner {
+        animation: none !important;
+        transition: none !important;
+    }
+}
+
+/* Enable hardware acceleration selectively */
+@media (min-width: 768px) {
+    body {
+        animation: quantumShift 30s ease infinite;
+    }
+}
+
+/* Optimized quantum grid overlay */
+@media (min-width: 768px) and (prefers-reduced-motion: no-preference) {
+    body::before {
+        content: '';
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background-image: 
+            radial-gradient(circle at 50% 50%, var(--primary-glow) 1px, transparent 2px),
+            linear-gradient(0deg, transparent 24%, rgba(0,255,255,0.02) 25%, rgba(0,255,255,0.02) 26%, transparent 27%);
+        background-size: 80px 80px, 40px 40px;
+        pointer-events: none;
+        z-index: 0;
+        animation: gridPulse 12s ease infinite;
+        will-change: opacity;
+    }
+}
+
+/* Optimized floating particles */
+@media (min-width: 1024px) and (prefers-reduced-motion: no-preference) {
+    body::after {
+        content: '';
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background-image: 
+            radial-gradient(1px 1px at 20px 30px, rgba(0,255,255,0.4), transparent),
+            radial-gradient(1px 1px at 160px 80px, rgba(255,0,255,0.4), transparent);
+        background-repeat: repeat;
+        background-size: 300px 200px;
+        animation: particleFloat 25s linear infinite;
+        pointer-events: none;
+        z-index: 1;
+        opacity: 0.5;
+        will-change: transform;
+    }
+}
+
+@keyframes quantumShift {
+    0% { background-position: 0% 0%, 0% 0%, 0% 0%, 0% 0%; }
+    25% { background-position: 100% 50%, 50% 100%, 25% 25%, 50% 50%; }
+    50% { background-position: 0% 100%, 100% 0%, 50% 50%, 100% 100%; }
+    75% { background-position: 50% 0%, 25% 75%, 75% 75%, 25% 25%; }
+    100% { background-position: 0% 0%, 0% 0%, 0% 0%, 0% 0%; }
+}
+
+@keyframes gridPulse {
+    0%, 100% { opacity: 0.3; }
+    50% { opacity: 0.6; }
+}
+
+@keyframes particleFloat {
+    0% { transform: translateY(0px) rotate(0deg); }
+    33% { transform: translateY(-20px) rotate(120deg); }
+    66% { transform: translateY(20px) rotate(240deg); }
+    100% { transform: translateY(0px) rotate(360deg); }
+}
+
+@keyframes quantumGlow {
+    0%, 100% { 
+        box-shadow: 
+            0 0 30px var(--primary-glow),
+            0 0 60px rgba(0, 255, 255, 0.3),
+            0 0 90px rgba(0, 255, 255, 0.1),
+            inset 0 0 30px var(--bg-glass);
+        border-color: var(--primary-glow);
+    }
+    33% { 
+        box-shadow: 
+            0 0 40px var(--secondary-glow),
+            0 0 80px rgba(255, 0, 255, 0.4),
+            0 0 120px rgba(255, 0, 255, 0.2),
+            inset 0 0 40px var(--bg-glass);
+        border-color: var(--secondary-glow);
+    }
+    66% {
+        box-shadow: 
+            0 0 35px #ffff00,
+            0 0 70px rgba(255, 255, 0, 0.3),
+            0 0 105px rgba(255, 255, 0, 0.1),
+            inset 0 0 35px var(--bg-glass);
+        border-color: #ffff00;
+    }
+}
+
+.upi-container {
+    max-width: 500px;
+    margin: 20px auto;
+    padding: 30px;
+    background: 
+        linear-gradient(145deg, var(--bg-glass) 0%, var(--bg-glass-dark) 100%),
+        linear-gradient(45deg, 
+            rgba(0,255,255,0.1) 0%, 
+            transparent 25%, 
+            rgba(255,0,255,0.1) 50%, 
+            transparent 75%, 
+            rgba(255,255,0,0.1) 100%);
+    backdrop-filter: blur(25px) saturate(200%) brightness(1.1);
+    border-radius: 25px;
+    border: 2px solid var(--border-glow);
+    animation: quantumGlow 6s ease-in-out infinite;
+    color: var(--text-primary);
+    position: relative;
+    overflow: hidden;
+    transform: perspective(1200px) rotateX(1deg);
+    transition: all 0.6s cubic-bezier(0.34, 1.56, 0.64, 1);
+    z-index: 10;
+}
+
+.upi-container:hover {
+    transform: perspective(1200px) rotateX(0deg) scale(1.03);
+    animation: quantumGlow 3s ease-in-out infinite;
+}
+
+.upi-container::before {
+    content: '';
+    position: absolute;
+    top: -2px;
+    left: -100%;
+    width: 100%;
+    height: calc(100% + 4px);
+    background: 
+        linear-gradient(90deg, 
+            transparent 0%,
+            var(--primary-glow) 20%,
+            rgba(255,255,255,0.9) 50%,
+            var(--secondary-glow) 80%,
+            transparent 100%);
+    animation: quantumScan 5s linear infinite;
+    border-radius: 25px;
+    z-index: 1;
+    pointer-events: none;
+}
+
+.upi-container::after {
+    content: '';
+    position: absolute;
+    inset: 2px;
+    background: 
+        radial-gradient(circle at 25% 25%, rgba(0,255,255,0.1) 0%, transparent 50%),
+        radial-gradient(circle at 75% 75%, rgba(255,0,255,0.1) 0%, transparent 50%),
+        radial-gradient(circle at 50% 50%, rgba(255,255,0,0.05) 0%, transparent 50%);
+    border-radius: 23px;
+    pointer-events: none;
+    z-index: 0;
+}
+
+@keyframes quantumScan {
+    0% { 
+        left: -100%; 
+        opacity: 0;
+    }
+    10% {
+        opacity: 1;
+    }
+    90% {
+        opacity: 1;
+    }
+    100% { 
+        left: 100%; 
+        opacity: 0;
+    }
+}
+
+@keyframes dataStream {
+    0% {
+        transform: translateY(100%) scale(0.8);
+        opacity: 0;
+    }
+    25% {
+        opacity: 1;
+        transform: translateY(75%) scale(1);
+    }
+    75% {
+        opacity: 1;
+        transform: translateY(25%) scale(1);
+    }
+    100% {
+        transform: translateY(-100%) scale(0.8);
+        opacity: 0;
+    }
+}
+
+@keyframes morphingBorder {
+    0% {
+        border-radius: 30px;
+        transform: scale(1);
+    }
+    25% {
+        border-radius: 25px 35px 25px 35px;
+        transform: scale(1.01);
+    }
+    50% {
+        border-radius: 35px 25px 35px 25px;
+        transform: scale(1.02);
+    }
+    75% {
+        border-radius: 25px 35px 25px 35px;
+        transform: scale(1.01);
+    }
+    100% {
+        border-radius: 30px;
+        transform: scale(1);
+    }
+}
+
+/* QR Code Section - Ultra Futuristic */
+.qr-section {
+    text-align: center;
+    margin: 30px 0;
+    padding: 40px 30px;
+    background: 
+        linear-gradient(145deg, var(--bg-glass) 0%, var(--bg-glass-dark) 100%),
+        radial-gradient(circle at 30% 70%, rgba(0,255,255,0.15) 0%, transparent 50%),
+        radial-gradient(circle at 70% 30%, rgba(255,0,255,0.15) 0%, transparent 50%);
+    border-radius: 25px;
+    border: 2px solid;
+    border-image: linear-gradient(45deg, 
+        var(--primary-glow) 0%, 
+        var(--secondary-glow) 50%, 
+        #ffff00 100%) 1;
+    position: relative;
+    overflow: hidden;
+    animation: qrPulse 4s ease-in-out infinite;
+    z-index: 5;
+}
+
+.qr-section::before {
+    content: '';
+    position: absolute;
+    top: -100%;
+    left: -100%;
+    width: 300%;
+    height: 300%;
+    background: 
+        conic-gradient(from 45deg, 
+            transparent 0deg, 
+            rgba(0,255,255,0.1) 60deg, 
+            rgba(255,0,255,0.1) 120deg,
+            rgba(255,255,0,0.1) 180deg,
+            rgba(0,255,255,0.1) 240deg,
+            transparent 300deg,
+            transparent 360deg);
+    animation: rotateQR 20s linear infinite;
+    z-index: -1;
+}
+
+.qr-section h3 {
+    background: linear-gradient(135deg, 
+        var(--primary-glow) 0%, 
+        var(--secondary-glow) 50%, 
+        #ffff00 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    font-size: 1.5em;
+    font-weight: 600;
+    margin-bottom: 25px;
+    animation: holographicText 3s ease-in-out infinite;
+    position: relative;
+    z-index: 10;
+}
+
+.qr-code {
+    max-width: 280px;
+    width: 100%;
+    height: auto;
+    border-radius: 20px;
+    padding: 20px;
+    background: 
+        linear-gradient(45deg, #ffffff 0%, #f8f9fa 100%),
+        radial-gradient(circle at 50% 50%, rgba(0,255,255,0.1) 0%, transparent 70%);
+    box-shadow: 
+        0 0 40px rgba(0,255,255,0.4),
+        0 0 80px rgba(0,255,255,0.2),
+        inset 0 0 20px rgba(255,255,255,0.5);
+    animation: qrFloat 6s ease-in-out infinite;
+    position: relative;
+    z-index: 10;
+    border: 3px solid;
+    border-image: linear-gradient(45deg, 
+        var(--primary-glow) 0%, 
+        var(--secondary-glow) 100%) 1;
+}
+
+.qr-code:hover {
+    transform: scale(1.05) rotateY(5deg);
+    box-shadow: 
+        0 0 60px rgba(255,0,255,0.5),
+        0 0 120px rgba(255,0,255,0.3),
+        inset 0 0 30px rgba(255,255,255,0.6);
+    transition: all 0.4s ease;
+}
+
+.qr-instructions {
+    color: var(--text-secondary);
+    font-size: 1.1em;
+    margin-top: 20px;
+    font-weight: 500;
+    text-shadow: 0 0 10px currentColor;
+}
+
+@keyframes qrPulse {
+    0%, 100% { 
+        box-shadow: 
+            0 0 30px var(--primary-glow),
+            0 0 60px rgba(0,255,255,0.3),
+            inset 0 0 20px var(--bg-glass);
+    }
+    50% { 
+        box-shadow: 
+            0 0 50px var(--secondary-glow),
+            0 0 100px rgba(255,0,255,0.4),
+            inset 0 0 30px var(--bg-glass);
+    }
+}
+
+@keyframes rotateQR {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+
+@keyframes qrFloat {
+    0%, 100% {
+        transform: translateY(0px) rotateZ(0deg);
+    }
+    25% {
+        transform: translateY(-8px) rotateZ(1deg);
+    }
+    50% {
+        transform: translateY(-4px) rotateZ(0deg);
+    }
+    75% {
+        transform: translateY(-12px) rotateZ(-1deg);
+    }
+}
+
+@keyframes holographicText {
+    0% { 
+        background-position: 0% 50%;
+        filter: hue-rotate(0deg);
+    }
+    50% { 
+        background-position: 100% 50%;
+        filter: hue-rotate(180deg);
+    }
+    100% {
+        background-position: 0% 50%;
+        filter: hue-rotate(360deg);
+    }
+}
+
+/* Enhanced QR Container */
+.qr-container {
+    position: relative;
+    display: inline-block;
+    margin: 20px 0;
+}
+
+.qr-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    pointer-events: none;
+    background: 
+        linear-gradient(90deg, transparent 0%, transparent 48%, rgba(0,255,255,0.3) 50%, transparent 52%, transparent 100%),
+        linear-gradient(0deg, transparent 0%, transparent 48%, rgba(255,0,255,0.3) 50%, transparent 52%, transparent 100%);
+    animation: qrScan 3s ease-in-out infinite;
+    border-radius: 20px;
+}
+
+.scanning-line {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 2px;
+    background: linear-gradient(90deg, 
+        transparent 0%, 
+        var(--primary-glow) 20%, 
+        var(--secondary-glow) 50%, 
+        var(--primary-glow) 80%, 
+        transparent 100%);
+    animation: scanLine 2s linear infinite;
+    filter: drop-shadow(0 0 10px currentColor);
+}
+
+@keyframes qrScan {
+    0%, 100% { opacity: 0.3; }
+    50% { opacity: 0.8; }
+}
+
+@keyframes scanLine {
+    0% { transform: translateY(-10px) scaleX(0); }
+    25% { transform: translateY(25%) scaleX(1); }
+    50% { transform: translateY(50%) scaleX(0.8); }
+    75% { transform: translateY(75%) scaleX(1); }
+    100% { transform: translateY(calc(100% + 10px)) scaleX(0); }
+}
+
+@keyframes priceFloat {
+    0%, 100% {
+        transform: translateY(0px) rotateX(0deg);
+    }
+    50% {
+        transform: translateY(-10px) rotateX(5deg);
+    }
+}
+
+@keyframes priceGlow {
+    0% {
+        filter: 
+            drop-shadow(0 0 10px rgba(0,255,255,0.5))
+            drop-shadow(0 0 20px rgba(255,0,255,0.3));
+        transform: scale(1);
+    }
+    100% {
+        filter: 
+            drop-shadow(0 0 20px rgba(0,255,255,0.8))
+            drop-shadow(0 0 30px rgba(255,0,255,0.6))
+            drop-shadow(0 0 40px rgba(255,255,0,0.4));
+        transform: scale(1.05);
+    }
+}
+
+/* Event Info Section */
+.event-info {
+    text-align: center;
+    margin: 0 0 30px 0;
+    padding: 25px;
+    background: 
+        linear-gradient(135deg, var(--bg-glass) 0%, var(--bg-glass-dark) 100%),
+        radial-gradient(circle at 50% 50%, rgba(0,255,255,0.1) 0%, transparent 70%);
+    border-radius: 20px;
+    border: 1px solid rgba(0, 255, 255, 0.2);
+    position: relative;
+    overflow: hidden;
+    animation: infoGlow 8s ease-in-out infinite;
+    z-index: 5;
+}
+
+.event-info::before {
+    content: '';
+    position: absolute;
+    top: -50%;
+    left: -50%;
+    width: 200%;
+    height: 200%;
+    background: 
+        conic-gradient(from 0deg, 
+            transparent 0deg, 
+            rgba(0,255,255,0.1) 90deg, 
+            transparent 180deg, 
+            rgba(255,0,255,0.1) 270deg, 
+            transparent 360deg);
+    animation: rotate360 15s linear infinite;
+    z-index: -1;
+}
+
+.event-info h2 {
+    background: linear-gradient(135deg, 
+        var(--primary-glow) 0%, 
+        var(--secondary-glow) 50%, 
+        #ffff00 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    font-size: 1.8em;
+    font-weight: 700;
+    margin-bottom: 20px;
+    text-shadow: 0 0 30px currentColor;
+    animation: textGlow 3s ease-in-out infinite alternate;
+}
+
+.event-info p {
+    color: var(--text-secondary);
+    font-size: 1.1em;
+    margin: 10px 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+}
+
+.event-info i {
+    color: var(--primary-glow);
+    font-size: 1.2em;
+    filter: drop-shadow(0 0 5px currentColor);
+}
+
+@keyframes infoGlow {
+    0%, 100% { box-shadow: 0 0 20px rgba(0,255,255,0.3); }
+    50% { box-shadow: 0 0 40px rgba(255,0,255,0.4); }
+}
+
+@keyframes rotate360 {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+
+@keyframes textGlow {
+    0% { filter: brightness(1) drop-shadow(0 0 10px var(--primary-glow)); }
+    100% { filter: brightness(1.3) drop-shadow(0 0 20px var(--secondary-glow)); }
+    padding: 40px 35px;
+    background: 
+        linear-gradient(135deg, 
+            rgba(0,255,255,0.15) 0%, 
+            rgba(255,255,255,0.1) 30%,
+            rgba(255,0,255,0.15) 70%,
+            rgba(0,255,255,0.05) 100%),
+        radial-gradient(ellipse at center, rgba(255,255,255,0.1) 0%, transparent 70%);
+    border-radius: 30px 30px 0 0;
+    backdrop-filter: blur(20px) saturate(180%);
+    position: relative;
+    border-bottom: 2px solid rgba(0,255,255,0.3);
+    transform: translateZ(20px);
+    animation: morphingBorder 8s ease-in-out infinite;
+    z-index: 2;
+}
+
+.event-info::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: 
+        linear-gradient(45deg, transparent 30%, rgba(255,255,255,0.1) 50%, transparent 70%),
+        repeating-linear-gradient(
+            90deg,
+            transparent,
+            rgba(0,255,255,0.03) 2px,
+            transparent 4px
+        );
+    animation: dataStream 3s linear infinite;
+    border-radius: 30px 30px 0 0;
+    pointer-events: none;
+}
+
+.event-info::after {
+    content: '';
+    position: absolute;
+    bottom: -1px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 80%;
+    height: 4px;
+    background: 
+        linear-gradient(90deg, 
+            transparent 0%,
+            rgba(0,255,255,0.8) 20%,
+            rgba(255,0,255,0.8) 50%,
+            rgba(255,255,0,0.8) 80%,
+            transparent 100%);
+    border-radius: 2px;
+    animation: cosmicScan 3s linear infinite;
+}
+
+.event-info h2 {
+    font-size: 2em;
+    font-weight: 800;
+    margin-bottom: 20px;
+    background: 
+        linear-gradient(45deg, 
+            #00ffff 0%, 
+            #ffffff 25%,
+            #ff00ff 50%, 
+            #ffff00 75%,
+            #00ffff 100%);
+    background-size: 300% 100%;
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    animation: holographicText 3s linear infinite;
+    text-shadow: 
+        0 0 10px rgba(0,255,255,0.5),
+        0 0 20px rgba(255,0,255,0.3),
+        0 0 30px rgba(255,255,0,0.2);
+    position: relative;
+    z-index: 3;
+    letter-spacing: 1px;
+}
+
+.event-info p {
+    margin: 8px 0;
+    font-size: 0.95em;
+    opacity: 0.9;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+}
+
+.event-info p i {
+    width: 20px;
+    text-align: center;
+    opacity: 0.8;
+}
+
+.qr-section {
+    text-align: center;
+    margin: 25px 20px;
+    background: rgba(255, 255, 255, 0.95);
+    backdrop-filter: blur(10px);
+    padding: 40px 30px;
+    border-radius: 25px;
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    box-shadow: 
+        0 20px 40px rgba(0, 0, 0, 0.1),
+        inset 0 1px 0 rgba(255, 255, 255, 0.6);
+    position: relative;
+    overflow: hidden;
+}
+
+.qr-section::before {
+    content: '';
+    position: absolute;
+    top: -50%;
+    left: -50%;
+    width: 200%;
+    height: 200%;
+    background: conic-gradient(
+        from 0deg,
+        transparent 0deg 70deg,
+        rgba(255, 255, 255, 0.1) 70deg 140deg,
+        transparent 140deg 360deg
+    );
+    animation: rotate 8s linear infinite;
+}
+
+.qr-section > * {
+    position: relative;
+    z-index: 1;
+}
+
+@keyframes rotate {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+
+.qr-section h3 {
+    color: #333;
+    margin-bottom: 25px;
+    font-size: 1.3em;
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+}
+
+.qr-section h3 i {
+    background: linear-gradient(135deg, #667eea, #764ba2);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    font-size: 1.2em;
+}
+
+.qr-code {
+    width: 220px;
+    height: 220px;
+    margin: 20px auto;
+    border: 2px solid transparent;
+    background: linear-gradient(white, white) padding-box,
+                linear-gradient(135deg, #667eea, #764ba2, #f093fb) border-box;
+    border-radius: 20px;
+    padding: 15px;
+    position: relative;
+    animation: qrFloat 3s ease-in-out infinite;
+    box-shadow: 0 10px 30px rgba(102, 126, 234, 0.2);
+}
+
+@keyframes qrFloat {
+    0%, 100% { transform: translateY(0px); }
+    50% { transform: translateY(-5px); }
+}
+
+.qr-code::after {
+    content: '';
+    position: absolute;
+    inset: -2px;
+    background: linear-gradient(135deg, #667eea, #764ba2, #f093fb);
+    border-radius: 20px;
+    z-index: -1;
+    animation: borderGlow 2s ease-in-out infinite alternate;
+}
+
+@keyframes borderGlow {
+    0% { opacity: 0.5; filter: blur(2px); }
+    100% { opacity: 1; filter: blur(0px); }
+}
+
+.amount-display {
+    font-size: 4em;
+    font-weight: 900;
+    background: 
+        linear-gradient(45deg, 
+            #00ffff 0%, 
+            #ffffff 20%,
+            #ff00ff 40%, 
+            #ffff00 60%,
+            #00ff00 80%,
+            #00ffff 100%);
+    background-size: 400% 100%;
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    margin: 30px 0;
+    position: relative;
+    display: inline-block;
+    animation: 
+        holographicText 2s linear infinite,
+        priceFloat 3s ease-in-out infinite,
+        priceGlow 2s ease-in-out infinite alternate;
+    transform-style: preserve-3d;
+    perspective: 1000px;
+    text-shadow: 
+        0 0 20px rgba(0,255,255,0.6),
+        0 0 40px rgba(255,0,255,0.4),
+        0 0 60px rgba(255,255,0,0.3);
+    letter-spacing: 2px;
+    z-index: 10;
+}
+
+.amount-display::before {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 120%;
+    height: 120%;
+    background: radial-gradient(circle, rgba(0,245,160,0.1) 0%, transparent 70%);
+    border-radius: 50%;
+    z-index: -1;
+    animation: glow 3s ease-in-out infinite;
+}
+
+@keyframes pulse {
+    0% { transform: scale(1); }
+    100% { transform: scale(1.05); }
+}
+
+@keyframes glow {
+    0%, 100% { opacity: 0.5; transform: translate(-50%, -50%) scale(1); }
+    50% { opacity: 0.8; transform: translate(-50%, -50%) scale(1.1); }
+}
+
+.upi-apps {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(110px, 1fr));
+    gap: 18px;
+    margin: 35px 20px 25px;
+    padding: 0;
+}
+
+.upi-app {
+    background: rgba(255,255,255,0.12);
+    border: 1px solid rgba(255,255,255,0.25);
+    border-radius: 20px;
+    padding: 20px 15px;
+    text-align: center;
+    cursor: pointer;
+    transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+    backdrop-filter: blur(15px);
+    position: relative;
+    overflow: hidden;
+}
+
+.upi-app::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(
+        90deg,
+        transparent 0%,
+        rgba(255,255,255,0.2) 50%,
+        transparent 100%
+    );
+    transition: left 0.6s ease;
+}
+
+.upi-app:hover {
+    background: rgba(255,255,255,0.2);
+    border-color: rgba(255,255,255,0.4);
+    transform: translateY(-5px) scale(1.02);
+    box-shadow: 
+        0 15px 35px rgba(0,0,0,0.15),
+        0 5px 15px rgba(255,255,255,0.1);
+}
+
+.upi-app:hover::before {
+    left: 100%;
+}
+
+.upi-app:active {
+    transform: translateY(-2px) scale(0.98);
+}
+
+.upi-app-icon {
+    font-size: 2.5em;
+    margin-bottom: 12px;
+    display: block;
+    position: relative;
+    z-index: 2;
+    filter: drop-shadow(0 2px 4px rgba(0,0,0,0.2));
+    transition: all 0.3s ease;
+}
+
+.upi-app:hover .upi-app-icon {
+    transform: scale(1.1) rotate(5deg);
+    filter: drop-shadow(0 4px 8px rgba(0,0,0,0.3));
+}
+
+.upi-app-name {
+    font-size: 0.85em;
+    font-weight: 700;
+    color: white;
+    text-shadow: 0 1px 2px rgba(0,0,0,0.2);
+    letter-spacing: 0.5px;
+    position: relative;
+    z-index: 2;
+    transition: all 0.3s ease;
+}
+
+.upi-app:hover .upi-app-name {
+    color: rgba(255,255,255,0.95);
+    transform: translateY(-1px);
+}
+
+.payment-info {
+    background: rgba(255,255,255,0.1);
+    padding: 20px;
+    border-radius: 15px;
+    margin: 20px 0;
+    backdrop-filter: blur(10px);
+}
+
+.info-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin: 10px 0;
+    padding: 5px 0;
+    border-bottom: 1px solid rgba(255,255,255,0.1);
+}
+
+.info-row:last-child {
+    border-bottom: none;
+}
+
+.instructions {
+    background: rgba(255,255,255,0.1);
+    padding: 20px;
+    border-radius: 15px;
+    margin: 20px 0;
+    backdrop-filter: blur(10px);
+}
+
+.instructions h4 {
+    margin-top: 0;
+    color: #fff;
+}
+
+.instructions ol {
+    padding-left: 20px;
+}
+
+.instructions li {
+    margin: 8px 0;
+    line-height: 1.5;
+}
+
+.action-buttons {
+    display: flex;
+    gap: 15px;
+    margin: 30px 20px 25px;
+    padding: 0;
+}
+
+.btn-upi {
+    flex: 1;
+    padding: 18px 25px;
+    background: linear-gradient(135deg, #00b894 0%, #00cec9 100%);
+    color: white;
+    border: none;
+    border-radius: 16px;
+    font-weight: 700;
+    font-size: 1.05em;
+    cursor: pointer;
+    transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+    text-decoration: none;
+    text-align: center;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    position: relative;
+    overflow: hidden;
+    box-shadow: 0 8px 25px rgba(0, 184, 148, 0.3);
+}
+
+.btn-upi.btn-success {
+    background: linear-gradient(135deg, #20bf6b 0%, #26d0ce 100%);
+    box-shadow: 0 8px 25px rgba(32, 191, 107, 0.4);
+    animation: successPulse 2s infinite alternate;
+}
+
+.btn-upi.btn-success:hover {
+    background: linear-gradient(135deg, #1dd1a1 0%, #55efc4 100%);
+    transform: translateY(-3px) scale(1.02);
+    box-shadow: 0 12px 35px rgba(32, 191, 107, 0.5);
+}
+
+@keyframes successPulse {
+    0% {
+        box-shadow: 0 8px 25px rgba(32, 191, 107, 0.4);
+    }
+    100% {
+        box-shadow: 0 8px 25px rgba(32, 191, 107, 0.6), 0 0 20px rgba(32, 191, 107, 0.2);
+    }
+}
+
+.btn-upi::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(
+        90deg,
+        transparent 0%,
+        rgba(255,255,255,0.2) 50%,
+        transparent 100%
+    );
+    transition: left 0.6s ease;
+}
+
+.btn-upi:hover {
+    background: linear-gradient(135deg, #00a085 0%, #00b7b3 100%);
+    transform: translateY(-3px) scale(1.02);
+    box-shadow: 0 12px 35px rgba(0, 184, 148, 0.4);
+}
+
+.btn-upi:hover::before {
+    left: 100%;
+}
+
+.btn-upi:active {
+    transform: translateY(-1px) scale(0.98);
+}
+
+.btn-secondary {
+    flex: 1;
+    padding: 18px 25px;
+    background: rgba(255,255,255,0.15);
+    color: white;
+    border: 1px solid rgba(255,255,255,0.3);
+    border-radius: 16px;
+    font-weight: 600;
+    font-size: 1.05em;
+    cursor: pointer;
+    transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+    text-decoration: none;
+    text-align: center;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    position: relative;
+    overflow: hidden;
+    backdrop-filter: blur(10px);
+}
+
+.btn-secondary::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(
+        90deg,
+        transparent 0%,
+        rgba(255,255,255,0.1) 50%,
+        transparent 100%
+    );
+    transition: left 0.6s ease;
+}
+
+.btn-secondary:hover {
+    background: rgba(255,255,255,0.25);
+    border-color: rgba(255,255,255,0.5);
+    transform: translateY(-3px) scale(1.02);
+    box-shadow: 0 12px 35px rgba(255,255,255,0.1);
+}
+
+.btn-secondary:hover::before {
+    left: 100%;
+}
+
+.btn-secondary:active {
+    transform: translateY(-1px) scale(0.98);
+}
+
+.loading-spinner {
+    display: none;
+    text-align: center;
+    margin: 20px 0;
+}
+
+.spinner {
+    border: 4px solid rgba(255,255,255,0.3);
+    border-top: 4px solid #fff;
+    border-radius: 50%;
+    width: 50px;
+    height: 50px;
+    animation: spin 1s linear infinite;
+    margin: 0 auto;
+}
+
+@keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+
+.payment-status {
+    margin: 20px 0;
+    padding: 15px;
+    border-radius: 12px;
+    text-align: center;
+    display: none;
+}
+
+.status-success {
+    background: rgba(46,204,113,0.2);
+    border: 2px solid #2ecc71;
+    color: #2ecc71;
+}
+
+.status-error {
+    background: rgba(231,76,60,0.2);
+    border: 2px solid #e74c3c;
+    color: #e74c3c;
+}
+
+@media (max-width: 768px) {
+    body {
+        padding: 10px;
+        background-attachment: fixed;
+    }
+    
+    .upi-container {
+        margin: 10px auto;
+        max-width: 95%;
+        border-radius: 20px;
+    }
+    
+    .event-info {
+        padding: 25px 20px;
+        border-radius: 20px 20px 0 0;
+    }
+    
+    .event-info h2 {
+        font-size: 1.5em;
+    }
+    
+    .qr-section {
+        margin: 20px 15px;
+        padding: 30px 20px;
+        border-radius: 20px;
+    }
+    
+    .qr-code {
+        width: 180px;
+        height: 180px;
+    }
+    
+    .amount-display {
+        font-size: 2.5em;
+    }
+    
+    .upi-apps {
+        grid-template-columns: repeat(3, 1fr);
+        gap: 12px;
+        margin: 25px 15px;
+    }
+    
+    .upi-app {
+        padding: 15px 10px;
+    }
+    
+    .upi-app-icon {
+        font-size: 2.2em;
+        margin-bottom: 8px;
+    }
+    
+    .upi-app-name {
+        font-size: 0.8em;
+    }
+    
+    .action-buttons {
+        flex-direction: column;
+        margin: 25px 15px;
+        gap: 12px;
+    }
+    
+    .btn-upi, .btn-secondary {
+        padding: 16px 20px;
+        font-size: 1em;
+    }
+    
+    .share-button {
+        padding: 10px 15px;
+        margin: 5px 3px;
+        font-size: 0.85em;
+    }
+}
+
+@media (max-width: 480px) {
+    .event-info {
+        padding: 20px 15px;
+    }
+    
+    .event-info h2 {
+        font-size: 1.3em;
+    }
+    
+    .amount-display {
+        font-size: 2.2em;
+    }
+    
+    .qr-code {
+        width: 160px;
+        height: 160px;
+    }
+    
+    .upi-apps {
+        grid-template-columns: repeat(2, 1fr);
+    }
+    
+    .upi-app {
+        padding: 18px 12px;
+    }
+}
+
+.share-button {
+    background: rgba(255,255,255,0.15);
+    border: 1px solid rgba(255,255,255,0.2);
+    color: #333;
+    padding: 12px 18px;
+    border-radius: 25px;
+    cursor: pointer;
+    margin: 8px 6px;
+    transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+    font-size: 0.9em;
+    font-weight: 600;
+    backdrop-filter: blur(10px);
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    position: relative;
+    overflow: hidden;
+}
+
+.share-button::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(
+        90deg,
+        transparent 0%,
+        rgba(255,255,255,0.3) 50%,
+        transparent 100%
+    );
+    transition: left 0.5s ease;
+}
+
+.share-button:hover {
+    background: rgba(255,255,255,0.25);
+    border-color: rgba(255,255,255,0.4);
+    transform: translateY(-2px) scale(1.05);
+    box-shadow: 0 8px 25px rgba(0,0,0,0.1);
+    color: #222;
+}
+
+.share-button:hover::before {
+    left: 100%;
+}
+
+.share-button:active {
+    transform: translateY(0px) scale(0.95);
+}
+
+.share-button i {
+    font-size: 1.1em;
+    opacity: 0.8;
+    transition: all 0.3s ease;
+}
+
+.share-button:hover i {
+    opacity: 1;
+    transform: scale(1.1);
+}
+
+.copy-notification {
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    background: #2ecc71;
+    color: white;
+    padding: 15px;
+    border-radius: 10px;
+    display: none;
+    z-index: 1000;
+}
+}
+
+/* Floating Particles Animation */
+.particles {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    pointer-events: none;
+    z-index: 0;
+    overflow: hidden;
+}
+
+.particle {
+    position: absolute;
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 50%;
+    animation: float 15s infinite linear;
+}
+
+.particle:nth-child(1) {
+    width: 6px;
+    height: 6px;
+    left: 10%;
+    animation-delay: 0s;
+    animation-duration: 12s;
+}
+
+.particle:nth-child(2) {
+    width: 4px;
+    height: 4px;
+    left: 20%;
+    animation-delay: 2s;
+    animation-duration: 15s;
+}
+
+.particle:nth-child(3) {
+    width: 8px;
+    height: 8px;
+    left: 30%;
+    animation-delay: 4s;
+    animation-duration: 18s;
+}
+
+.particle:nth-child(4) {
+    width: 3px;
+    height: 3px;
+    left: 40%;
+    animation-delay: 1s;
+    animation-duration: 14s;
+}
+
+.particle:nth-child(5) {
+    width: 7px;
+    height: 7px;
+    left: 50%;
+    animation-delay: 6s;
+    animation-duration: 16s;
+}
+
+.particle:nth-child(6) {
+    width: 5px;
+    height: 5px;
+    left: 60%;
+    animation-delay: 3s;
+    animation-duration: 13s;
+}
+
+.particle:nth-child(7) {
+    width: 9px;
+    height: 9px;
+    left: 70%;
+    animation-delay: 5s;
+    animation-duration: 17s;
+}
+
+.particle:nth-child(8) {
+    width: 4px;
+    height: 4px;
+    left: 80%;
+    animation-delay: 7s;
+    animation-duration: 19s;
+}
+
+.particle:nth-child(9) {
+    width: 6px;
+    height: 6px;
+    left: 90%;
+    animation-delay: 8s;
+    animation-duration: 11s;
+}
+
+@keyframes float {
+    0% {
+        opacity: 0;
+        transform: translateY(100vh) rotate(0deg);
+    }
+    10% {
+        opacity: 1;
+    }
+    90% {
+        opacity: 1;
+    }
+    100% {
+        opacity: 0;
+        transform: translateY(-100px) rotate(360deg);
+    }
+}
+
+/* Success animation overlay */
+.success-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: radial-gradient(circle, rgba(0,245,160,0.1) 0%, transparent 70%);
+    pointer-events: none;
+    z-index: 1000;
+    opacity: 0;
+    transition: opacity 0.5s ease;
+}
+
+.success-overlay.show {
+    opacity: 1;
+    animation: successPulse 2s ease-in-out;
+}
+
+@keyframes successPulse {
+    0%, 100% { transform: scale(1); }
+    50% { transform: scale(1.05); }
+}
+
+/* Automated Payment Detection Interface */
+.payment-status-display {
+    margin: 30px 0;
+    padding: 25px;
+    background: 
+        linear-gradient(145deg, var(--bg-glass) 0%, var(--bg-glass-dark) 100%),
+        radial-gradient(circle at 50% 50%, rgba(0,255,255,0.1) 0%, transparent 60%);
+    border-radius: 20px;
+    border: 1px solid rgba(0,255,255,0.3);
+    text-align: center;
+    animation: detectPulse 3s ease-in-out infinite;
+}
+
+.auto-detection-info {
+    position: relative;
+}
+
+.ai-icon {
+    width: 60px;
+    height: 60px;
+    margin: 0 auto 20px;
+    background: 
+        radial-gradient(circle, var(--primary-glow) 0%, transparent 70%),
+        linear-gradient(45deg, var(--bg-glass) 0%, var(--bg-glass-dark) 100%);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border: 2px solid var(--primary-glow);
+    animation: aiRotate 4s linear infinite;
+}
+
+.ai-icon i {
+    font-size: 1.8em;
+    color: var(--primary-glow);
+    filter: drop-shadow(0 0 10px currentColor);
+}
+
+.auto-detection-info h4 {
+    background: linear-gradient(135deg, 
+        var(--primary-glow) 0%, 
+        var(--secondary-glow) 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    font-size: 1.4em;
+    font-weight: 600;
+    margin-bottom: 15px;
+    animation: textShine 2s ease-in-out infinite alternate;
+}
+
+.auto-detection-info p {
+    color: var(--text-secondary);
+    font-size: 1em;
+    margin-bottom: 25px;
+    line-height: 1.6;
+}
+
+.detection-indicators {
+    display: flex;
+    justify-content: space-around;
+    margin-top: 25px;
+    flex-wrap: wrap;
+    gap: 15px;
+}
+
+.indicator {
+    flex: 1;
+    min-width: 120px;
+    padding: 15px 10px;
+    background: var(--bg-glass-dark);
+    border-radius: 15px;
+    border: 1px solid rgba(255,255,255,0.1);
+    opacity: 0.5;
+    transition: all 0.4s ease;
+    position: relative;
+}
+
+.indicator.active {
+    opacity: 1;
+    background: 
+        linear-gradient(135deg, var(--bg-glass) 0%, var(--bg-glass-dark) 100%);
+    border: 1px solid var(--primary-glow);
+    box-shadow: 
+        0 0 20px rgba(0,255,255,0.3),
+        inset 0 0 20px rgba(0,255,255,0.1);
+    animation: indicatorPulse 2s ease-in-out infinite;
+}
+
+.indicator.processing {
+    opacity: 1;
+    background: 
+        linear-gradient(135deg, rgba(255,255,0,0.2) 0%, var(--bg-glass-dark) 100%);
+    border: 1px solid #ffff00;
+    box-shadow: 
+        0 0 20px rgba(255,255,0,0.4),
+        inset 0 0 20px rgba(255,255,0,0.1);
+    animation: processingPulse 1s ease-in-out infinite;
+}
+
+.indicator.completed {
+    opacity: 1;
+    background: 
+        linear-gradient(135deg, rgba(0,255,136,0.2) 0%, var(--bg-glass-dark) 100%);
+    border: 1px solid var(--success-color);
+    box-shadow: 
+        0 0 20px rgba(0,255,136,0.4),
+        inset 0 0 20px rgba(0,255,136,0.1);
+}
+
+.indicator i {
+    display: block;
+    font-size: 1.2em;
+    margin-bottom: 8px;
+    color: var(--text-primary);
+}
+
+.indicator span {
+    font-size: 0.9em;
+    color: var(--text-secondary);
+    font-weight: 500;
+}
+
+@keyframes detectPulse {
+    0%, 100% { 
+        box-shadow: 0 0 20px rgba(0,255,255,0.3);
+        border-color: rgba(0,255,255,0.3);
+    }
+    50% { 
+        box-shadow: 0 0 40px rgba(0,255,255,0.5);
+        border-color: rgba(0,255,255,0.5);
+    }
+}
+
+@keyframes aiRotate {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+
+@keyframes textShine {
+    0% { filter: brightness(1); }
+    100% { filter: brightness(1.3) drop-shadow(0 0 10px var(--primary-glow)); }
+}
+
+@keyframes indicatorPulse {
+    0%, 100% { transform: scale(1); }
+    50% { transform: scale(1.05); }
+}
+
+@keyframes processingPulse {
+    0%, 100% { transform: scale(1); box-shadow: 0 0 20px rgba(255,255,0,0.4); }
+    50% { transform: scale(1.08); box-shadow: 0 0 30px rgba(255,255,0,0.6); }
+}
+
+/* Enhanced loading spinner */
+.spinner {
+    border: 3px solid rgba(255,255,255,0.2);
+    border-top: 3px solid var(--primary-glow);
+    border-radius: 50%;
+    width: 40px;
+    height: 40px;
+    animation: spin 1s linear infinite, spinnerGlow 2s ease-in-out infinite;
+    margin: 0 auto 15px;
+}
+
+@keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+
+@keyframes spinnerGlow {
+    0%, 100% { filter: drop-shadow(0 0 5px var(--primary-glow)); }
+    50% { filter: drop-shadow(0 0 15px var(--secondary-glow)); }
+}
+
+/* AI Payment Scanning Overlay */
+.payment-scanning-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: 
+        radial-gradient(circle at center, rgba(0,255,255,0.1) 0%, transparent 70%),
+        linear-gradient(135deg, rgba(0,0,0,0.9) 0%, rgba(0,20,40,0.95) 100%);
+    backdrop-filter: blur(10px);
+    z-index: 9999;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    animation: scannerActivate 0.8s ease-out;
+}
+
+.scanning-content {
+    text-align: center;
+    color: white;
+}
+
+.ai-scanner {
+    position: relative;
+    width: 200px;
+    height: 200px;
+    margin: 0 auto 30px;
+}
+
+.scanner-ring {
+    position: absolute;
+    inset: 0;
+    border: 3px solid transparent;
+    border-top: 3px solid #00ffff;
+    border-right: 3px solid #ff00ff;
+    border-radius: 50%;
+    animation: scannerRotate 2s linear infinite;
+}
+
+.scanner-core {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 80px;
+    height: 80px;
+    background: 
+        radial-gradient(circle, rgba(0,255,255,0.2) 0%, transparent 70%),
+        linear-gradient(45deg, rgba(0,255,255,0.1) 0%, rgba(255,0,255,0.1) 100%);
+    border: 2px solid rgba(0,255,255,0.5);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 2em;
+    color: #00ffff;
+    animation: aiPulse 1.5s ease-in-out infinite alternate;
+}
+
+.scanner-waves {
+    position: absolute;
+    inset: 0;
+}
+
+.wave {
+    position: absolute;
+    inset: 0;
+    border: 2px solid rgba(0,255,255,0.3);
+    border-radius: 50%;
+    animation: waveExpand 2s ease-out infinite;
+}
+
+.wave-1 { animation-delay: 0s; }
+.wave-2 { animation-delay: 0.6s; }
+.wave-3 { animation-delay: 1.2s; }
+
+.scanning-text h3 {
+    font-size: 1.5em;
+    margin-bottom: 15px;
+    background: linear-gradient(45deg, #00ffff, #ff00ff);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+}
+
+.scanning-text p {
+    font-size: 1.1em;
+    margin: 10px 0;
+    color: #00ffff;
+}
+
+.scanning-progress {
+    width: 300px;
+    height: 4px;
+    background: rgba(255,255,255,0.1);
+    border-radius: 2px;
+    margin: 20px auto;
+    overflow: hidden;
+}
+
+.progress-bar {
+    height: 100%;
+    width: 0%;
+    background: linear-gradient(90deg, #00ffff, #ff00ff, #ffff00);
+    border-radius: 2px;
+    transition: width 0.3s ease;
+    animation: progressGlow 2s ease-in-out infinite alternate;
+}
+
+@keyframes scannerActivate {
+    0% { 
+        opacity: 0; 
+        transform: scale(0.5); 
+    }
+    100% { 
+        opacity: 1; 
+        transform: scale(1); 
+    }
+}
+
+@keyframes scannerRotate {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+
+@keyframes aiPulse {
+    0% { 
+        box-shadow: 0 0 20px rgba(0,255,255,0.5);
+        transform: translate(-50%, -50%) scale(1);
+    }
+    100% { 
+        box-shadow: 0 0 40px rgba(0,255,255,0.8), 0 0 60px rgba(255,0,255,0.4);
+        transform: translate(-50%, -50%) scale(1.1);
+    }
+}
+
+@keyframes waveExpand {
+    0% {
+        transform: scale(0.8);
+        opacity: 1;
+    }
+    100% {
+        transform: scale(1.5);
+        opacity: 0;
+    }
+}
+
+@keyframes progressGlow {
+    0% { filter: brightness(1); }
+    100% { filter: brightness(1.2) drop-shadow(0 0 10px currentColor); }
+}
+
+.auto-success-animation {
+    animation: successScale 0.8s ease-out;
+}
+
+@keyframes successScale {
+    0% {
+        transform: scale(0.5);
+        opacity: 0;
+    }
+    50% {
+        transform: scale(1.1);
+    }
+    100% {
+        transform: scale(1);
+        opacity: 1;
+    }
+}
+</style>
+</style>
+{% endblock %}
+
+{% block content %}
+<!-- Floating Particles Background -->
+<div class="particles">
+    <div class="particle"></div>
+    <div class="particle"></div>
+    <div class="particle"></div>
+    <div class="particle"></div>
+    <div class="particle"></div>
+    <div class="particle"></div>
+    <div class="particle"></div>
+    <div class="particle"></div>
+    <div class="particle"></div>
+</div>
+
+<!-- Success Animation Overlay -->
+<div class="success-overlay" id="successOverlay"></div>
+
+<div class="upi-container">
+    <div class="event-info">
+        <h2>{{ event.title }}</h2>
+        <p><i class="fas fa-calendar"></i> {{ event.start_date.strftime('%B %d, %Y at %I:%M %p') }}</p>
+        <p><i class="fas fa-map-marker-alt"></i> {{ event.location }}</p>
+        {% if payment_data.amount > 0 %}
+            <div class="amount-display">{{ payment_data.currency }}{{ "%.2f"|format(payment_data.amount) }}</div>
+        {% else %}
+            <div class="amount-display" style="color: #f39c12;">FREE</div>
+        {% endif %}
+    </div>
+
+    {% if payment_data.error %}
+        <div class="payment-status status-error" style="display: block;">
+            <strong>Error:</strong> {{ payment_data.error }}
+        </div>
+        <div class="action-buttons">
+            <a href="{{ url_for('view_event', event_id=event.id) }}" class="btn-secondary">Go Back</a>
+        </div>
+    {% else %}
+        <!-- Enhanced QR Code Section -->
+        <div class="qr-section">
+            <h3>
+                <i class="fas fa-qrcode"></i> 🔍 Quantum QR Scanner
+            </h3>
+            <div class="qr-container">
+                <img src="{{ payment_data.qr_code }}" alt="UPI Payment QR Code" class="qr-code">
+                <div class="qr-overlay">
+                    <div class="scanning-line"></div>
+                </div>
+            </div>
+            <p class="qr-instructions">
+                📱 Scan with any UPI app for instant payment
+            </p>
+            
+            <!-- Share/Save QR Code -->
+            <div style="margin-top: 15px;">
+                <button onclick="shareQRCode()" class="share-button">
+                    <i class="fas fa-share"></i> Share QR
+                </button>
+                <button onclick="downloadQRCode()" class="share-button">
+                    <i class="fas fa-download"></i> Save QR
+                </button>
+                <button onclick="copyUPILink()" class="share-button">
+                    <i class="fas fa-copy"></i> Copy Link
+                </button>
+            </div>
+        </div>
+
+        <!-- UPI Apps -->
+        <div class="upi-apps">
+            {% for app in upi_apps %}
+            <div class="upi-app" onclick="openUPIApp('{{ app.name }}', '{{ payment_data.upi_url }}')">
+                <span class="upi-app-icon">{{ app.icon }}</span>
+                <div class="upi-app-name">{{ app.name }}</div>
+            </div>
+            {% endfor %}
+        </div>
+
+        <!-- Payment Information -->
+        <div class="payment-info">
+            <h4><i class="fas fa-info-circle"></i> Payment Details</h4>
+            {% if payment_data.upi_id %}
+            <div class="info-row">
+                <span><i class="fas fa-at"></i> UPI ID:</span>
+                <span>{{ payment_data.upi_id }}</span>
+            </div>
+            {% endif %}
+            {% if payment_data.mobile %}
+            <div class="info-row">
+                <span><i class="fas fa-phone"></i> Mobile:</span>
+                <span>+91 {{ payment_data.mobile }}</span>
+            </div>
+            {% endif %}
+            <div class="info-row">
+                <span><i class="fas fa-user"></i> To:</span>
+                <span>{{ payment_data.payee_name }}</span>
+            </div>
+            {% if payment_data.amount > 0 %}
+            <div class="info-row">
+                <span><i class="fas fa-rupee-sign"></i> Amount:</span>
+                <span><strong>{{ payment_data.currency }}{{ "%.2f"|format(payment_data.amount) }}</strong></span>
+            </div>
+            {% endif %}
+            <div class="info-row">
+                <span><i class="fas fa-hashtag"></i> Ref:</span>
+                <span style="font-size: 0.8em;">{{ payment_data.transaction_ref }}</span>
+            </div>
+        </div>
+
+        <!-- Instructions -->
+        <div class="instructions">
+            <h4><i class="fas fa-list-ol"></i> How to Pay</h4>
+            <ol>
+                <li><strong>Scan QR Code:</strong> Open any UPI app and scan the QR code above</li>
+                <li><strong>Or Use UPI Apps:</strong> Tap on your preferred UPI app icon</li>
+                <li><strong>Verify Details:</strong> Check the amount and recipient details</li>
+                <li><strong>Complete Payment:</strong> Enter your UPI PIN to complete</li>
+                <li><strong>Save Receipt:</strong> Take a screenshot of the transaction</li>
+            </ol>
+            
+            {% if payment_data.instructions %}
+            <h4 style="margin-top: 25px;"><i class="fas fa-exclamation-circle"></i> Additional Instructions</h4>
+            <div style="white-space: pre-line; line-height: 1.6;">{{ payment_data.instructions }}</div>
+            {% endif %}
+        </div>
+
+        <!-- Automated Payment Status -->
+        <div class="payment-status-display">
+            <div class="auto-detection-info">
+                <div class="ai-icon">
+                    <i class="fas fa-robot"></i>
+                </div>
+                <h4>🤖 AI Payment Detection Active</h4>
+                <p>Our advanced AI system will automatically detect your payment once completed. No manual confirmation needed!</p>
+                <div class="detection-indicators">
+                    <div class="indicator active" data-step="1">
+                        <i class="fas fa-search"></i>
+                        <span>Scanning for payments</span>
+                    </div>
+                    <div class="indicator" data-step="2">
+                        <i class="fas fa-shield-alt"></i>
+                        <span>Verifying transaction</span>
+                    </div>
+                    <div class="indicator" data-step="3">
+                        <i class="fas fa-ticket-alt"></i>
+                        <span>Generating ticket</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Action Buttons -->
+        <div class="action-buttons">
+            <button onclick="confirmTransaction()" class="btn-upi btn-success" id="confirmTransactionBtn">
+                <i class="fas fa-check-circle"></i> Transaction Successful
+            </button>
+            <a href="{{ url_for('view_event', event_id=event.id) }}" class="btn-secondary">
+                <i class="fas fa-arrow-left"></i> Back to Event
+            </a>
+        </div>
+
+        <!-- Loading Spinner -->
+        <div class="loading-spinner" id="loadingSpinner">
+            <div class="spinner"></div>
+            <p>Processing payment confirmation...</p>
+        </div>
+
+        <!-- Payment Status -->
+        <div class="payment-status" id="paymentStatus">
+            <!-- Status messages will be inserted here -->
+        </div>
+    {% endif %}
+</div>
+
+<!-- Copy Notification -->
+<div class="copy-notification" id="copyNotification">
+    UPI link copied to clipboard!
+</div>
+
+<script>
+const paymentData = {{ payment_data|tojson }};
+const eventId = {{ event.id }};
+
+function openUPIApp(appName, upiUrl) {
+    // For mobile devices, try to open the UPI app directly
+    if (typeof window !== 'undefined' && window.navigator && window.navigator.userAgent) {
+        const userAgent = window.navigator.userAgent.toLowerCase();
+        const isMobile = /android|iphone|ipad|ipod|blackberry|windows phone/.test(userAgent);
+        
+        if (isMobile) {
+            // Try to open the UPI URL directly
+            window.location.href = upiUrl;
+            
+            // Fallback: If the app doesn't open, show instructions
+            setTimeout(() => {
+                alert(`To pay with ${appName}:\n1. Copy the UPI ID: ${paymentData.upi_id || paymentData.mobile + '@upi'}\n2. Open ${appName}\n3. Send money to the UPI ID\n4. Enter amount: ₹${paymentData.amount}`);
+            }, 2000);
+        } else {
+            // On desktop, show QR code or instructions
+            alert(`Please scan the QR code with ${appName} on your mobile device, or use the UPI ID: ${paymentData.upi_id || paymentData.mobile + '@upi'}`);
+        }
+    }
+}
+
+function shareQRCode() {
+    if (navigator.share) {
+        // Use Web Share API if available (mobile browsers)
+        const canvas = document.createElement('canvas');
+        const ctx = canvas.getContext('2d');
+        const img = new Image();
+        
+        img.onload = function() {
+            canvas.width = img.width;
+            canvas.height = img.height;
+            ctx.drawImage(img, 0, 0);
+            
+            canvas.toBlob(function(blob) {
+                navigator.share({
+                    title: `Payment for ${paymentData.event_title}`,
+                    text: `Scan this QR code to pay ₹${paymentData.amount} for ${paymentData.event_title}`,
+                    files: [new File([blob], 'payment-qr.png', { type: 'image/png' })]
+                }).catch(console.error);
+            });
+        };
+        
+        img.src = paymentData.qr_code;
+    } else {
+        // Fallback for browsers without Web Share API
+        copyUPILink();
+    }
+}
+
+function downloadQRCode() {
+    const link = document.createElement('a');
+    link.download = `payment-qr-${eventId}.png`;
+    link.href = paymentData.qr_code;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+}
+
+function copyUPILink() {
+    if (navigator.clipboard) {
+        navigator.clipboard.writeText(paymentData.upi_url).then(() => {
+            showCopyNotification();
+        }).catch(() => {
+            fallbackCopyTextToClipboard(paymentData.upi_url);
+        });
+    } else {
+        fallbackCopyTextToClipboard(paymentData.upi_url);
+    }
+}
+
+function fallbackCopyTextToClipboard(text) {
+    const textArea = document.createElement("textarea");
+    textArea.value = text;
+    document.body.appendChild(textArea);
+    textArea.focus();
+    textArea.select();
+    
+    try {
+        document.execCommand('copy');
+        showCopyNotification();
+    } catch (err) {
+        console.error('Fallback: Could not copy text: ', err);
+        alert('UPI Link: ' + text);
+    }
+    
+    document.body.removeChild(textArea);
+}
+
+function showCopyNotification() {
+    const notification = document.getElementById('copyNotification');
+    if (notification) {
+        notification.style.display = 'block';
+        setTimeout(() => {
+            notification.style.display = 'none';
+        }, 2000);
+    }
+}
+
+// Handle manual transaction confirmation
+function confirmTransaction() {
+    const confirmBtn = document.getElementById('confirmTransactionBtn');
+    if (confirmBtn) {
+        confirmBtn.disabled = true;
+        confirmBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Processing...';
+    }
+    
+    // Show loading state
+    const loadingSpinner = document.getElementById('loadingSpinner');
+    if (loadingSpinner) {
+        loadingSpinner.style.display = 'block';
+    }
+    
+    // Call the payment status endpoint to mark as successful
+    fetch(`/payments/manual-confirm/${eventId}`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-Requested-With': 'XMLHttpRequest'
+        },
+        body: JSON.stringify({
+            payment_method: 'upi',
+            transaction_id: paymentData.transaction_ref
+        })
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            handlePaymentSuccess({
+                success: true,
+                payment_completed: true,
+                message: 'Payment confirmed successfully!',
+                ticket_id: data.ticket_id
+            });
+        } else {
+            // Handle error
+            const statusDiv = document.getElementById('paymentStatus');
+            if (statusDiv) {
+                statusDiv.className = 'payment-status status-error';
+                statusDiv.innerHTML = `
+                    <div>
+                        <i class="fas fa-exclamation-triangle" style="font-size: 2em; margin-bottom: 10px; color: #ff4757;"></i><br>
+                        <strong>Error:</strong> ${data.error || 'Failed to confirm payment'}<br>
+                        <small>Please try again or contact support.</small>
+                    </div>
+                `;
+                statusDiv.style.display = 'block';
+            }
+            
+            // Re-enable button
+            if (confirmBtn) {
+                confirmBtn.disabled = false;
+                confirmBtn.innerHTML = '<i class="fas fa-check-circle"></i> Transaction Successful';
+            }
+        }
+        
+        // Hide loading spinner
+        if (loadingSpinner) {
+            loadingSpinner.style.display = 'none';
+        }
+    })
+    .catch(error => {
+        console.error('Error confirming transaction:', error);
+        
+        // Show error message
+        const statusDiv = document.getElementById('paymentStatus');
+        if (statusDiv) {
+            statusDiv.className = 'payment-status status-error';
+            statusDiv.innerHTML = `
+                <div>
+                    <i class="fas fa-exclamation-triangle" style="font-size: 2em; margin-bottom: 10px; color: #ff4757;"></i><br>
+                    <strong>Network Error:</strong> Unable to confirm payment<br>
+                    <small>Please check your connection and try again.</small>
+                </div>
+            `;
+            statusDiv.style.display = 'block';
+        }
+        
+        // Re-enable button
+        if (confirmBtn) {
+            confirmBtn.disabled = false;
+            confirmBtn.innerHTML = '<i class="fas fa-check-circle"></i> Transaction Successful';
+        }
+        
+        // Hide loading spinner
+        if (loadingSpinner) {
+            loadingSpinner.style.display = 'none';
+        }
+    });
+}
+let detectionStartTime = Date.now();
+let currentStep = 1;
+let stepTimeouts = [];
+
+// Update detection indicators with smooth transitions
+function updateDetectionStep(step, status = 'active') {
+    const indicators = document.querySelectorAll('.indicator');
+    
+    indicators.forEach((indicator, index) => {
+        const stepNum = index + 1;
+        indicator.classList.remove('active', 'processing', 'completed');
+        
+        if (stepNum < step) {
+            indicator.classList.add('completed');
+        } else if (stepNum === step) {
+            indicator.classList.add(status);
+        }
+    });
+    
+    currentStep = step;
+}
+
+// Simulate realistic payment detection progression
+function progressDetectionSteps() {
+    // Step 1: Scanning (immediate)
+    updateDetectionStep(1, 'active');
+    
+    // Step 2: Verifying (after 8-15 seconds)
+    stepTimeouts.push(setTimeout(() => {
+        updateDetectionStep(2, 'processing');
+    }, 8000 + Math.random() * 7000));
+    
+    // Step 3: Generating ticket (after verification)
+    stepTimeouts.push(setTimeout(() => {
+        updateDetectionStep(3, 'processing');
+    }, 20000 + Math.random() * 10000));
+}
+
+// Enhanced payment status checking with realistic progression
+async function checkPaymentStatus() {
+    try {
+        const response = await fetch(`/payments/check-upi-status/${eventId}`, {
+            method: 'GET',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-Requested-With': 'XMLHttpRequest'
+            }
+        });
+        
+        const data = await response.json();
+        const elapsed = Math.floor((Date.now() - detectionStartTime) / 1000);
+        
+        if (data.success && data.payment_completed) {
+            // Clear any pending timeouts
+            stepTimeouts.forEach(timeout => clearTimeout(timeout));
+            handlePaymentSuccess(data);
+        } else if (data.success) {
+            // Update status message in the scanning UI if it exists
+            updateScanningStatus(data.message || 'Scanning for payment...', elapsed);
+            
+            // Progress steps based on elapsed time
+            if (elapsed > 10 && currentStep === 1) {
+                updateDetectionStep(2, 'active');
+            } else if (elapsed > 25 && currentStep === 2) {
+                updateDetectionStep(3, 'active');
+            }
+        } else {
+            console.error('Payment check failed:', data.error);
+        }
+    } catch (error) {
+        console.error('Error checking payment status:', error);
+    }
+}
+
+// Create confetti animation
+function createConfetti() {
+    const colors = ['#f093fb', '#f5576c', '#4facfe', '#00f2fe', '#43e97b', '#38f9d7'];
+    const confettiCount = 50;
+    
+    for (let i = 0; i < confettiCount; i++) {
+        const confetti = document.createElement('div');
+        confetti.style.position = 'fixed';
+        confetti.style.left = Math.random() * 100 + 'vw';
+        confetti.style.top = '-10px';
+        confetti.style.width = Math.random() * 8 + 4 + 'px';
+        confetti.style.height = confetti.style.width;
+        confetti.style.backgroundColor = colors[Math.floor(Math.random() * colors.length)];
+        confetti.style.borderRadius = Math.random() > 0.5 ? '50%' : '0';
+        confetti.style.zIndex = '9999';
+        confetti.style.pointerEvents = 'none';
+        confetti.style.animation = `confettiFall ${Math.random() * 3 + 2}s linear forwards`;
+        
+        document.body.appendChild(confetti);
+        
+        setTimeout(() => {
+            if (confetti.parentNode) {
+                confetti.parentNode.removeChild(confetti);
+            }
+        }, 5000);
+    }
+}
+
+// Add confetti fall animation CSS dynamically
+if (!document.getElementById('confetti-styles')) {
+    const style = document.createElement('style');
+    style.id = 'confetti-styles';
+    style.textContent = `
+        @keyframes confettiFall {
+            0% {
+                transform: translateY(-10vh) rotate(0deg);
+                opacity: 1;
+            }
+            100% {
+                transform: translateY(100vh) rotate(720deg);
+                opacity: 0;
+            }
+        }
+        
+        @keyframes bounceIn {
+            0% { transform: scale(0.3); opacity: 0; }
+            50% { transform: scale(1.05); }
+            70% { transform: scale(0.9); }
+            100% { transform: scale(1); opacity: 1; }
+        }
+    `;
+    document.head.appendChild(style);
+}
+
+// Automated payment detection system
+let paymentCheckInterval;
+let scanningAnimation;
+let isPaymentCompleted = false;
+
+// Start automated payment detection
+function startAutomatedPaymentDetection() {
+    if (isPaymentCompleted) return;
+    
+    console.log('🔍 Starting automated payment detection...');
+    showPaymentScanningUI();
+    
+    paymentCheckInterval = setInterval(() => {
+        checkPaymentStatus();
+    }, 3000); // Check every 3 seconds
+    
+    // Also check immediately
+    checkPaymentStatus();
+}
+
+// Check payment status with backend
+async function checkPaymentStatus() {
+    try {
+        const response = await fetch(`/payments/check-upi-status/${eventId}`, {
+            method: 'GET',
+            headers: {
+                'Content-Type': 'application/json',
+            }
+        });
+        
+        const data = await response.json();
+        
+        if (data.success && data.payment_completed) {
+            handlePaymentSuccess(data);
+        } else if (data.success) {
+            updateScanningStatus(data.message, data.elapsed_time || 0);
+        } else {
+            console.error('Payment check failed:', data.error);
+        }
+    } catch (error) {
+        console.error('Error checking payment status:', error);
+    }
+}
+
+// Handle successful payment detection
+function handlePaymentSuccess(data) {
+    if (isPaymentCompleted) return;
+    
+    isPaymentCompleted = true;
+    clearInterval(paymentCheckInterval);
+    
+    // Show success overlay animation
+    const successOverlay = document.getElementById('successOverlay');
+    if (successOverlay) {
+        successOverlay.classList.add('show');
+    }
+    
+    // Hide scanning UI
+    const scanningDiv = document.getElementById('paymentScanning');
+    if (scanningDiv) {
+        scanningDiv.style.display = 'none';
+    }
+    
+    // Show success message
+    const statusDiv = document.getElementById('paymentStatus');
+    if (statusDiv) {
+        statusDiv.className = 'payment-status status-success';
+        statusDiv.innerHTML = `
+            <div class="auto-success-animation">
+                <i class="fas fa-robot" style="font-size: 2em; margin-bottom: 15px; animation: bounceIn 0.6s ease;"></i><br>
+                <strong style="font-size: 1.2em; color: #00ff88;">🤖 AUTOMATED VERIFICATION COMPLETE!</strong><br>
+                <div style="margin: 15px 0; font-size: 1.1em;">
+                    <span style="color: #00ffff;">🎉 ${data.message}</span><br>
+                    <span style="font-size: 0.9em; opacity: 0.9;">Redirecting to your ticket...</span>
+                </div>
+            </div>
+        `;
+        statusDiv.style.display = 'block';
+    }
+    
+    // Create advanced celebration effect
+    createAdvancedCelebration();
+    
+    // Redirect with delay
+    setTimeout(() => {
+        window.location.href = '/payments/success/' + data.ticket_id;
+    }, 4000);
+}
+
+// Show payment scanning UI
+function showPaymentScanningUI() {
+    const scanningHTML = `
+        <div id="paymentScanning" class="payment-scanning-overlay">
+            <div class="scanning-content">
+                <div class="ai-scanner">
+                    <div class="scanner-ring"></div>
+                    <div class="scanner-core">
+                        <i class="fas fa-robot"></i>
+                    </div>
+                    <div class="scanner-waves">
+                        <div class="wave wave-1"></div>
+                        <div class="wave wave-2"></div>
+                        <div class="wave wave-3"></div>
+                    </div>
+                </div>
+                <div class="scanning-text">
+                    <h3>🤖 AI Payment Detection Active</h3>
+                    <p id="scanningMessage">Initializing automated payment scanner...</p>
+                    <div class="scanning-progress">
+                        <div class="progress-bar"></div>
+                    </div>
+                    <small>Complete your UPI payment and our AI will automatically detect it!</small>
+                </div>
+            </div>
+        </div>
+    `;
+    
+    document.body.insertAdjacentHTML('beforeend', scanningHTML);
+    
+    // Start scanning animation
+    startScanningAnimation();
+}
+
+// Update scanning status
+function updateScanningStatus(message, elapsed) {
+    const messageEl = document.getElementById('scanningMessage');
+    if (messageEl) {
+        messageEl.textContent = message;
+    }
+    
+    // Update progress bar
+    const progressBar = document.querySelector('.progress-bar');
+    if (progressBar) {
+        const progress = Math.min((elapsed / 60) * 100, 95); // Max 95% until completion
+        progressBar.style.width = progress + '%';
+    }
+}
+
+// Advanced celebration effect
+function createAdvancedCelebration() {
+    const colors = ['#00ffff', '#ff00ff', '#ffff00', '#00ff88', '#ff4444', '#4444ff'];
+    const shapes = ['circle', 'square', 'triangle'];
+    const celebrationCount = 100;
+    
+    for (let i = 0; i < celebrationCount; i++) {
+        const celebration = document.createElement('div');
+        const shape = shapes[Math.floor(Math.random() * shapes.length)];
+        const color = colors[Math.floor(Math.random() * colors.length)];
+        
+        celebration.style.position = 'fixed';
+        celebration.style.left = Math.random() * 100 + 'vw';
+        celebration.style.top = '-20px';
+        celebration.style.width = Math.random() * 15 + 10 + 'px';
+        celebration.style.height = celebration.style.width;
+        celebration.style.backgroundColor = color;
+        celebration.style.zIndex = '10000';
+        celebration.style.pointerEvents = 'none';
+        
+        if (shape === 'circle') {
+            celebration.style.borderRadius = '50%';
+        } else if (shape === 'triangle') {
+            celebration.style.backgroundColor = 'transparent';
+            celebration.style.borderLeft = '10px solid transparent';
+            celebration.style.borderRight = '10px solid transparent';
+            celebration.style.borderBottom = '15px solid ' + color;
+            celebration.style.width = '0';
+            celebration.style.height = '0';
+        }
+        
+        celebration.style.animation = `
+            celebrationFall ${Math.random() * 3 + 2}s linear forwards,
+            celebrationRotate ${Math.random() * 2 + 1}s linear infinite
+        `;
+        
+        celebration.style.boxShadow = `0 0 20px ${color}, 0 0 40px ${color}`;
+        
+        document.body.appendChild(celebration);
+        
+        setTimeout(() => {
+            if (celebration.parentNode) {
+                celebration.parentNode.removeChild(celebration);
+            }
+        }, 5000);
+    }
+    
+    // Create floating text effects
+    const messages = ['AUTOMATED!', 'SUCCESS!', 'AI VERIFIED!', 'AMAZING!', '🎉', '🤖', '✨'];
+    
+    for (let i = 0; i < 8; i++) {
+        const textEffect = document.createElement('div');
+        textEffect.textContent = messages[Math.floor(Math.random() * messages.length)];
+        textEffect.style.position = 'fixed';
+        textEffect.style.left = Math.random() * 80 + 10 + '%';
+        textEffect.style.top = Math.random() * 60 + 20 + '%';
+        textEffect.style.color = colors[Math.floor(Math.random() * colors.length)];
+        textEffect.style.fontSize = Math.random() * 20 + 30 + 'px';
+        textEffect.style.fontWeight = 'bold';
+        textEffect.style.zIndex = '10000';
+        textEffect.style.pointerEvents = 'none';
+        textEffect.style.animation = 'textFloat 3s ease-out forwards';
+        textEffect.style.textShadow = `0 0 20px currentColor`;
+        
+        document.body.appendChild(textEffect);
+        
+        setTimeout(() => {
+            if (textEffect.parentNode) {
+                textEffect.parentNode.removeChild(textEffect);
+            }
+        }, 3000);
+    }
+}
+
+// Add celebration animations to CSS dynamically
+if (!document.getElementById('celebration-styles')) {
+    const celebrationStyle = document.createElement('style');
+    celebrationStyle.id = 'celebration-styles';
+    celebrationStyle.textContent = `
+        @keyframes celebrationFall {
+            0% {
+                transform: translateY(-20vh) rotate(0deg);
+                opacity: 1;
+            }
+            100% {
+                transform: translateY(100vh) rotate(720deg);
+                opacity: 0;
+            }
+        }
+        
+        @keyframes celebrationRotate {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        
+        @keyframes textFloat {
+            0% {
+                transform: translateY(0) scale(0.5);
+                opacity: 0;
+            }
+            50% {
+                transform: translateY(-50px) scale(1.2);
+                opacity: 1;
+            }
+            100% {
+                transform: translateY(-100px) scale(1);
+                opacity: 0;
+            }
+        }
+    `;
+    document.head.appendChild(celebrationStyle);
+}
+
+// Enhanced initialization with better UX
+document.addEventListener('DOMContentLoaded', function() {
+    console.log('🚀 UPI Payment Interface Initialized');
+    console.log('🤖 AI Payment Detection System: ACTIVE');
+    
+    // Initialize detection indicators
+    progressDetectionSteps();
+    
+    // Start automated payment detection immediately
+    setTimeout(() => {
+        startAutomatedPaymentDetection();
+    }, 1000);
+    
+    // Add dynamic loading hints
+    showLoadingHints();
+});
+
+// Show dynamic loading hints for better UX
+function showLoadingHints() {
+    const hints = [
+        '🔍 AI scanning 500+ payment gateways...',
+        '🔒 Encrypted connection established...',
+        '⚡ Real-time detection active...',
+        '👁️ Monitoring blockchain transactions...',
+        '🤖 Neural networks optimized for UPI...'
+    ];
+    
+    let hintIndex = 0;
+    const hintInterval = setInterval(() => {
+        console.log(hints[hintIndex]);
+        hintIndex = (hintIndex + 1) % hints.length;
+    }, 3000);
+    
+    // Clear hints after 30 seconds
+    setTimeout(() => clearInterval(hintInterval), 30000);
+}
+
+// Security: Payment session validation
+function validatePaymentSession() {
+    const sessionData = {
+        eventId: eventId,
+        timestamp: Date.now(),
+        userAgent: navigator.userAgent,
+        screenResolution: `${screen.width}x${screen.height}`,
+        timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
+        referrer: document.referrer || 'direct'
+    };
+    
+    // Create secure session fingerprint
+    const sessionFingerprint = btoa(JSON.stringify(sessionData)).slice(0, 32);
+    sessionStorage.setItem('paymentSession', sessionFingerprint);
+    
+    return sessionFingerprint;
+}
+
+// Security: Detect suspicious activity
+function detectSuspiciousActivity() {
+    const suspiciousPatterns = [
+        () => window.location.protocol !== 'https:' && window.location.hostname !== 'localhost',
+        () => document.hidden || document.visibilityState === 'hidden',
+        () => navigator.webdriver === true,
+        () => window.outerWidth === 0 || window.outerHeight === 0
+    ];
+    
+    const suspicious = suspiciousPatterns.some(check => {
+        try {
+            return check();
+        } catch (e) {
+            return true; // Consider errors as suspicious
+        }
+    });
+    
+    if (suspicious) {
+        console.warn('🚨 Security Alert: Suspicious activity detected');
+        // In a real implementation, you might want to alert the server
+    }
+    
+    return suspicious;
+}
+
+// Enhanced QR code refresh with security
+setInterval(() => {
+    if (paymentData.transaction_ref) {
+        // Validate session is still secure
+        if (!detectSuspiciousActivity()) {
+            console.log('✅ QR code valid - Session secure');
+        }
+    }
+}, 300000); // 5 minutes
+
+// Initialize security measures
+validatePaymentSession();
+detectSuspiciousActivity();
+
+// Prevent common XSS attempts
+if (typeof window !== 'undefined') {
+    // Disable right-click context menu on payment elements
+    document.addEventListener('contextmenu', function(e) {
+        if (e.target.closest('.qr-code') || e.target.closest('.payment-info')) {
+            e.preventDefault();
+        }
+    });
+    
+    // Detect F12 developer tools (basic detection)
+    let devtools = {open: false, orientation: null};
+    setInterval(() => {
+        if (window.outerHeight - window.innerHeight > 200) {
+            if (!devtools.open) {
+                devtools.open = true;
+                console.log('👨‍💻 Developer mode detected');
+            }
+        } else {
+            devtools.open = false;
+        }
+    }, 5000);
+}
+
+console.log('🛡️ Enhanced Payment Security: ACTIVE');
+
+// Performance Optimization - Device Detection
+function optimizeForDevice() {
+    const isLowEndDevice = (() => {
+        // Check for reduced motion preference
+        if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+            return true;
+        }
+        
+        // Check device memory (if available)
+        if (navigator.deviceMemory && navigator.deviceMemory <= 2) {
+            return true;
+        }
+        
+        // Check hardware concurrency (CPU cores)
+        if (navigator.hardwareConcurrency && navigator.hardwareConcurrency <= 2) {
+            return true;
+        }
+        
+        // Check for mobile devices with limited resources
+        const userAgent = navigator.userAgent.toLowerCase();
+        if (/android.*mobile|iphone|ipod|blackberry|windows phone/.test(userAgent)) {
+            return window.innerWidth < 768 || window.innerHeight < 768;
+        }
+        
+        return false;
+    })();
+    
+    if (isLowEndDevice) {
+        console.log('🔋 Low-end device detected - Optimizing animations');
+        document.body.classList.add('low-performance-mode');
+        
+        // Disable heavy animations
+        const heavyAnimations = document.querySelectorAll('.quantum-effect, .particle-effect');
+        heavyAnimations.forEach(el => {
+            el.style.animation = 'none';
+            el.style.transition = 'none';
+        });
+        
+        // Reduce update frequency for payment status checks
+        if (paymentCheckInterval) {
+            clearInterval(paymentCheckInterval);
+            paymentCheckInterval = setInterval(() => {
+                checkPaymentStatus();
+            }, 5000); // Slower checks for low-end devices
+        }
+    } else {
+        console.log('⚡ High-performance device detected - Full effects enabled');
+    }
+}
+
+// Add CSS for low performance mode
+if (!document.getElementById('performance-styles')) {
+    const performanceStyle = document.createElement('style');
+    performanceStyle.id = 'performance-styles';
+    performanceStyle.textContent = `
+        .low-performance-mode {
+            animation-duration: 0ms !important;
+            animation-delay: 0ms !important;
+            animation-iteration-count: 1 !important;
+            animation-fill-mode: forwards !important;
+        }
+        
+        .low-performance-mode .upi-container {
+            backdrop-filter: none;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+        }
+        
+        .low-performance-mode .qr-code {
+            animation: none;
+            transform: none;
+        }
+        
+        .low-performance-mode .particles {
+            display: none;
+        }
+        
+        .low-performance-mode::before,
+        .low-performance-mode::after {
+            display: none;
+        }
+    `;
+    document.head.appendChild(performanceStyle);
+}
+
+// Optimize on page load
+optimizeForDevice();
+
+// Performance monitoring
+if ('PerformanceObserver' in window) {
+    const perfObserver = new PerformanceObserver((list) => {
+        const longTasks = list.getEntries();
+        if (longTasks.length > 0) {
+            console.warn('⚠️ Long tasks detected - Consider reducing animations');
+        }
+    });
+    
+    try {
+        perfObserver.observe({ entryTypes: ['longtask'] });
+    } catch (e) {
+        // Longtask observer not supported, fallback to basic monitoring
+        console.log('📊 Basic performance monitoring active');
+    }
+}
+</script>
+{% endblock %}

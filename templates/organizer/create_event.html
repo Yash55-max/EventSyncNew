@@ -1,7 +1,7 @@
 {% extends "layout.html" %}
 
 {% block title %}
-  {% if edit_mode %}Edit Event{% else %}Create Event{% endif %} - EventHub
+  {% if edit_mode %}Edit Event{% else %}Create Event{% endif %} - EVENTSYNC
 {% endblock %}
 
 {% block content %}
@@ -183,6 +183,93 @@
         </div>
       </div>
       
+      <!-- UPI Payment Settings -->
+      <div class="event-form-section">
+        <h3 class="event-form-section-title">
+          <i class="fas fa-mobile-alt me-2"></i>UPI Payment Settings
+          <span class="badge bg-success ms-2">India</span>
+        </h3>
+        <div class="alert alert-warning">
+          <i class="fas fa-exclamation-triangle me-2"></i>
+          <strong>Important:</strong> UPI payment settings only work for <strong>paid events</strong>. 
+          Make sure to set a price greater than ₹0 in the "Ticket Price" field above if you want to charge attendees.
+        </div>
+        <p class="text-muted mb-3">
+          Enable UPI payments to allow attendees to pay using popular Indian payment apps like Google Pay, PhonePe, Paytm, etc.
+        </p>
+        
+        <div class="mb-3">
+          <div class="form-check form-switch">
+            {{ form.accept_upi_payments(class="form-check-input", id="upiPaymentsSwitch") }}
+            {{ form.accept_upi_payments.label(class="form-check-label", for="upiPaymentsSwitch") }}
+          </div>
+          <div class="form-text">Enable this to accept payments via UPI</div>
+        </div>
+        
+        <div id="upiPaymentDetails" style="display: none;">
+          <div class="row g-3">
+            <div class="col-md-6">
+              <div class="mb-3">
+                {{ form.upi_id.label(class="form-label") }}
+                {% if form.upi_id.errors %}
+                  {{ form.upi_id(class="form-control is-invalid") }}
+                  <div class="invalid-feedback">
+                    {% for error in form.upi_id.errors %}
+                      {{ error }}
+                    {% endfor %}
+                  </div>
+                {% else %}
+                  {{ form.upi_id(class="form-control", placeholder="yourname@paytm") }}
+                {% endif %}
+                <div class="form-text">Your UPI ID (e.g., name@paytm, mobile@ybl)</div>
+              </div>
+            </div>
+            
+            <div class="col-md-6">
+              <div class="mb-3">
+                {{ form.payment_mobile.label(class="form-label") }}
+                {% if form.payment_mobile.errors %}
+                  {{ form.payment_mobile(class="form-control is-invalid") }}
+                  <div class="invalid-feedback">
+                    {% for error in form.payment_mobile.errors %}
+                      {{ error }}
+                    {% endfor %}
+                  </div>
+                {% else %}
+                  {{ form.payment_mobile(class="form-control", placeholder="9876543210", type="tel", pattern="[6-9][0-9]{9}") }}
+                {% endif %}
+                <div class="form-text">10-digit mobile number linked to UPI</div>
+              </div>
+            </div>
+          </div>
+          
+          <div class="mb-3">
+            {{ form.payment_instructions.label(class="form-label") }}
+            {% if form.payment_instructions.errors %}
+              {{ form.payment_instructions(class="form-control is-invalid", rows=3) }}
+              <div class="invalid-feedback">
+                {% for error in form.payment_instructions.errors %}
+                  {{ error }}
+                {% endfor %}
+              </div>
+            {% else %}
+              {{ form.payment_instructions(class="form-control", rows=3, placeholder="Additional instructions for attendees (e.g., 'Send payment screenshot to WhatsApp +91 9876543210')") }}
+            {% endif %}
+            <div class="form-text">Optional: Provide additional payment instructions for attendees</div>
+          </div>
+          
+          <div class="alert alert-info">
+            <h6><i class="fas fa-info-circle me-2"></i>How UPI Payments Work:</h6>
+            <ul class="mb-0">
+              <li>Attendees can scan the generated QR code with any UPI app</li>
+              <li>They can also tap UPI app buttons to pay directly</li>
+              <li>Payment confirmation is done manually by attendees</li>
+              <li>You can verify payments using transaction screenshots</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+      
       <div class="d-grid gap-2 d-md-flex justify-content-md-end mt-4">
         <a href="{{ url_for('manage_events') }}" class="btn btn-outline-secondary me-md-2">Cancel</a>
         {{ form.submit(class="btn btn-primary btn-lg") }}
@@ -261,6 +348,103 @@
       // Trigger change event to set initial min value for end_date
       startDateInput.dispatchEvent(new Event('change'));
     }
+    
+      // Handle UPI payments toggle
+      const upiPaymentsSwitch = document.getElementById('upiPaymentsSwitch');
+      const upiPaymentDetails = document.getElementById('upiPaymentDetails');
+      const priceInput = document.getElementById('price');
+      
+      // Function to check price and UPI relationship
+      function validatePriceUPIRelationship() {
+        if (!upiPaymentsSwitch || !priceInput) return;
+        
+        const price = parseFloat(priceInput.value) || 0;
+        const upiEnabled = upiPaymentsSwitch.checked;
+        
+        // Remove existing warnings
+        const existingWarning = document.getElementById('upi-price-warning');
+        if (existingWarning) {
+          existingWarning.remove();
+        }
+        
+        if (upiEnabled && price === 0) {
+          // Show warning for UPI enabled but price = 0
+          const warning = document.createElement('div');
+          warning.id = 'upi-price-warning';
+          warning.className = 'alert alert-danger mt-2';
+          warning.innerHTML = `
+            <i class="fas fa-exclamation-circle me-2"></i>
+            <strong>Warning:</strong> UPI payments are enabled but ticket price is ₹0. 
+            This will create a <strong>FREE event</strong>. If you want to charge attendees, 
+            please set a price greater than ₹0 in the "Ticket Price" field above.
+          `;
+          upiPaymentDetails.insertBefore(warning, upiPaymentDetails.firstChild);
+        }
+      }
+    
+    if (upiPaymentsSwitch && upiPaymentDetails) {
+      // Show/hide UPI details based on switch state
+      function toggleUPIDetails() {
+        if (upiPaymentsSwitch.checked) {
+          upiPaymentDetails.style.display = 'block';
+          // Add smooth slide-down animation
+          upiPaymentDetails.style.opacity = '0';
+          upiPaymentDetails.style.transform = 'translateY(-10px)';
+          setTimeout(() => {
+            upiPaymentDetails.style.transition = 'all 0.3s ease';
+            upiPaymentDetails.style.opacity = '1';
+            upiPaymentDetails.style.transform = 'translateY(0)';
+          }, 10);
+        } else {
+          upiPaymentDetails.style.transition = 'all 0.3s ease';
+          upiPaymentDetails.style.opacity = '0';
+          upiPaymentDetails.style.transform = 'translateY(-10px)';
+          setTimeout(() => {
+            upiPaymentDetails.style.display = 'none';
+          }, 300);
+        }
+      }
+      
+      // Initial state
+      toggleUPIDetails();
+      validatePriceUPIRelationship();
+      
+      // Handle switch change
+      upiPaymentsSwitch.addEventListener('change', function() {
+        toggleUPIDetails();
+        validatePriceUPIRelationship();
+      });
+      
+      // Auto-enable UPI payments for paid events and validate relationship
+      if (priceInput) {
+        priceInput.addEventListener('input', function() {
+          const price = parseFloat(this.value) || 0;
+          
+          // Validate UPI-price relationship
+          validatePriceUPIRelationship();
+          
+          if (price > 0 && !upiPaymentsSwitch.checked) {
+            // Suggest enabling UPI payments for paid events
+            const suggestion = document.createElement('div');
+            suggestion.className = 'alert alert-info alert-dismissible fade show mt-2';
+            suggestion.innerHTML = `
+              <i class="fas fa-lightbulb me-2"></i>
+              <strong>Suggestion:</strong> Enable UPI payments for paid events to accept payments from Indian users.
+              <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            `;
+            
+            // Remove any existing suggestion
+            const existingSuggestion = this.parentNode.querySelector('.alert-info');
+            if (existingSuggestion) {
+              existingSuggestion.remove();
+            }
+            
+            this.parentNode.appendChild(suggestion);
+          }
+        });
+      }
+    }
   });
 </script>
 {% endblock %}
+

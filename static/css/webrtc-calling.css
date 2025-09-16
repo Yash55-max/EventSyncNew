@@ -1,0 +1,601 @@
+/**
+ * WebRTC Calling Interface Styles for EVENTSYNC
+ * Modern and responsive video/audio calling UI
+ */
+
+/* Call Container */
+.webrtc-call-container {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    z-index: 9999;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+}
+
+/* Call Header */
+.call-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 1rem 2rem;
+    background: rgba(255, 255, 255, 0.1);
+    backdrop-filter: blur(10px);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.call-info {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    color: white;
+}
+
+.call-info h3 {
+    margin: 0;
+    font-size: 1.5rem;
+    font-weight: 600;
+}
+
+.call-status {
+    padding: 0.25rem 0.75rem;
+    background: rgba(76, 175, 80, 0.8);
+    border-radius: 15px;
+    font-size: 0.85rem;
+    font-weight: 500;
+}
+
+.call-duration {
+    font-family: 'Courier New', monospace;
+    font-size: 1.1rem;
+    font-weight: 600;
+    background: rgba(255, 255, 255, 0.1);
+    padding: 0.5rem 1rem;
+    border-radius: 10px;
+    backdrop-filter: blur(5px);
+}
+
+.call-participants-count {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    color: white;
+    font-size: 1.1rem;
+}
+
+/* Call Content */
+.call-content {
+    flex: 1;
+    display: flex;
+    position: relative;
+    overflow: hidden;
+}
+
+/* Video Grid */
+.video-grid {
+    flex: 1;
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    grid-auto-rows: minmax(200px, 1fr);
+    gap: 1rem;
+    padding: 1rem;
+    overflow-y: auto;
+}
+
+/* Single participant view */
+.video-grid:has(.video-container:only-child) {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.video-grid:has(.video-container:only-child) .video-container {
+    width: 90%;
+    height: 90%;
+    max-width: 800px;
+    max-height: 600px;
+}
+
+/* Two participants view */
+.video-grid:has(.video-container:nth-child(2):last-child) {
+    grid-template-columns: 1fr 1fr;
+}
+
+/* Video Container */
+.video-container {
+    position: relative;
+    background: rgba(0, 0, 0, 0.8);
+    border-radius: 15px;
+    overflow: hidden;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.video-container:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 12px 40px rgba(0, 0, 0, 0.4);
+}
+
+.video-container video {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    border-radius: 15px;
+}
+
+/* Local Video Container */
+.local-video-container {
+    border: 3px solid rgba(33, 150, 243, 0.8);
+}
+
+/* Video Overlay */
+.video-overlay {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    background: linear-gradient(transparent, rgba(0, 0, 0, 0.7));
+    padding: 1rem;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    color: white;
+}
+
+.participant-name {
+    font-weight: 600;
+    font-size: 1.1rem;
+    text-shadow: 0 2px 4px rgba(0, 0, 0, 0.5);
+}
+
+.media-status {
+    display: flex;
+    gap: 0.5rem;
+}
+
+.media-status i {
+    padding: 0.5rem;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.2);
+    backdrop-filter: blur(5px);
+    font-size: 1rem;
+    transition: all 0.3s ease;
+}
+
+.media-status i.muted,
+.media-status i.video-off {
+    background: rgba(244, 67, 54, 0.8);
+}
+
+/* Screen Sharing */
+.video-container.screen-sharing {
+    border: 3px solid rgba(255, 193, 7, 0.8);
+}
+
+.video-container.screen-sharing .video-overlay::before {
+    content: "🖥️ Sharing Screen";
+    position: absolute;
+    top: -2rem;
+    left: 1rem;
+    background: rgba(255, 193, 7, 0.9);
+    color: black;
+    padding: 0.25rem 0.75rem;
+    border-radius: 5px;
+    font-size: 0.85rem;
+    font-weight: 600;
+}
+
+/* Participants Sidebar */
+.participants-sidebar {
+    width: 300px;
+    background: rgba(255, 255, 255, 0.05);
+    backdrop-filter: blur(10px);
+    border-left: 1px solid rgba(255, 255, 255, 0.1);
+    padding: 1rem;
+    overflow-y: auto;
+}
+
+.participants-sidebar h4 {
+    color: white;
+    margin: 0 0 1rem 0;
+    font-size: 1.2rem;
+    font-weight: 600;
+}
+
+.participants-list {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+}
+
+/* Participant Item */
+.participant-item {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    padding: 0.75rem;
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 10px;
+    color: white;
+    transition: all 0.3s ease;
+}
+
+.participant-item:hover {
+    background: rgba(255, 255, 255, 0.15);
+    transform: translateX(5px);
+}
+
+.participant-avatar {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    background: linear-gradient(45deg, #2196F3, #21CBF3);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    font-size: 1.2rem;
+}
+
+.participant-info {
+    flex: 1;
+}
+
+.participant-name {
+    display: block;
+    font-weight: 600;
+    margin-bottom: 0.25rem;
+}
+
+.participant-status {
+    display: flex;
+    gap: 0.25rem;
+}
+
+.participant-status i {
+    font-size: 0.85rem;
+    opacity: 0.8;
+}
+
+/* Call Controls */
+.call-controls {
+    display: flex;
+    justify-content: center;
+    gap: 1rem;
+    padding: 1.5rem;
+    background: rgba(0, 0, 0, 0.3);
+    backdrop-filter: blur(10px);
+    border-top: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.control-btn {
+    width: 60px;
+    height: 60px;
+    border: none;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.2);
+    color: white;
+    font-size: 1.5rem;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    backdrop-filter: blur(5px);
+}
+
+.control-btn:hover {
+    background: rgba(255, 255, 255, 0.3);
+    transform: translateY(-3px);
+    box-shadow: 0 6px 20px rgba(0, 0, 0, 0.3);
+}
+
+.control-btn:active {
+    transform: translateY(-1px);
+}
+
+/* Specific control button styles */
+.toggle-audio-btn.muted,
+.toggle-video-btn.video-off {
+    background: rgba(244, 67, 54, 0.8);
+}
+
+.toggle-screen-share-btn.sharing {
+    background: rgba(255, 193, 7, 0.8);
+    color: black;
+}
+
+.end-call-btn {
+    background: rgba(244, 67, 54, 0.8);
+    width: 70px;
+    height: 70px;
+    font-size: 1.8rem;
+}
+
+.end-call-btn:hover {
+    background: rgba(244, 67, 54, 1);
+    transform: scale(1.1);
+}
+
+/* Incoming Call Dialog */
+.incoming-call-dialog {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    background: rgba(0, 0, 0, 0.8);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 10000;
+    animation: fadeIn 0.3s ease;
+}
+
+.incoming-call-content {
+    background: white;
+    border-radius: 20px;
+    padding: 2rem;
+    text-align: center;
+    max-width: 400px;
+    width: 90%;
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+    animation: slideInUp 0.3s ease;
+}
+
+.caller-info {
+    margin-bottom: 2rem;
+}
+
+.caller-avatar {
+    width: 80px;
+    height: 80px;
+    border-radius: 50%;
+    background: linear-gradient(45deg, #2196F3, #21CBF3);
+    color: white;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 2rem;
+    margin: 0 auto 1rem;
+}
+
+.caller-info h3 {
+    margin: 0 0 0.5rem 0;
+    color: #333;
+    font-size: 1.5rem;
+}
+
+.caller-info p {
+    margin: 0;
+    color: #666;
+    font-size: 1.1rem;
+}
+
+.call-actions {
+    display: flex;
+    gap: 1rem;
+    justify-content: center;
+}
+
+.call-actions .btn {
+    padding: 1rem 2rem;
+    border: none;
+    border-radius: 50px;
+    font-size: 1.1rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    min-width: 120px;
+    justify-content: center;
+}
+
+.call-actions .btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(0, 0, 0, 0.2);
+}
+
+/* Error Notifications */
+.webrtc-error {
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    z-index: 10001;
+    max-width: 400px;
+    padding: 1rem 1.5rem;
+    border-radius: 10px;
+    font-weight: 500;
+    animation: slideInRight 0.3s ease;
+}
+
+/* Call Buttons in Chat/UI */
+.start-video-call,
+.start-audio-call {
+    background: none;
+    border: none;
+    color: #2196F3;
+    font-size: 1.2rem;
+    cursor: pointer;
+    padding: 0.5rem;
+    border-radius: 50%;
+    transition: all 0.3s ease;
+}
+
+.start-video-call:hover,
+.start-audio-call:hover {
+    background: rgba(33, 150, 243, 0.1);
+    transform: scale(1.1);
+}
+
+.start-audio-call {
+    color: #4CAF50;
+}
+
+.start-audio-call:hover {
+    background: rgba(76, 175, 80, 0.1);
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+    .call-header {
+        padding: 1rem;
+        flex-direction: column;
+        gap: 0.5rem;
+        text-align: center;
+    }
+
+    .call-info {
+        flex-direction: column;
+        gap: 0.5rem;
+    }
+
+    .participants-sidebar {
+        display: none; /* Hide on mobile */
+    }
+
+    .video-grid {
+        padding: 0.5rem;
+        gap: 0.5rem;
+        grid-template-columns: 1fr;
+    }
+
+    .call-controls {
+        gap: 0.5rem;
+        padding: 1rem;
+        flex-wrap: wrap;
+    }
+
+    .control-btn {
+        width: 50px;
+        height: 50px;
+        font-size: 1.2rem;
+    }
+
+    .end-call-btn {
+        width: 60px;
+        height: 60px;
+    }
+
+    .incoming-call-content {
+        padding: 1.5rem;
+    }
+
+    .call-actions {
+        flex-direction: column;
+        gap: 0.5rem;
+    }
+
+    .call-actions .btn {
+        width: 100%;
+    }
+}
+
+@media (max-width: 480px) {
+    .call-header {
+        padding: 0.5rem;
+    }
+
+    .call-info h3 {
+        font-size: 1.2rem;
+    }
+
+    .call-duration {
+        font-size: 1rem;
+        padding: 0.25rem 0.75rem;
+    }
+
+    .video-grid {
+        padding: 0.25rem;
+    }
+
+    .control-btn {
+        width: 45px;
+        height: 45px;
+        font-size: 1rem;
+    }
+
+    .end-call-btn {
+        width: 55px;
+        height: 55px;
+        font-size: 1.4rem;
+    }
+}
+
+/* Animations */
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+    }
+    to {
+        opacity: 1;
+    }
+}
+
+@keyframes slideInUp {
+    from {
+        transform: translateY(30px);
+        opacity: 0;
+    }
+    to {
+        transform: translateY(0);
+        opacity: 1;
+    }
+}
+
+@keyframes slideInRight {
+    from {
+        transform: translateX(100%);
+        opacity: 0;
+    }
+    to {
+        transform: translateX(0);
+        opacity: 1;
+    }
+}
+
+/* Dark theme adjustments */
+@media (prefers-color-scheme: dark) {
+    .incoming-call-content {
+        background: #2d3748;
+        color: white;
+    }
+
+    .caller-info h3 {
+        color: white;
+    }
+
+    .caller-info p {
+        color: #a0aec0;
+    }
+}
+
+/* Accessibility improvements */
+@media (prefers-reduced-motion: reduce) {
+    * {
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.01ms !important;
+    }
+}
+
+/* High contrast mode */
+@media (prefers-contrast: high) {
+    .video-overlay {
+        background: rgba(0, 0, 0, 0.9);
+    }
+
+    .control-btn {
+        border: 2px solid white;
+    }
+
+    .video-container {
+        border-width: 4px;
+    }
+}

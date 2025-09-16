@@ -1,0 +1,391 @@
+{% extends "layout.html" %}
+
+{% block title %}WebRTC Video/Audio Calling Demo - EventSync{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+    <div class="row justify-content-center">
+        <div class="col-lg-10">
+            <div class="card shadow-lg border-0 rounded-lg">
+                <div class="card-header bg-gradient-primary text-white text-center py-4">
+                    <h1 class="mb-0">
+                        <i class="fas fa-video me-3"></i>
+                        WebRTC Video & Audio Calling Demo
+                    </h1>
+                    <p class="mb-0 mt-2">Test the video and audio calling features</p>
+                </div>
+
+                <div class="card-body p-4">
+                    <!-- Call Status Section -->
+                    <div class="row mb-4">
+                        <div class="col-12">
+                            <div class="alert alert-info" id="call-status-alert">
+                                <i class="fas fa-info-circle me-2"></i>
+                                <strong>Ready to call:</strong> Choose a call type below to test the WebRTC functionality.
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Quick Actions -->
+                    <div class="row mb-4">
+                        <div class="col-md-6 mb-3">
+                            <div class="card border-primary">
+                                <div class="card-body text-center">
+                                    <i class="fas fa-video fa-3x text-primary mb-3"></i>
+                                    <h5>Video Call</h5>
+                                    <p class="text-muted">Start a video call with camera and microphone</p>
+                                    <button class="btn btn-primary start-video-call" data-user-id="1">
+                                        <i class="fas fa-video me-2"></i>Start Video Call
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="col-md-6 mb-3">
+                            <div class="card border-success">
+                                <div class="card-body text-center">
+                                    <i class="fas fa-phone fa-3x text-success mb-3"></i>
+                                    <h5>Audio Call</h5>
+                                    <p class="text-muted">Start an audio-only call with microphone</p>
+                                    <button class="btn btn-success start-audio-call" data-user-id="1">
+                                        <i class="fas fa-phone me-2"></i>Start Audio Call
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- User Selection for Multi-user Calls -->
+                    <div class="row mb-4">
+                        <div class="col-12">
+                            <div class="card border-info">
+                                <div class="card-header bg-info text-white">
+                                    <h5 class="mb-0">
+                                        <i class="fas fa-users me-2"></i>
+                                        Group Call Options
+                                    </h5>
+                                </div>
+                                <div class="card-body">
+                                    <p>Select multiple users to invite to a group call:</p>
+                                    
+                                    <div class="row">
+                                        <div class="col-md-8">
+                                            <div class="form-group">
+                                                <label for="invite-users">User IDs to invite (comma-separated):</label>
+                                                <input type="text" 
+                                                       id="invite-users" 
+                                                       class="form-control" 
+                                                       placeholder="e.g., 2, 3, 4" 
+                                                       value="">
+                                                <small class="form-text text-muted">Enter user IDs separated by commas</small>
+                                            </div>
+                                        </div>
+                                        <div class="col-md-4 d-flex align-items-end">
+                                            <button class="btn btn-outline-primary me-2" onclick="startGroupVideoCall()">
+                                                <i class="fas fa-video me-1"></i>Group Video
+                                            </button>
+                                            <button class="btn btn-outline-success" onclick="startGroupAudioCall()">
+                                                <i class="fas fa-phone me-1"></i>Group Audio
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Call History Section -->
+                    <div class="row mb-4">
+                        <div class="col-12">
+                            <div class="card">
+                                <div class="card-header d-flex justify-content-between align-items-center">
+                                    <h5 class="mb-0">
+                                        <i class="fas fa-history me-2"></i>
+                                        Recent Calls
+                                    </h5>
+                                    <button class="btn btn-sm btn-outline-primary" onclick="loadCallHistory()">
+                                        <i class="fas fa-sync me-1"></i>Refresh
+                                    </button>
+                                </div>
+                                <div class="card-body">
+                                    <div id="call-history-container">
+                                        <div class="text-center text-muted py-4">
+                                            <i class="fas fa-phone fa-2x mb-2"></i>
+                                            <p>No call history available. Start a call to see it here!</p>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Features List -->
+                    <div class="row">
+                        <div class="col-12">
+                            <div class="card bg-light">
+                                <div class="card-header">
+                                    <h5 class="mb-0">
+                                        <i class="fas fa-star me-2"></i>
+                                        WebRTC Features Available
+                                    </h5>
+                                </div>
+                                <div class="card-body">
+                                    <div class="row">
+                                        <div class="col-md-6">
+                                            <ul class="list-unstyled">
+                                                <li><i class="fas fa-check text-success me-2"></i>High-quality video calls</li>
+                                                <li><i class="fas fa-check text-success me-2"></i>Crystal-clear audio calls</li>
+                                                <li><i class="fas fa-check text-success me-2"></i>Screen sharing capability</li>
+                                                <li><i class="fas fa-check text-success me-2"></i>Multiple participants support</li>
+                                            </ul>
+                                        </div>
+                                        <div class="col-md-6">
+                                            <ul class="list-unstyled">
+                                                <li><i class="fas fa-check text-success me-2"></i>Real-time media controls</li>
+                                                <li><i class="fas fa-check text-success me-2"></i>Call recording (when enabled)</li>
+                                                <li><i class="fas fa-check text-success me-2"></i>Mobile responsive interface</li>
+                                                <li><i class="fas fa-check text-success me-2"></i>Call history and analytics</li>
+                                            </ul>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Call Test Results Modal -->
+<div class="modal fade" id="testResultsModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Call Test Results</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body" id="testResultsContent">
+                <!-- Results will be populated here -->
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Load call history on page load
+    loadCallHistory();
+    
+    // Set up event listeners for call status updates
+    if (window.webrtcManager && window.webrtcManager.socket) {
+        window.webrtcManager.socket.on('webrtc_call_joined', function(data) {
+            updateCallStatus('success', 'Call joined successfully!');
+        });
+        
+        window.webrtcManager.socket.on('webrtc_error', function(data) {
+            updateCallStatus('danger', 'Call error: ' + data.error);
+        });
+    }
+});
+
+function startGroupVideoCall() {
+    const userIdsInput = document.getElementById('invite-users');
+    const userIdsText = userIdsInput.value.trim();
+    
+    if (!userIdsText) {
+        alert('Please enter user IDs to invite to the call');
+        return;
+    }
+    
+    const userIds = userIdsText.split(',').map(id => parseInt(id.trim())).filter(id => !isNaN(id));
+    
+    if (userIds.length === 0) {
+        alert('Please enter valid user IDs');
+        return;
+    }
+    
+    if (window.webrtcManager) {
+        window.webrtcManager.initiateCall('video', userIds, {
+            title: 'Group Video Call Demo',
+            description: 'Testing group video call functionality'
+        });
+    } else {
+        alert('WebRTC manager not initialized');
+    }
+}
+
+function startGroupAudioCall() {
+    const userIdsInput = document.getElementById('invite-users');
+    const userIdsText = userIdsInput.value.trim();
+    
+    if (!userIdsText) {
+        alert('Please enter user IDs to invite to the call');
+        return;
+    }
+    
+    const userIds = userIdsText.split(',').map(id => parseInt(id.trim())).filter(id => !isNaN(id));
+    
+    if (userIds.length === 0) {
+        alert('Please enter valid user IDs');
+        return;
+    }
+    
+    if (window.webrtcManager) {
+        window.webrtcManager.initiateCall('audio', userIds, {
+            title: 'Group Audio Call Demo',
+            description: 'Testing group audio call functionality'
+        });
+    } else {
+        alert('WebRTC manager not initialized');
+    }
+}
+
+async function loadCallHistory() {
+    try {
+        const response = await fetch('/api/webrtc/calls/history?limit=10');
+        const data = await response.json();
+        
+        const container = document.getElementById('call-history-container');
+        
+        if (data.calls && data.calls.length > 0) {
+            let html = '<div class="list-group">';
+            
+            data.calls.forEach(call => {
+                const startTime = new Date(call.created_at).toLocaleString();
+                const duration = call.duration_seconds ? `${Math.floor(call.duration_seconds / 60)}:${(call.duration_seconds % 60).toString().padStart(2, '0')}` : 'N/A';
+                const statusBadge = getStatusBadge(call.status);
+                const typeIcon = call.call_type === 'video' ? 'fa-video' : 'fa-phone';
+                
+                html += `
+                    <div class="list-group-item">
+                        <div class="d-flex w-100 justify-content-between">
+                            <h6 class="mb-1">
+                                <i class="fas ${typeIcon} me-2"></i>
+                                ${call.title || 'Call'}
+                            </h6>
+                            <small>${startTime}</small>
+                        </div>
+                        <p class="mb-1">
+                            ${statusBadge}
+                            <span class="ms-2">Duration: ${duration}</span>
+                            <span class="ms-2">Participants: ${call.participant_count}</span>
+                        </p>
+                        <small class="text-muted">Call ID: ${call.call_id}</small>
+                    </div>
+                `;
+            });
+            
+            html += '</div>';
+            container.innerHTML = html;
+        } else {
+            container.innerHTML = `
+                <div class="text-center text-muted py-4">
+                    <i class="fas fa-phone fa-2x mb-2"></i>
+                    <p>No call history available. Start a call to see it here!</p>
+                </div>
+            `;
+        }
+    } catch (error) {
+        console.error('Error loading call history:', error);
+        document.getElementById('call-history-container').innerHTML = `
+            <div class="text-center text-danger py-4">
+                <i class="fas fa-exclamation-triangle fa-2x mb-2"></i>
+                <p>Error loading call history. Please try again.</p>
+            </div>
+        `;
+    }
+}
+
+function getStatusBadge(status) {
+    const badges = {
+        'ended': '<span class="badge bg-secondary">Ended</span>',
+        'connected': '<span class="badge bg-success">Connected</span>',
+        'failed': '<span class="badge bg-danger">Failed</span>',
+        'missed': '<span class="badge bg-warning">Missed</span>',
+        'declined': '<span class="badge bg-danger">Declined</span>'
+    };
+    
+    return badges[status] || '<span class="badge bg-secondary">' + status + '</span>';
+}
+
+function updateCallStatus(type, message) {
+    const alertElement = document.getElementById('call-status-alert');
+    alertElement.className = `alert alert-${type}`;
+    alertElement.innerHTML = `
+        <i class="fas fa-info-circle me-2"></i>
+        <strong>Call Status:</strong> ${message}
+    `;
+}
+
+// Test WebRTC functionality
+function testWebRTCSupport() {
+    const results = [];
+    
+    // Test getUserMedia support
+    if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
+        results.push({ test: 'getUserMedia API', status: 'supported', icon: 'check' });
+    } else {
+        results.push({ test: 'getUserMedia API', status: 'not supported', icon: 'times' });
+    }
+    
+    // Test RTCPeerConnection support
+    if (window.RTCPeerConnection) {
+        results.push({ test: 'RTCPeerConnection', status: 'supported', icon: 'check' });
+    } else {
+        results.push({ test: 'RTCPeerConnection', status: 'not supported', icon: 'times' });
+    }
+    
+    // Test WebSocket support
+    if (window.WebSocket) {
+        results.push({ test: 'WebSocket', status: 'supported', icon: 'check' });
+    } else {
+        results.push({ test: 'WebSocket', status: 'not supported', icon: 'times' });
+    }
+    
+    // Test Screen Capture API
+    if (navigator.mediaDevices && navigator.mediaDevices.getDisplayMedia) {
+        results.push({ test: 'Screen Capture API', status: 'supported', icon: 'check' });
+    } else {
+        results.push({ test: 'Screen Capture API', status: 'not supported', icon: 'times' });
+    }
+    
+    // Display results
+    let html = '<div class="row">';
+    results.forEach(result => {
+        const colorClass = result.icon === 'check' ? 'text-success' : 'text-danger';
+        html += `
+            <div class="col-md-6 mb-2">
+                <i class="fas fa-${result.icon} ${colorClass} me-2"></i>
+                ${result.test}: <strong>${result.status}</strong>
+            </div>
+        `;
+    });
+    html += '</div>';
+    
+    document.getElementById('testResultsContent').innerHTML = html;
+    
+    // Show modal
+    const modal = new bootstrap.Modal(document.getElementById('testResultsModal'));
+    modal.show();
+}
+
+// Add test button to the page
+document.addEventListener('DOMContentLoaded', function() {
+    const cardHeader = document.querySelector('.card-header');
+    cardHeader.innerHTML += `
+        <div class="mt-2">
+            <button class="btn btn-outline-light btn-sm" onclick="testWebRTCSupport()">
+                <i class="fas fa-cog me-1"></i>Test WebRTC Support
+            </button>
+        </div>
+    `;
+});
+</script>
+{% endblock %}

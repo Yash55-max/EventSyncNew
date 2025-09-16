@@ -1,6 +1,6 @@
 {% extends "layout.html" %}
 
-{% block title %}{{ event.title }} - EventHub{% endblock %}
+{% block title %}{{ event.title }} - EventSync{% endblock %}
 
 {% block content %}
 <!-- Event Hero -->
@@ -197,37 +197,28 @@
                 </a>
               </div>
             {% elif not event.is_full() %}
-              <form method="POST" action="{{ url_for('register_for_event', event_id=event.id) }}">
-                {{ form.hidden_tag() }}
-                
-                <div class="mb-3">
-                  {{ form.quantity.label(class="form-label") }}
-                  {% if form.quantity.errors %}
-                    {{ form.quantity(class="form-control is-invalid", type="number", min="1", max=(event.max_attendees - event.attendees_count() if event.max_attendees > 0 else 10), data_max_attendees=event.max_attendees, data_current_attendees=event.attendees_count(), data_price=event.price) }}
-                    <div class="invalid-feedback">
-                      {% for error in form.quantity.errors %}
-                        {{ error }}
-                      {% endfor %}
-                    </div>
-                  {% else %}
-                    {{ form.quantity(class="form-control", type="number", min="1", max=(event.max_attendees - event.attendees_count() if event.max_attendees > 0 else 10), data_max_attendees=event.max_attendees, data_current_attendees=event.attendees_count(), data_price=event.price) }}
-                  {% endif %}
-                  <div id="quantity-warning" class="form-text text-danger" style="display: none;"></div>
-                </div>
-                
+              <div class="d-grid">
                 {% if event.price > 0 %}
-                  <div class="mb-3">
-                    <div class="d-flex justify-content-between">
-                      <span>Total:</span>
-                      <span class="fw-bold" id="total-price">${{ "%.2f"|format(event.price) }}</span>
-                    </div>
-                  </div>
+                  <a href="{{ url_for('payments.checkout', event_id=event.id) }}" class="btn btn-primary btn-lg">
+                    {% if event.accept_upi_payments and (event.upi_id or event.payment_mobile) %}
+                      <i class="fas fa-mobile-alt me-2"></i> Register & Pay ₹{{ "%.2f"|format(event.price) }} via UPI
+                    {% else %}
+                      <i class="fas fa-credit-card me-2"></i> Register & Pay ${{ "%.2f"|format(event.price) }}
+                    {% endif %}
+                  </a>
+                  <small class="text-muted mt-2 text-center">
+                    {% if event.accept_upi_payments and (event.upi_id or event.payment_mobile) %}
+                      <i class="fas fa-mobile-alt me-1"></i> UPI payments available
+                    {% else %}
+                      <i class="fas fa-shield-alt me-1"></i> Secure payment with Stripe
+                    {% endif %}
+                  </small>
+                {% else %}
+                  <a href="{{ url_for('payments.checkout', event_id=event.id) }}" class="btn btn-success btn-lg">
+                    <i class="fas fa-user-plus me-2"></i> Register for Free
+                  </a>
                 {% endif %}
-                
-                <div class="d-grid">
-                  {{ form.submit(class="btn btn-primary btn-lg") }}
-                </div>
-              </form>
+              </div>
             {% else %}
               <div class="alert alert-danger mt-3">
                 <i class="fas fa-exclamation-circle me-2"></i>
@@ -379,3 +370,4 @@
   });
 </script>
 {% endblock %}
+

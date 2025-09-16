@@ -1,0 +1,422 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Security Dashboard - Event Management System</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/modern-ui.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/security-dashboard.css') }}">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+</head>
+<body>
+    <div class="security-dashboard">
+        <!-- Header -->
+        <header class="dashboard-header">
+            <div class="header-content">
+                <h1><i class="fas fa-shield-alt"></i> Security Dashboard</h1>
+                <div class="security-status">
+                    <div class="status-indicator {{ 'secure' if security_score > 80 else 'warning' if security_score > 60 else 'danger' }}">
+                        <span class="score">{{ security_score }}%</span>
+                        <span class="label">Security Score</span>
+                    </div>
+                </div>
+            </div>
+        </header>
+
+        <!-- Navigation -->
+        <nav class="security-nav">
+            <div class="nav-tabs">
+                <button class="nav-tab active" data-tab="overview">Overview</button>
+                <button class="nav-tab" data-tab="rbac">Access Control</button>
+                <button class="nav-tab" data-tab="audit">Audit Logs</button>
+                <button class="nav-tab" data-tab="privacy">Privacy & GDPR</button>
+                <button class="nav-tab" data-tab="settings">Settings</button>
+            </div>
+        </nav>
+
+        <!-- Overview Tab -->
+        <div id="overview" class="tab-content active">
+            <div class="metrics-grid">
+                <div class="metric-card">
+                    <div class="metric-icon">
+                        <i class="fas fa-clock"></i>
+                    </div>
+                    <div class="metric-info">
+                        <h3>{{ dashboard_data.total_events_24h }}</h3>
+                        <p>Security Events (24h)</p>
+                    </div>
+                </div>
+                
+                <div class="metric-card warning">
+                    <div class="metric-icon">
+                        <i class="fas fa-exclamation-triangle"></i>
+                    </div>
+                    <div class="metric-info">
+                        <h3>{{ dashboard_data.failed_attempts_24h }}</h3>
+                        <p>Failed Login Attempts</p>
+                    </div>
+                </div>
+                
+                <div class="metric-card">
+                    <div class="metric-icon">
+                        <i class="fas fa-ban"></i>
+                    </div>
+                    <div class="metric-info">
+                        <h3>{{ dashboard_data.blocked_ips }}</h3>
+                        <p>Blocked IP Addresses</p>
+                    </div>
+                </div>
+                
+                <div class="metric-card">
+                    <div class="metric-icon">
+                        <i class="fas fa-database"></i>
+                    </div>
+                    <div class="metric-info">
+                        <h3>{{ dashboard_data.active_data_processing_records }}</h3>
+                        <p>Active Data Records</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Recent Security Events -->
+            <div class="security-events">
+                <h2><i class="fas fa-history"></i> Recent Security Events</h2>
+                <div class="events-list">
+                    {% for event in dashboard_data.recent_failed_logins %}
+                    <div class="event-item failed">
+                        <div class="event-icon">
+                            <i class="fas fa-times-circle"></i>
+                        </div>
+                        <div class="event-details">
+                            <div class="event-title">Failed Login Attempt</div>
+                            <div class="event-meta">
+                                <span class="timestamp">{{ event.timestamp }}</span>
+                                <span class="ip">IP: {{ event.ip_address }}</span>
+                            </div>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+
+        <!-- RBAC Tab -->
+        <div id="rbac" class="tab-content">
+            <div class="rbac-section">
+                <h2><i class="fas fa-users-cog"></i> Role-Based Access Control</h2>
+                
+                <!-- Role Management -->
+                <div class="role-management">
+                    <h3>User Roles & Permissions</h3>
+                    <div class="roles-grid">
+                        {% for role_name, permissions in role_permissions.items() %}
+                        <div class="role-card">
+                            <div class="role-header">
+                                <h4>{{ role_name.replace('_', ' ').title() }}</h4>
+                                <span class="permission-count">{{ permissions|length }} permissions</span>
+                            </div>
+                            <div class="permissions-list">
+                                {% for permission in permissions %}
+                                <span class="permission-tag">{{ permission.replace('_', ' ').title() }}</span>
+                                {% endfor %}
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+
+                <!-- Permission Matrix -->
+                <div class="permission-matrix">
+                    <h3>Permission Matrix</h3>
+                    <table class="matrix-table">
+                        <thead>
+                            <tr>
+                                <th>Permission</th>
+                                <th>Guest</th>
+                                <th>Attendee</th>
+                                <th>Organizer</th>
+                                <th>Moderator</th>
+                                <th>Admin</th>
+                                <th>Super Admin</th>
+                            </tr>
+                        </thead>
+                        <tbody id="permission-matrix-body">
+                            <!-- Populated by JavaScript -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- Audit Logs Tab -->
+        <div id="audit" class="tab-content">
+            <div class="audit-section">
+                <h2><i class="fas fa-clipboard-list"></i> Security Audit Logs</h2>
+                
+                <!-- Filters -->
+                <div class="audit-filters">
+                    <div class="filter-group">
+                        <label for="date-range">Date Range:</label>
+                        <select id="date-range">
+                            <option value="24h">Last 24 Hours</option>
+                            <option value="7d">Last 7 Days</option>
+                            <option value="30d">Last 30 Days</option>
+                            <option value="custom">Custom Range</option>
+                        </select>
+                    </div>
+                    
+                    <div class="filter-group">
+                        <label for="event-type">Event Type:</label>
+                        <select id="event-type">
+                            <option value="all">All Events</option>
+                            <option value="login_attempt">Login Attempts</option>
+                            <option value="unauthorized_access">Unauthorized Access</option>
+                            <option value="data_access">Data Access</option>
+                            <option value="system_changes">System Changes</option>
+                        </select>
+                    </div>
+                    
+                    <div class="filter-group">
+                        <label for="success-filter">Status:</label>
+                        <select id="success-filter">
+                            <option value="all">All</option>
+                            <option value="success">Success Only</option>
+                            <option value="failure">Failures Only</option>
+                        </select>
+                    </div>
+                    
+                    <button id="export-logs" class="btn btn-secondary">
+                        <i class="fas fa-download"></i> Export Logs
+                    </button>
+                </div>
+
+                <!-- Audit Log Table -->
+                <div class="audit-table-container">
+                    <table class="audit-table">
+                        <thead>
+                            <tr>
+                                <th>Timestamp</th>
+                                <th>User</th>
+                                <th>Action</th>
+                                <th>Resource</th>
+                                <th>IP Address</th>
+                                <th>Status</th>
+                                <th>Details</th>
+                            </tr>
+                        </thead>
+                        <tbody id="audit-logs-body">
+                            <!-- Populated by JavaScript -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- Privacy & GDPR Tab -->
+        <div id="privacy" class="tab-content">
+            <div class="privacy-section">
+                <h2><i class="fas fa-user-shield"></i> Privacy & GDPR Compliance</h2>
+                
+                <!-- Data Processing Records -->
+                <div class="data-processing">
+                    <h3>Data Processing Records</h3>
+                    <div class="processing-stats">
+                        <div class="stat-item">
+                            <span class="stat-number">{{ data_processing_stats.total_records }}</span>
+                            <span class="stat-label">Total Records</span>
+                        </div>
+                        <div class="stat-item">
+                            <span class="stat-number">{{ data_processing_stats.expiring_soon }}</span>
+                            <span class="stat-label">Expiring Soon</span>
+                        </div>
+                        <div class="stat-item">
+                            <span class="stat-number">{{ data_processing_stats.anonymized }}</span>
+                            <span class="stat-label">Anonymized</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- GDPR Actions -->
+                <div class="gdpr-actions">
+                    <h3>GDPR Actions</h3>
+                    <div class="action-buttons">
+                        <button id="export-user-data" class="btn btn-primary">
+                            <i class="fas fa-file-export"></i> Export User Data
+                        </button>
+                        <button id="anonymize-data" class="btn btn-warning">
+                            <i class="fas fa-user-secret"></i> Anonymize Data
+                        </button>
+                        <button id="delete-expired" class="btn btn-danger">
+                            <i class="fas fa-trash"></i> Delete Expired Data
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Data Retention Policies -->
+                <div class="retention-policies">
+                    <h3>Data Retention Policies</h3>
+                    <table class="policies-table">
+                        <thead>
+                            <tr>
+                                <th>Data Category</th>
+                                <th>Retention Period</th>
+                                <th>Legal Basis</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>Personal Information</td>
+                                <td>7 years</td>
+                                <td>Legitimate Interest</td>
+                                <td><button class="btn btn-sm">Edit</button></td>
+                            </tr>
+                            <tr>
+                                <td>Payment Data</td>
+                                <td>7 years</td>
+                                <td>Legal Obligation</td>
+                                <td><button class="btn btn-sm">Edit</button></td>
+                            </tr>
+                            <tr>
+                                <td>Behavioral Data</td>
+                                <td>2 years</td>
+                                <td>Consent</td>
+                                <td><button class="btn btn-sm">Edit</button></td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- Settings Tab -->
+        <div id="settings" class="tab-content">
+            <div class="settings-section">
+                <h2><i class="fas fa-cogs"></i> Security Settings</h2>
+                
+                <!-- Two-Factor Authentication -->
+                <div class="settings-group">
+                    <h3><i class="fas fa-mobile-alt"></i> Two-Factor Authentication</h3>
+                    <div class="setting-item">
+                        <div class="setting-info">
+                            <label>Enforce 2FA for Admin Users</label>
+                            <p>Require all administrator accounts to use two-factor authentication</p>
+                        </div>
+                        <div class="setting-control">
+                            <label class="toggle">
+                                <input type="checkbox" id="enforce-2fa" checked>
+                                <span class="slider"></span>
+                            </label>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Session Management -->
+                <div class="settings-group">
+                    <h3><i class="fas fa-clock"></i> Session Management</h3>
+                    <div class="setting-item">
+                        <label for="session-timeout">Session Timeout (minutes)</label>
+                        <input type="number" id="session-timeout" value="30" min="5" max="480">
+                    </div>
+                    <div class="setting-item">
+                        <div class="setting-info">
+                            <label>Strict IP Validation</label>
+                            <p>Invalidate sessions when IP address changes</p>
+                        </div>
+                        <div class="setting-control">
+                            <label class="toggle">
+                                <input type="checkbox" id="strict-ip">
+                                <span class="slider"></span>
+                            </label>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Rate Limiting -->
+                <div class="settings-group">
+                    <h3><i class="fas fa-tachometer-alt"></i> Rate Limiting</h3>
+                    <div class="rate-limit-config">
+                        <div class="limit-item">
+                            <label for="login-attempts">Login Attempts (per 15 min)</label>
+                            <input type="number" id="login-attempts" value="5" min="1" max="20">
+                        </div>
+                        <div class="limit-item">
+                            <label for="api-calls">API Calls (per minute)</label>
+                            <input type="number" id="api-calls" value="100" min="10" max="1000">
+                        </div>
+                        <div class="limit-item">
+                            <label for="password-resets">Password Resets (per hour)</label>
+                            <input type="number" id="password-resets" value="3" min="1" max="10">
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Password Policy -->
+                <div class="settings-group">
+                    <h3><i class="fas fa-key"></i> Password Policy</h3>
+                    <div class="password-policy">
+                        <div class="policy-item">
+                            <label for="min-length">Minimum Length</label>
+                            <input type="number" id="min-length" value="8" min="6" max="20">
+                        </div>
+                        <div class="policy-checkboxes">
+                            <label><input type="checkbox" checked> Require Uppercase</label>
+                            <label><input type="checkbox" checked> Require Lowercase</label>
+                            <label><input type="checkbox" checked> Require Numbers</label>
+                            <label><input type="checkbox" checked> Require Special Characters</label>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Save Settings -->
+                <div class="settings-actions">
+                    <button id="save-settings" class="btn btn-primary">
+                        <i class="fas fa-save"></i> Save Settings
+                    </button>
+                    <button id="reset-settings" class="btn btn-secondary">
+                        <i class="fas fa-undo"></i> Reset to Defaults
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 2FA Setup Modal -->
+    <div id="twofa-modal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3><i class="fas fa-mobile-alt"></i> Setup Two-Factor Authentication</h3>
+                <button class="modal-close">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div class="twofa-steps">
+                    <div class="step active" data-step="1">
+                        <h4>Step 1: Scan QR Code</h4>
+                        <p>Use your authenticator app to scan this QR code:</p>
+                        <div class="qr-code-container">
+                            <img id="qr-code" src="" alt="2FA QR Code">
+                        </div>
+                        <p><small>Can't scan? Enter this code manually: <code id="manual-code"></code></small></p>
+                    </div>
+                    <div class="step" data-step="2">
+                        <h4>Step 2: Verify Code</h4>
+                        <p>Enter the 6-digit code from your authenticator app:</p>
+                        <input type="text" id="verification-code" maxlength="6" placeholder="123456">
+                        <div class="backup-codes">
+                            <h5>Backup Codes</h5>
+                            <p>Save these backup codes in a safe place:</p>
+                            <div id="backup-codes-list"></div>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-actions">
+                    <button id="verify-2fa" class="btn btn-primary">Verify & Enable</button>
+                    <button class="btn btn-secondary" onclick="closeModal('twofa-modal')">Cancel</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="{{ url_for('static', filename='js/security-dashboard.js') }}"></script>
+</body>
+</html>

@@ -1,0 +1,278 @@
+{% extends "layout.html" %}
+
+{% block title %}{{ title }} - EventSync{% endblock %}
+
+{% block extra_css %}
+<style>
+    .check-in-container {
+        max-width: 800px;
+        margin: 0 auto;
+        padding: 20px;
+    }
+    
+    .scanner-section {
+        background: #f8f9fa;
+        border: 2px dashed #007bff;
+        border-radius: 10px;
+        padding: 30px;
+        text-align: center;
+        margin: 20px 0;
+    }
+    
+    .ticket-input {
+        width: 100%;
+        padding: 15px;
+        border: 2px solid #ddd;
+        border-radius: 5px;
+        font-size: 16px;
+        margin: 10px 0;
+    }
+    
+    .scan-result {
+        margin-top: 20px;
+        padding: 15px;
+        border-radius: 5px;
+        display: none;
+    }
+    
+    .scan-success {
+        background: #d4edda;
+        border: 1px solid #c3e6cb;
+        color: #155724;
+    }
+    
+    .scan-error {
+        background: #f8d7da;
+        border: 1px solid #f5c6cb;
+        color: #721c24;
+    }
+    
+    .btn-verify {
+        background: linear-gradient(45deg, #007bff, #0056b3);
+        color: white;
+        border: none;
+        padding: 12px 30px;
+        border-radius: 25px;
+        font-size: 16px;
+        cursor: pointer;
+    }
+    
+    .btn-verify:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 8px rgba(0,123,255,0.3);
+    }
+    
+    .attendee-info {
+        background: white;
+        border-radius: 5px;
+        padding: 15px;
+        margin-top: 10px;
+        text-align: left;
+    }
+    
+    .stats-section {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: 20px;
+        margin: 30px 0;
+    }
+    
+    .stat-card {
+        background: white;
+        padding: 20px;
+        border-radius: 10px;
+        box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        text-align: center;
+    }
+    
+    .stat-number {
+        font-size: 2em;
+        font-weight: bold;
+        color: #007bff;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="check-in-container">
+    <h1>🎫 Event Check-in System</h1>
+    
+    {% if user_events %}
+    <div class="text-center mb-4">
+        <label for="event-select" class="form-label"><strong>Select Event:</strong></label>
+        <select id="event-select" class="form-select" style="max-width: 400px; margin: 0 auto;">
+            <option value="">Choose an event...</option>
+            {% for event in user_events %}
+            <option value="{{ event.id }}">{{ event.title }} - {{ event.start_date.strftime('%Y-%m-%d') }}</option>
+            {% endfor %}
+        </select>
+    </div>
+    
+    <div class="scanner-section" id="scanner-section" style="display: none;">
+        <h3>🎟️ Enter Ticket Number</h3>
+        <p>Ask attendees for their ticket number and enter it below:</p>
+        
+        <div class="input-group">
+            <input type="text" id="ticket-input" class="ticket-input" placeholder="Enter ticket number..." autofocus>
+            <button onclick="verifyTicket()" class="btn btn-verify">✅ Verify Ticket</button>
+        </div>
+        
+        <div id="scan-result" class="scan-result">
+            <div id="result-message"></div>
+            <div id="attendee-info" class="attendee-info"></div>
+        </div>
+    </div>
+    
+    <div class="stats-section" id="stats-section" style="display: none;">
+        <div class="stat-card">
+            <div class="stat-number" id="total-checked">0</div>
+            <div>Total Checked-in</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-number" id="total-attempts">0</div>
+            <div>Total Attempts</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-number" id="success-rate">100%</div>
+            <div>Success Rate</div>
+        </div>
+    </div>
+    
+    {% else %}
+    <div class="alert alert-info">
+        <h4>No Events Available</h4>
+        <p>You don't have any events to manage check-ins for. <a href="{{ url_for('create_event') }}">Create an event</a> first!</p>
+    </div>
+    {% endif %}
+</div>
+
+<script>
+let totalAttempts = 0;
+let successfulCheckins = 0;
+
+document.getElementById('event-select').addEventListener('change', function() {
+    const eventId = this.value;
+    const scannerSection = document.getElementById('scanner-section');
+    const statsSection = document.getElementById('stats-section');
+    
+    if (eventId) {
+        scannerSection.style.display = 'block';
+        statsSection.style.display = 'block';
+        document.getElementById('ticket-input').focus();
+    } else {
+        scannerSection.style.display = 'none';
+        statsSection.style.display = 'none';
+    }
+});
+
+document.getElementById('ticket-input').addEventListener('keypress', function(e) {
+    if (e.key === 'Enter') {
+        verifyTicket();
+    }
+});
+
+function verifyTicket() {
+    const ticketNumber = document.getElementById('ticket-input').value.trim();
+    const eventId = document.getElementById('event-select').value;
+    const resultDiv = document.getElementById('scan-result');
+    const messageDiv = document.getElementById('result-message');
+    const attendeeDiv = document.getElementById('attendee-info');
+    
+    if (!ticketNumber) {
+        alert('Please enter a ticket number');
+        return;
+    }
+    
+    if (!eventId) {
+        alert('Please select an event first');
+        return;
+    }
+    
+    // Show loading
+    resultDiv.style.display = 'block';
+    resultDiv.className = 'scan-result';
+    messageDiv.innerHTML = '🔄 Verifying ticket...';
+    attendeeDiv.innerHTML = '';
+    
+    fetch('/tickets/verify-ticket', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+            ticket_number: ticketNumber,
+            event_id: eventId
+        })
+    })
+    .then(response => response.json())
+    .then(data => {
+        totalAttempts++;
+        
+        if (data.success) {
+            successfulCheckins++;
+            resultDiv.className = 'scan-result scan-success';
+            messageDiv.innerHTML = `✅ ${data.message}`;
+            
+            // Show attendee information
+            const attendeeData = data.data;
+            attendeeDiv.innerHTML = `
+                <h5>👤 Attendee Information</h5>
+                <div><strong>Name:</strong> ${attendeeData.attendee_name}</div>
+                <div><strong>Email:</strong> ${attendeeData.attendee_email}</div>
+                <div><strong>Ticket Number:</strong> ${attendeeData.ticket_number}</div>
+                <div><strong>Status:</strong> ${attendeeData.status}</div>
+                <div><strong>Check-in Time:</strong> ${attendeeData.check_in_time}</div>
+            `;
+            
+        } else {
+            resultDiv.className = 'scan-result scan-error';
+            messageDiv.innerHTML = `❌ ${data.message}`;
+            
+            // Show partial info if available
+            if (data.data) {
+                const attendeeData = data.data;
+                attendeeDiv.innerHTML = `
+                    <h5>ℹ️ Ticket Information</h5>
+                    <div><strong>Attendee:</strong> ${attendeeData.attendee_name || 'N/A'}</div>
+                    <div><strong>Ticket Number:</strong> ${attendeeData.ticket_number || 'N/A'}</div>
+                    <div><strong>Status:</strong> ${attendeeData.status || 'N/A'}</div>
+                `;
+            } else {
+                attendeeDiv.innerHTML = '';
+            }
+        }
+        
+        // Update stats
+        updateStats();
+        
+        // Clear input for next scan
+        setTimeout(() => {
+            document.getElementById('ticket-input').value = '';
+            document.getElementById('ticket-input').focus();
+        }, 2000);
+        
+    })
+    .catch(error => {
+        resultDiv.className = 'scan-result scan-error';
+        messageDiv.innerHTML = `❌ Error: ${error.message}`;
+        attendeeDiv.innerHTML = '';
+    });
+}
+
+function updateStats() {
+    document.getElementById('total-checked').textContent = successfulCheckins;
+    document.getElementById('total-attempts').textContent = totalAttempts;
+    
+    const successRate = totalAttempts > 0 ? Math.round((successfulCheckins / totalAttempts) * 100) : 100;
+    document.getElementById('success-rate').textContent = successRate + '%';
+}
+
+// Auto-focus on ticket input when page loads
+window.onload = function() {
+    const ticketInput = document.getElementById('ticket-input');
+    if (ticketInput) {
+        ticketInput.focus();
+    }
+};
+</script>
+{% endblock %}

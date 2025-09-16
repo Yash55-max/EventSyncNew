@@ -1,0 +1,484 @@
+{% extends 'base.html' %}
+
+{% block title %}Setup Webhooks Integration - EVENTSYNC{% endblock %}
+
+{% block extra_css %}
+<style>
+    .setup-container {
+        max-width: 800px;
+        margin: 2rem auto;
+    }
+    .setup-card {
+        border: none;
+        border-radius: 10px;
+        box-shadow: 0 0.15rem 1.75rem 0 rgba(58, 59, 69, 0.15);
+    }
+    .setup-header {
+        background: linear-gradient(135deg, #6f42c1 0%, #e83e8c 100%);
+        color: white;
+        border-radius: 10px 10px 0 0;
+        padding: 2rem;
+        text-align: center;
+    }
+    .setup-icon {
+        font-size: 3rem;
+        margin-bottom: 1rem;
+    }
+    .step-card {
+        border: 1px solid #e3e6f0;
+        border-radius: 8px;
+        margin-bottom: 1rem;
+        overflow: hidden;
+    }
+    .step-header {
+        background: #f8f9fc;
+        padding: 1rem 1.5rem;
+        font-weight: 600;
+        border-bottom: 1px solid #e3e6f0;
+    }
+    .step-content {
+        padding: 1.5rem;
+    }
+    .form-group label {
+        font-weight: 600;
+        color: #5a5c69;
+    }
+    .required-field::after {
+        content: " *";
+        color: #e74a3b;
+    }
+    .code-block {
+        background: #f8f9fa;
+        border: 1px solid #e9ecef;
+        border-radius: 4px;
+        padding: 1rem;
+        font-family: 'Courier New', monospace;
+        font-size: 0.9rem;
+        overflow-x: auto;
+    }
+    .alert-info {
+        background: #d1ecf1;
+        border: 1px solid #bee5eb;
+        color: #0c5460;
+        border-radius: 5px;
+        padding: 1rem;
+        margin-bottom: 1rem;
+    }
+    .event-type-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: 1rem;
+        margin-top: 1rem;
+    }
+    .event-type-card {
+        border: 1px solid #e3e6f0;
+        border-radius: 8px;
+        padding: 1rem;
+        text-align: center;
+        transition: all 0.3s ease;
+    }
+    .event-type-card:hover {
+        border-color: #6f42c1;
+        background: #f8f9fc;
+    }
+    .event-type-card input[type="checkbox"] {
+        margin-bottom: 0.5rem;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="setup-container">
+    <div class="setup-card">
+        <div class="setup-header">
+            <i class="fas fa-webhook setup-icon"></i>
+            <h2 class="mb-0">Webhook Integration</h2>
+            <p class="mb-0 mt-2">Receive real-time notifications via HTTP webhooks</p>
+        </div>
+        
+        <div class="p-4">
+            <!-- Step 1: Webhook URL -->
+            <div class="step-card">
+                <div class="step-header">
+                    <i class="fas fa-link text-primary me-2"></i>
+                    Step 1: Configure Webhook URL
+                </div>
+                <div class="step-content">
+                    <div class="alert-info">
+                        <i class="fas fa-info-circle me-2"></i>
+                        We'll send HTTP POST requests to your webhook URL when events occur.
+                    </div>
+                    
+                    <form id="webhookSetup">
+                        <div class="form-group mb-3">
+                            <label for="webhookUrl" class="required-field">Webhook URL</label>
+                            <input type="url" class="form-control" id="webhookUrl" name="webhook_url" 
+                                   placeholder="https://your-app.com/webhooks/EVENTSYNC" required>
+                            <small class="form-text text-muted">
+                                Must be a valid HTTPS URL that accepts POST requests
+                            </small>
+                        </div>
+                        
+                        <div class="form-group mb-3">
+                            <label for="webhookSecret">Webhook Secret (Optional)</label>
+                            <input type="text" class="form-control" id="webhookSecret" name="webhook_secret" 
+                                   placeholder="Enter a secret key for signature verification">
+                            <small class="form-text text-muted">
+                                Used to verify webhook authenticity with HMAC SHA256 signatures
+                            </small>
+                        </div>
+                        
+                        <button type="button" class="btn btn-primary" onclick="testWebhook()">
+                            <i class="fas fa-vial"></i> Test Webhook
+                        </button>
+                    </form>
+                </div>
+            </div>
+
+            <!-- Step 2: Event Types -->
+            <div class="step-card">
+                <div class="step-header">
+                    <i class="fas fa-bell text-success me-2"></i>
+                    Step 2: Select Event Types
+                </div>
+                <div class="step-content">
+                    <p>Choose which events should trigger webhook notifications:</p>
+                    
+                    <div class="event-type-grid">
+                        <div class="event-type-card">
+                            <input type="checkbox" id="event-created" name="events" value="event.created" checked>
+                            <label for="event-created" class="d-block">
+                                <i class="fas fa-plus-circle text-success"></i><br>
+                                <strong>Event Created</strong><br>
+                                <small class="text-muted">When new events are created</small>
+                            </label>
+                        </div>
+                        
+                        <div class="event-type-card">
+                            <input type="checkbox" id="event-updated" name="events" value="event.updated" checked>
+                            <label for="event-updated" class="d-block">
+                                <i class="fas fa-edit text-warning"></i><br>
+                                <strong>Event Updated</strong><br>
+                                <small class="text-muted">When events are modified</small>
+                            </label>
+                        </div>
+                        
+                        <div class="event-type-card">
+                            <input type="checkbox" id="event-cancelled" name="events" value="event.cancelled" checked>
+                            <label for="event-cancelled" class="d-block">
+                                <i class="fas fa-times-circle text-danger"></i><br>
+                                <strong>Event Cancelled</strong><br>
+                                <small class="text-muted">When events are cancelled</small>
+                            </label>
+                        </div>
+                        
+                        <div class="event-type-card">
+                            <input type="checkbox" id="ticket-purchased" name="events" value="ticket.purchased" checked>
+                            <label for="ticket-purchased" class="d-block">
+                                <i class="fas fa-ticket-alt text-info"></i><br>
+                                <strong>Ticket Purchased</strong><br>
+                                <small class="text-muted">When tickets are bought</small>
+                            </label>
+                        </div>
+                        
+                        <div class="event-type-card">
+                            <input type="checkbox" id="ticket-cancelled" name="events" value="ticket.cancelled">
+                            <label for="ticket-cancelled" class="d-block">
+                                <i class="fas fa-ticket-alt text-danger"></i><br>
+                                <strong>Ticket Cancelled</strong><br>
+                                <small class="text-muted">When tickets are refunded</small>
+                            </label>
+                        </div>
+                        
+                        <div class="event-type-card">
+                            <input type="checkbox" id="payment-completed" name="events" value="payment.completed">
+                            <label for="payment-completed" class="d-block">
+                                <i class="fas fa-credit-card text-success"></i><br>
+                                <strong>Payment Completed</strong><br>
+                                <small class="text-muted">When payments are processed</small>
+                            </label>
+                        </div>
+                        
+                        <div class="event-type-card">
+                            <input type="checkbox" id="attendee-checkin" name="events" value="attendee.checkin">
+                            <label for="attendee-checkin" class="d-block">
+                                <i class="fas fa-check-circle text-success"></i><br>
+                                <strong>Attendee Check-in</strong><br>
+                                <small class="text-muted">When attendees check in</small>
+                            </label>
+                        </div>
+                        
+                        <div class="event-type-card">
+                            <input type="checkbox" id="event-reminder" name="events" value="event.reminder">
+                            <label for="event-reminder" class="d-block">
+                                <i class="fas fa-clock text-warning"></i><br>
+                                <strong>Event Reminders</strong><br>
+                                <small class="text-muted">Reminder notifications sent</small>
+                            </label>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Step 3: Payload Format -->
+            <div class="step-card">
+                <div class="step-header">
+                    <i class="fas fa-code text-info me-2"></i>
+                    Step 3: Webhook Payload Format
+                </div>
+                <div class="step-content">
+                    <p>Your webhook endpoint will receive JSON payloads in this format:</p>
+                    
+                    <div class="code-block">
+{
+  "event": "event.created",
+  "timestamp": "2023-12-07T10:30:00.000Z",
+  "data": {
+    "event_id": 123,
+    "title": "Amazing Conference 2024",
+    "start_date": "2024-01-15T09:00:00.000Z",
+    "end_date": "2024-01-15T17:00:00.000Z",
+    "location": "Convention Center",
+    "organizer_id": 456,
+    "max_attendees": 100
+  },
+  "signature": "sha256=d4a8c5a8f8..."
+}
+                    </div>
+                    
+                    <div class="mt-3">
+                        <h6>Webhook Headers:</h6>
+                        <ul class="list-unstyled">
+                            <li><code>Content-Type: application/json</code></li>
+                            <li><code>X-Webhook-Signature: sha256=...</code> (if secret provided)</li>
+                            <li><code>X-Event-Type: event.created</code></li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Step 4: Signature Verification -->
+            <div class="step-card">
+                <div class="step-header">
+                    <i class="fas fa-shield-alt text-warning me-2"></i>
+                    Step 4: Signature Verification (Recommended)
+                </div>
+                <div class="step-content">
+                    <p>If you provide a webhook secret, we'll sign each request with HMAC SHA256:</p>
+                    
+                    <div class="code-block">
+# Python example
+import hmac
+import hashlib
+import json
+
+def verify_webhook_signature(payload, signature, secret):
+    expected_signature = hmac.new(
+        secret.encode('utf-8'),
+        payload.encode('utf-8'),
+        hashlib.sha256
+    ).hexdigest()
+    return f"sha256={expected_signature}" == signature
+
+# Node.js example
+const crypto = require('crypto');
+
+function verifyWebhookSignature(payload, signature, secret) {
+    const expectedSignature = crypto
+        .createHmac('sha256', secret)
+        .update(payload, 'utf8')
+        .digest('hex');
+    return signature === `sha256=${expectedSignature}`;
+}
+                    </div>
+                </div>
+            </div>
+
+            <!-- Action Buttons -->
+            <div class="text-center mt-4">
+                <button type="button" class="btn btn-primary btn-lg me-3" onclick="saveWebhookIntegration()">
+                    <i class="fas fa-save me-2"></i>
+                    Save Webhook Integration
+                </button>
+                <a href="{{ url_for('integrations.integration_dashboard') }}" class="btn btn-secondary btn-lg">
+                    <i class="fas fa-arrow-left me-2"></i>
+                    Back to Dashboard
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+<script>
+function testWebhook() {
+    const webhookUrl = document.getElementById('webhookUrl').value;
+    
+    if (!webhookUrl) {
+        Swal.fire({
+            icon: 'error',
+            title: 'Missing URL',
+            text: 'Please enter a webhook URL first'
+        });
+        return;
+    }
+    
+    // Validate URL format
+    try {
+        new URL(webhookUrl);
+    } catch {
+        Swal.fire({
+            icon: 'error',
+            title: 'Invalid URL',
+            text: 'Please enter a valid HTTPS URL'
+        });
+        return;
+    }
+    
+    if (!webhookUrl.startsWith('https://')) {
+        Swal.fire({
+            icon: 'error',
+            title: 'HTTPS Required',
+            text: 'Webhook URLs must use HTTPS for security'
+        });
+        return;
+    }
+    
+    // Show loading
+    Swal.fire({
+        title: 'Testing Webhook...',
+        text: 'Sending test payload to your endpoint',
+        allowOutsideClick: false,
+        didOpen: () => {
+            Swal.showLoading();
+        }
+    });
+    
+    // Send test request
+    fetch('/integrations/api/test-webhook', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+            webhook_url: webhookUrl,
+            secret: document.getElementById('webhookSecret').value
+        })
+    })
+    .then(response => response.json())
+    .then(data => {
+        Swal.close();
+        
+        if (data.success) {
+            Swal.fire({
+                icon: 'success',
+                title: 'Test Successful!',
+                text: `Webhook endpoint responded with status ${data.status}`,
+                timer: 3000
+            });
+        } else {
+            Swal.fire({
+                icon: 'error',
+                title: 'Test Failed',
+                text: data.error || 'Webhook endpoint did not respond correctly'
+            });
+        }
+    })
+    .catch(error => {
+        Swal.close();
+        Swal.fire({
+            icon: 'error',
+            title: 'Test Error',
+            text: 'Failed to test webhook: ' + error.message
+        });
+    });
+}
+
+function saveWebhookIntegration() {
+    const webhookUrl = document.getElementById('webhookUrl').value;
+    const webhookSecret = document.getElementById('webhookSecret').value;
+    
+    if (!webhookUrl) {
+        Swal.fire({
+            icon: 'error',
+            title: 'Missing URL',
+            text: 'Please enter a webhook URL'
+        });
+        return;
+    }
+    
+    // Get selected event types
+    const selectedEvents = Array.from(document.querySelectorAll('input[name="events"]:checked'))
+        .map(checkbox => checkbox.value);
+    
+    if (selectedEvents.length === 0) {
+        Swal.fire({
+            icon: 'error',
+            title: 'No Events Selected',
+            text: 'Please select at least one event type to receive notifications for'
+        });
+        return;
+    }
+    
+    const integrationData = {
+        integration_type: 'webhooks',
+        credentials: {},
+        settings: {
+            events: selectedEvents,
+            secret: webhookSecret || null
+        },
+        webhook_url: webhookUrl
+    };
+    
+    // Show loading
+    Swal.fire({
+        title: 'Saving Webhook Integration...',
+        text: 'Please wait while we configure your webhook.',
+        allowOutsideClick: false,
+        didOpen: () => {
+            Swal.showLoading();
+        }
+    });
+    
+    // Save integration
+    fetch('/integrations/api/register', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(integrationData)
+    })
+    .then(response => response.json())
+    .then(data => {
+        Swal.close();
+        
+        if (data.success) {
+            Swal.fire({
+                icon: 'success',
+                title: 'Webhook Configured!',
+                text: 'Your webhook integration has been configured successfully.',
+                confirmButtonText: 'Go to Dashboard'
+            }).then(() => {
+                window.location.href = '/integrations/';
+            });
+        } else {
+            Swal.fire({
+                icon: 'error',
+                title: 'Save Failed',
+                text: data.error || 'Failed to save webhook integration'
+            });
+        }
+    })
+    .catch(error => {
+        Swal.close();
+        Swal.fire({
+            icon: 'error',
+            title: 'Network Error',
+            text: 'Failed to save integration: ' + error.message
+        });
+    });
+}
+</script>
+{% endblock %}

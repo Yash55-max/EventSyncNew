@@ -1,0 +1,513 @@
+{% extends 'base.html' %}
+
+{% block title %}Setup Google Calendar Integration - EVENTSYNC{% endblock %}
+
+{% block extra_css %}
+<style>
+    .setup-container {
+        max-width: 800px;
+        margin: 2rem auto;
+    }
+    .setup-card {
+        border: none;
+        border-radius: 10px;
+        box-shadow: 0 0.15rem 1.75rem 0 rgba(58, 59, 69, 0.15);
+    }
+    .setup-header {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        border-radius: 10px 10px 0 0;
+        padding: 2rem;
+        text-align: center;
+    }
+    .setup-icon {
+        font-size: 3rem;
+        margin-bottom: 1rem;
+    }
+    .step-card {
+        border: 1px solid #e3e6f0;
+        border-radius: 8px;
+        margin-bottom: 1rem;
+        overflow: hidden;
+    }
+    .step-header {
+        background: #f8f9fc;
+        padding: 1rem 1.5rem;
+        font-weight: 600;
+        border-bottom: 1px solid #e3e6f0;
+    }
+    .step-content {
+        padding: 1.5rem;
+    }
+    .form-group label {
+        font-weight: 600;
+        color: #5a5c69;
+    }
+    .required-field::after {
+        content: " *";
+        color: #e74a3b;
+    }
+    .btn-oauth {
+        background: #4285f4;
+        color: white;
+        border: none;
+        padding: 0.75rem 1.5rem;
+        border-radius: 5px;
+        font-weight: 600;
+        transition: all 0.3s ease;
+    }
+    .btn-oauth:hover {
+        background: #357ae8;
+        transform: translateY(-1px);
+    }
+    .code-block {
+        background: #f8f9fa;
+        border: 1px solid #e9ecef;
+        border-radius: 4px;
+        padding: 1rem;
+        font-family: 'Courier New', monospace;
+        font-size: 0.9rem;
+        overflow-x: auto;
+    }
+    .alert-info {
+        background: #d1ecf1;
+        border: 1px solid #bee5eb;
+        color: #0c5460;
+        border-radius: 5px;
+        padding: 1rem;
+        margin-bottom: 1rem;
+    }
+    .token-display {
+        background: #f8f9fa;
+        border: 1px solid #dee2e6;
+        border-radius: 4px;
+        padding: 0.5rem;
+        font-family: monospace;
+        font-size: 0.85rem;
+        word-break: break-all;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="setup-container">
+    <div class="setup-card">
+        <div class="setup-header">
+            <i class="fab fa-google setup-icon"></i>
+            <h2 class="mb-0">Google Calendar Integration</h2>
+            <p class="mb-0 mt-2">Sync your events with Google Calendar automatically</p>
+        </div>
+        
+        <div class="p-4">
+            <!-- Step 1: Google Cloud Setup -->
+            <div class="step-card">
+                <div class="step-header">
+                    <i class="fas fa-cloud text-primary me-2"></i>
+                    Step 1: Google Cloud Console Setup
+                </div>
+                <div class="step-content">
+                    <div class="alert-info">
+                        <i class="fas fa-info-circle me-2"></i>
+                        You'll need to create a Google Cloud project and enable the Calendar API.
+                    </div>
+                    
+                    <ol class="list-group list-group-numbered">
+                        <li class="list-group-item border-0 ps-0">
+                            Go to the <a href="https://console.cloud.google.com" target="_blank" class="text-primary">Google Cloud Console</a>
+                        </li>
+                        <li class="list-group-item border-0 ps-0">
+                            Create a new project or select an existing one
+                        </li>
+                        <li class="list-group-item border-0 ps-0">
+                            Enable the Google Calendar API for your project
+                        </li>
+                        <li class="list-group-item border-0 ps-0">
+                            Go to "Credentials" and create OAuth 2.0 credentials
+                        </li>
+                        <li class="list-group-item border-0 ps-0">
+                            Add the following redirect URI:
+                            <div class="code-block mt-2" id="redirectUri">
+                                {{ request.url_root }}integrations/oauth/google/callback
+                            </div>
+                            <button class="btn btn-sm btn-outline-primary mt-2" onclick="copyToClipboard('redirectUri')">
+                                <i class="fas fa-copy"></i> Copy
+                            </button>
+                        </li>
+                    </ol>
+                </div>
+            </div>
+
+            <!-- Step 2: OAuth Configuration -->
+            <div class="step-card">
+                <div class="step-header">
+                    <i class="fas fa-key text-success me-2"></i>
+                    Step 2: OAuth Configuration
+                </div>
+                <div class="step-content">
+                    <form id="googleCalendarSetup">
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="form-group mb-3">
+                                    <label for="clientId" class="required-field">Client ID</label>
+                                    <input type="text" class="form-control" id="clientId" name="client_id" 
+                                           placeholder="123456789.apps.googleusercontent.com" required>
+                                    <small class="form-text text-muted">
+                                        From your Google Cloud Console credentials
+                                    </small>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-group mb-3">
+                                    <label for="clientSecret" class="required-field">Client Secret</label>
+                                    <input type="password" class="form-control" id="clientSecret" name="client_secret" 
+                                           placeholder="Enter your client secret" required>
+                                    <small class="form-text text-muted">
+                                        Keep this secret and secure
+                                    </small>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="text-center">
+                            <button type="button" class="btn-oauth" onclick="initiateOAuth()">
+                                <i class="fab fa-google me-2"></i>
+                                Authorize with Google
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+            <!-- Step 3: Authorization -->
+            <div class="step-card" id="authStep" style="display: none;">
+                <div class="step-header">
+                    <i class="fas fa-check text-success me-2"></i>
+                    Step 3: Authorization Complete
+                </div>
+                <div class="step-content">
+                    <div class="alert alert-success">
+                        <i class="fas fa-check-circle me-2"></i>
+                        Authorization successful! Your tokens have been received.
+                    </div>
+                    
+                    <div class="form-group mb-3">
+                        <label>Access Token</label>
+                        <div class="token-display" id="accessToken"></div>
+                    </div>
+                    
+                    <div class="form-group mb-3">
+                        <label>Refresh Token</label>
+                        <div class="token-display" id="refreshToken"></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Step 4: Settings -->
+            <div class="step-card">
+                <div class="step-header">
+                    <i class="fas fa-cog text-info me-2"></i>
+                    Step 4: Integration Settings
+                </div>
+                <div class="step-content">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="form-group mb-3">
+                                <label for="defaultCalendar">Default Calendar</label>
+                                <select class="form-control" id="defaultCalendar" name="default_calendar">
+                                    <option value="primary">Primary Calendar</option>
+                                </select>
+                                <small class="form-text text-muted">
+                                    Calendar where events will be synced
+                                </small>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="form-group mb-3">
+                                <label for="syncMode">Sync Mode</label>
+                                <select class="form-control" id="syncMode" name="sync_mode">
+                                    <option value="auto">Automatic (sync on create/update)</option>
+                                    <option value="manual">Manual (sync on demand)</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="form-check mb-3">
+                        <input class="form-check-input" type="checkbox" id="createReminders" name="create_reminders" checked>
+                        <label class="form-check-label" for="createReminders">
+                            Create automatic reminders (24h and 30min before event)
+                        </label>
+                    </div>
+                    
+                    <div class="form-check mb-3">
+                        <input class="form-check-input" type="checkbox" id="syncAttendees" name="sync_attendees" checked>
+                        <label class="form-check-label" for="syncAttendees">
+                            Sync event attendees as calendar invitees
+                        </label>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Action Buttons -->
+            <div class="text-center mt-4">
+                <button type="button" class="btn btn-primary btn-lg me-3" onclick="saveIntegration()" id="saveBtn" disabled>
+                    <i class="fas fa-save me-2"></i>
+                    Save Integration
+                </button>
+                <a href="{{ url_for('integrations.integration_dashboard') }}" class="btn btn-secondary btn-lg">
+                    <i class="fas fa-arrow-left me-2"></i>
+                    Back to Dashboard
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- OAuth Popup -->
+<div id="oauthModal" class="modal" style="display: none;">
+    <div class="modal-content">
+        <div class="text-center">
+            <div class="spinner-border text-primary mb-3" role="status">
+                <span class="sr-only">Loading...</span>
+            </div>
+            <h5>Authorizing with Google...</h5>
+            <p class="text-muted">Please complete the authorization in the popup window.</p>
+            <button type="button" class="btn btn-secondary mt-3" onclick="closeOAuthModal()">
+                Cancel
+            </button>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+<script>
+let oauthWindow = null;
+let authTokens = null;
+
+function copyToClipboard(elementId) {
+    const text = document.getElementById(elementId).textContent;
+    navigator.clipboard.writeText(text).then(() => {
+        Swal.fire({
+            icon: 'success',
+            title: 'Copied!',
+            text: 'URL copied to clipboard',
+            timer: 2000,
+            showConfirmButton: false
+        });
+    });
+}
+
+function initiateOAuth() {
+    const clientId = document.getElementById('clientId').value;
+    const clientSecret = document.getElementById('clientSecret').value;
+    
+    if (!clientId || !clientSecret) {
+        Swal.fire({
+            icon: 'error',
+            title: 'Missing Information',
+            text: 'Please enter both Client ID and Client Secret'
+        });
+        return;
+    }
+    
+    // Store credentials for later use
+    window.googleCredentials = {
+        client_id: clientId,
+        client_secret: clientSecret
+    };
+    
+    // Create OAuth URL
+    const redirectUri = `${window.location.origin}/integrations/oauth/google/callback`;
+    const scope = 'https://www.googleapis.com/auth/calendar';
+    const authUrl = `https://accounts.google.com/oauth2/authorize?` +
+        `client_id=${encodeURIComponent(clientId)}&` +
+        `redirect_uri=${encodeURIComponent(redirectUri)}&` +
+        `scope=${encodeURIComponent(scope)}&` +
+        `response_type=code&` +
+        `access_type=offline&` +
+        `prompt=consent`;
+    
+    // Open OAuth popup
+    oauthWindow = window.open(
+        authUrl,
+        'google_oauth',
+        'width=500,height=600,scrollbars=yes,resizable=yes'
+    );
+    
+    document.getElementById('oauthModal').style.display = 'block';
+    
+    // Listen for OAuth completion
+    const checkClosed = setInterval(() => {
+        if (oauthWindow.closed) {
+            clearInterval(checkClosed);
+            document.getElementById('oauthModal').style.display = 'none';
+        }
+    }, 1000);
+    
+    // Listen for auth completion message
+    window.addEventListener('message', handleOAuthCallback, false);
+}
+
+function handleOAuthCallback(event) {
+    if (event.origin !== window.location.origin) {
+        return;
+    }
+    
+    if (event.data.type === 'google_oauth_success') {
+        authTokens = event.data.tokens;
+        
+        // Display tokens
+        document.getElementById('accessToken').textContent = authTokens.access_token;
+        document.getElementById('refreshToken').textContent = authTokens.refresh_token || 'N/A';
+        
+        // Show authorization step
+        document.getElementById('authStep').style.display = 'block';
+        document.getElementById('saveBtn').disabled = false;
+        
+        // Close modal and popup
+        document.getElementById('oauthModal').style.display = 'none';
+        if (oauthWindow) {
+            oauthWindow.close();
+        }
+        
+        Swal.fire({
+            icon: 'success',
+            title: 'Authorization Successful!',
+            text: 'You can now save your integration settings.',
+            timer: 3000
+        });
+        
+        // Load user's calendars
+        loadGoogleCalendars();
+    }
+}
+
+function loadGoogleCalendars() {
+    // This would load the user's calendars to populate the dropdown
+    // For demo purposes, we'll just add the primary calendar
+    const select = document.getElementById('defaultCalendar');
+    select.innerHTML = '<option value="primary">Primary Calendar</option>';
+}
+
+function closeOAuthModal() {
+    document.getElementById('oauthModal').style.display = 'none';
+    if (oauthWindow) {
+        oauthWindow.close();
+    }
+}
+
+function saveIntegration() {
+    if (!authTokens || !window.googleCredentials) {
+        Swal.fire({
+            icon: 'error',
+            title: 'Missing Authorization',
+            text: 'Please complete the OAuth authorization first.'
+        });
+        return;
+    }
+    
+    const integrationData = {
+        integration_type: 'google_calendar',
+        credentials: {
+            ...window.googleCredentials,
+            access_token: authTokens.access_token,
+            refresh_token: authTokens.refresh_token,
+            token_uri: 'https://oauth2.googleapis.com/token'
+        },
+        settings: {
+            default_calendar: document.getElementById('defaultCalendar').value,
+            sync_mode: document.getElementById('syncMode').value,
+            create_reminders: document.getElementById('createReminders').checked,
+            sync_attendees: document.getElementById('syncAttendees').checked
+        }
+    };
+    
+    // Show loading
+    Swal.fire({
+        title: 'Saving Integration...',
+        text: 'Please wait while we configure your Google Calendar integration.',
+        allowOutsideClick: false,
+        didOpen: () => {
+            Swal.showLoading();
+        }
+    });
+    
+    // Save integration
+    fetch('/integrations/api/register', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(integrationData)
+    })
+    .then(response => response.json())
+    .then(data => {
+        Swal.close();
+        
+        if (data.success) {
+            Swal.fire({
+                icon: 'success',
+                title: 'Integration Saved!',
+                text: 'Your Google Calendar integration has been configured successfully.',
+                confirmButtonText: 'Go to Dashboard'
+            }).then(() => {
+                window.location.href = '/integrations/';
+            });
+        } else {
+            Swal.fire({
+                icon: 'error',
+                title: 'Save Failed',
+                text: data.error || 'Failed to save integration'
+            });
+        }
+    })
+    .catch(error => {
+        Swal.close();
+        Swal.fire({
+            icon: 'error',
+            title: 'Network Error',
+            text: 'Failed to save integration: ' + error.message
+        });
+    });
+}
+
+// Handle OAuth callback from popup
+if (window.location.search.includes('code=')) {
+    const urlParams = new URLSearchParams(window.location.search);
+    const authCode = urlParams.get('code');
+    
+    if (authCode && window.opener) {
+        // This is the OAuth callback
+        fetch('/integrations/api/oauth/google/exchange', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+                code: authCode,
+                redirect_uri: window.location.origin + '/integrations/oauth/google/callback'
+            })
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                window.opener.postMessage({
+                    type: 'google_oauth_success',
+                    tokens: data.tokens
+                }, window.location.origin);
+                window.close();
+            } else {
+                alert('OAuth failed: ' + data.error);
+                window.close();
+            }
+        })
+        .catch(error => {
+            alert('OAuth error: ' + error.message);
+            window.close();
+        });
+    }
+}
+</script>
+{% endblock %}

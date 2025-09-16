@@ -1,13 +1,13 @@
 {% extends "layout.html" %}
 
-{% block title %}Register - EventHub{% endblock %}
+{% block title %}Register - EventSync{% endblock %}
 
 {% block content %}
 <div class="container py-5">
   <div class="row justify-content-center">
     <div class="col-lg-8">
       <div class="auth-form animate-on-scroll">
-        <h2>Create Your EventHub Account</h2>
+        <h2>Create Your EventSync Account</h2>
         
         <div class="auth-tabs mb-4">
           <div class="auth-tab {% if request.args.get('user_type') != 'organizer' %}active{% endif %}" id="attendee-tab">I want to attend events</div>
@@ -132,17 +132,50 @@
           </div>
           
           <div class="mb-4">
-            <div class="form-text">Account Type</div>
-            <div class="form-check form-check-inline">
-              {{ form.user_type(class="form-check-input") }}
-              <div class="form-text">
-                <span id="account-type-text">
-                  {% if request.args.get('user_type') == 'organizer' %}
-                    Organizer Account
-                  {% else %}
-                    Attendee Account
-                  {% endif %}
-                </span>
+            <label class="form-label fw-bold mb-3">Choose Your Account Type</label>
+            {{ form.user_type(class="d-none") }}
+            
+            <div class="row g-3">
+              <!-- Attendee Account Card -->
+              <div class="col-md-6">
+                <div class="account-type-card {% if request.args.get('user_type') != 'organizer' %}active{% endif %}" data-type="attendee">
+                  <div class="account-type-header">
+                    <div class="account-type-icon text-primary">
+                      <i class="fas fa-user-friends fa-3x"></i>
+                    </div>
+                    <h4 class="account-type-title">Event Attendee</h4>
+                  </div>
+                  <div class="account-type-body">
+                    <p class="account-type-description">Perfect for individuals who want to discover and attend amazing events.</p>
+                    <ul class="account-type-features">
+                      <li><i class="fas fa-check me-2 text-success"></i>Browse and search events</li>
+                      <li><i class="fas fa-check me-2 text-success"></i>Purchase event tickets</li>
+                      <li><i class="fas fa-check me-2 text-success"></i>Digital ticket management</li>
+                      <li><i class="fas fa-check me-2 text-success"></i>Event notifications</li>
+                    </ul>
+                  </div>
+                </div>
+              </div>
+              
+              <!-- Organizer Account Card -->
+              <div class="col-md-6">
+                <div class="account-type-card {% if request.args.get('user_type') == 'organizer' %}active{% endif %}" data-type="organizer">
+                  <div class="account-type-header">
+                    <div class="account-type-icon text-secondary">
+                      <i class="fas fa-calendar-plus fa-3x"></i>
+                    </div>
+                    <h4 class="account-type-title">Event Organizer</h4>
+                  </div>
+                  <div class="account-type-body">
+                    <p class="account-type-description">Ideal for professionals and organizations hosting events.</p>
+                    <ul class="account-type-features">
+                      <li><i class="fas fa-check me-2 text-success"></i>Create and manage events</li>
+                      <li><i class="fas fa-check me-2 text-success"></i>Sell tickets & track sales</li>
+                      <li><i class="fas fa-check me-2 text-success"></i>Attendee management</li>
+                      <li><i class="fas fa-check me-2 text-success"></i>Analytics & reporting</li>
+                    </ul>
+                  </div>
+                </div>
               </div>
             </div>
           </div>
@@ -169,75 +202,140 @@
   </div>
 </div>
 
-<!-- Info Section -->
-<section class="py-5 bg-light">
+<!-- Enhanced Info Section -->
+<section class="py-5 register-benefits-section">
   <div class="container">
-    <div class="row">
-      <div class="col-lg-6 mb-4 mb-lg-0">
-        <h3>Why Register for EventHub?</h3>
-        <div class="mt-4">
-          <div class="d-flex mb-3">
-            <div class="text-primary me-3">
-              <i class="fas fa-search fa-2x"></i>
-            </div>
-            <div>
-              <h5>Discover Events</h5>
-              <p>Find events that match your interests and connect with like-minded individuals.</p>
-            </div>
-          </div>
+    <div class="text-center mb-5">
+      <h2 class="section-title">Why Register for EVENTSYNC?</h2>
+      <p class="section-subtitle">Join thousands of event enthusiasts and organizers worldwide</p>
+    </div>
+    
+    <div class="row g-4">
+      <!-- Attendee Benefits -->
+      <div class="col-lg-6">
+        <div class="benefits-group">
+          <h3 class="benefits-group-title">
+            <i class="fas fa-user-friends me-2 text-primary"></i>
+            For Event Attendees
+          </h3>
           
-          <div class="d-flex mb-3">
-            <div class="text-primary me-3">
-              <i class="fas fa-ticket-alt fa-2x"></i>
+          <div class="row g-3">
+            <div class="col-12">
+              <div class="benefit-card">
+                <div class="benefit-icon">
+                  <i class="fas fa-search"></i>
+                </div>
+                <div class="benefit-content">
+                  <h5 class="benefit-title">Discover Events</h5>
+                  <p class="benefit-description">Find events that match your interests and connect with like-minded individuals in your area.</p>
+                </div>
+              </div>
             </div>
-            <div>
-              <h5>Easy Registration</h5>
-              <p>Register for events with just a few clicks. No more waiting in lines!</p>
+            
+            <div class="col-12">
+              <div class="benefit-card">
+                <div class="benefit-icon">
+                  <i class="fas fa-mouse-pointer"></i>
+                </div>
+                <div class="benefit-content">
+                  <h5 class="benefit-title">Easy Registration</h5>
+                  <p class="benefit-description">Register for events with just a few clicks. No more waiting in lines or complicated processes!</p>
+                </div>
+              </div>
             </div>
-          </div>
-          
-          <div class="d-flex">
-            <div class="text-primary me-3">
-              <i class="fas fa-mobile-alt fa-2x"></i>
-            </div>
-            <div>
-              <h5>Digital Tickets</h5>
-              <p>Access your tickets anytime, anywhere. No need to print physical tickets.</p>
+            
+            <div class="col-12">
+              <div class="benefit-card">
+                <div class="benefit-icon">
+                  <i class="fas fa-mobile-alt"></i>
+                </div>
+                <div class="benefit-content">
+                  <h5 class="benefit-title">Digital Tickets</h5>
+                  <p class="benefit-description">Access your tickets anytime, anywhere. No need to print physical tickets or worry about losing them.</p>
+                </div>
+              </div>
             </div>
           </div>
         </div>
       </div>
       
+      <!-- Organizer Benefits -->
       <div class="col-lg-6">
-        <h3>For Event Organizers</h3>
-        <div class="mt-4">
-          <div class="d-flex mb-3">
-            <div class="text-secondary me-3">
-              <i class="fas fa-calendar-plus fa-2x"></i>
+        <div class="benefits-group">
+          <h3 class="benefits-group-title">
+            <i class="fas fa-calendar-plus me-2 text-secondary"></i>
+            For Event Organizers
+          </h3>
+          
+          <div class="row g-3">
+            <div class="col-12">
+              <div class="benefit-card">
+                <div class="benefit-icon">
+                  <i class="fas fa-plus-circle"></i>
+                </div>
+                <div class="benefit-content">
+                  <h5 class="benefit-title">Create Events</h5>
+                  <p class="benefit-description">Easily create and manage events of any size or type with our intuitive and powerful tools.</p>
+                </div>
+              </div>
             </div>
-            <div>
-              <h5>Create Events</h5>
-              <p>Easily create and manage events of any size or type with our intuitive tools.</p>
+            
+            <div class="col-12">
+              <div class="benefit-card">
+                <div class="benefit-icon">
+                  <i class="fas fa-chart-line"></i>
+                </div>
+                <div class="benefit-content">
+                  <h5 class="benefit-title">Track Performance</h5>
+                  <p class="benefit-description">Get detailed analytics and insights about your events, attendees, and engagement metrics.</p>
+                </div>
+              </div>
+            </div>
+            
+            <div class="col-12">
+              <div class="benefit-card">
+                <div class="benefit-icon">
+                  <i class="fas fa-dollar-sign"></i>
+                </div>
+                <div class="benefit-content">
+                  <h5 class="benefit-title">Monetize Events</h5>
+                  <p class="benefit-description">Set up ticket sales with various pricing options and manage all registrations seamlessly.</p>
+                </div>
+              </div>
             </div>
           </div>
-          
-          <div class="d-flex mb-3">
-            <div class="text-secondary me-3">
-              <i class="fas fa-chart-pie fa-2x"></i>
+        </div>
+      </div>
+    </div>
+    
+    <!-- Trust Indicators -->
+    <div class="row mt-5 pt-4">
+      <div class="col-12">
+        <div class="trust-section text-center">
+          <div class="row g-4">
+            <div class="col-6 col-md-3">
+              <div class="trust-item">
+                <h4 class="trust-number">10K+</h4>
+                <p class="trust-label">Active Users</p>
+              </div>
             </div>
-            <div>
-              <h5>Track Performance</h5>
-              <p>Get detailed analytics and insights about your events and attendees.</p>
+            <div class="col-6 col-md-3">
+              <div class="trust-item">
+                <h4 class="trust-number">500+</h4>
+                <p class="trust-label">Events Created</p>
+              </div>
             </div>
-          </div>
-          
-          <div class="d-flex">
-            <div class="text-secondary me-3">
-              <i class="fas fa-money-bill-wave fa-2x"></i>
+            <div class="col-6 col-md-3">
+              <div class="trust-item">
+                <h4 class="trust-number">50K+</h4>
+                <p class="trust-label">Tickets Sold</p>
+              </div>
             </div>
-            <div>
-              <h5>Sell Tickets</h5>
-              <p>Set up ticket sales with various pricing options and manage registrations.</p>
+            <div class="col-6 col-md-3">
+              <div class="trust-item">
+                <h4 class="trust-number">4.9★</h4>
+                <p class="trust-label">User Rating</p>
+              </div>
             </div>
           </div>
         </div>
@@ -254,21 +352,22 @@
     const attendeeTab = document.getElementById('attendee-tab');
     const organizerTab = document.getElementById('organizer-tab');
     const userTypeInput = document.getElementById('user_type');
-    const accountTypeText = document.getElementById('account-type-text');
+    const accountTypeCards = document.querySelectorAll('.account-type-card');
     
+    // Handle tab clicking (existing functionality)
     if (attendeeTab && organizerTab && userTypeInput) {
       attendeeTab.addEventListener('click', function() {
         organizerTab.classList.remove('active');
         attendeeTab.classList.add('active');
         userTypeInput.value = 'attendee';
-        accountTypeText.textContent = 'Attendee Account';
+        updateAccountTypeCards('attendee');
       });
       
       organizerTab.addEventListener('click', function() {
         attendeeTab.classList.remove('active');
         organizerTab.classList.add('active');
         userTypeInput.value = 'organizer';
-        accountTypeText.textContent = 'Organizer Account';
+        updateAccountTypeCards('organizer');
       });
       
       // Set initial value based on active tab
@@ -277,6 +376,45 @@
       } else {
         userTypeInput.value = 'organizer';
       }
+    }
+    
+    // Handle account type card clicking
+    accountTypeCards.forEach(card => {
+      card.addEventListener('click', function() {
+        const accountType = this.getAttribute('data-type');
+        
+        // Remove active class from all cards
+        accountTypeCards.forEach(c => c.classList.remove('active'));
+        
+        // Add active class to clicked card
+        this.classList.add('active');
+        
+        // Update hidden input value
+        if (userTypeInput) {
+          userTypeInput.value = accountType;
+        }
+        
+        // Update tab states
+        if (accountType === 'attendee') {
+          if (attendeeTab) attendeeTab.classList.add('active');
+          if (organizerTab) organizerTab.classList.remove('active');
+        } else {
+          if (organizerTab) organizerTab.classList.add('active');
+          if (attendeeTab) attendeeTab.classList.remove('active');
+        }
+      });
+    });
+    
+    // Function to update card states based on type
+    function updateAccountTypeCards(type) {
+      accountTypeCards.forEach(card => {
+        const cardType = card.getAttribute('data-type');
+        if (cardType === type) {
+          card.classList.add('active');
+        } else {
+          card.classList.remove('active');
+        }
+      });
     }
     
     // Password visibility toggle
@@ -311,3 +449,4 @@
   });
 </script>
 {% endblock %}
+

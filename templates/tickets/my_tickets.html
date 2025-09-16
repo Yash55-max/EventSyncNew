@@ -1,0 +1,322 @@
+{% extends "layout.html" %}
+
+{% block title %}{{ title }} - EventSync{% endblock %}
+
+{% block extra_css %}
+<style>
+    .tickets-container {
+        max-width: 1000px;
+        margin: 0 auto;
+        padding: 20px;
+    }
+    
+    .ticket-card {
+        background: white;
+        border-radius: 15px;
+        box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+        margin: 20px 0;
+        overflow: hidden;
+        transition: transform 0.3s, box-shadow 0.3s;
+    }
+    
+    .ticket-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 8px 25px rgba(0,0,0,0.15);
+    }
+    
+    .ticket-header {
+        background: linear-gradient(135deg, #007bff, #0056b3);
+        color: white;
+        padding: 20px;
+        position: relative;
+    }
+    
+    .ticket-header::after {
+        content: '';
+        position: absolute;
+        bottom: -10px;
+        left: 0;
+        right: 0;
+        height: 20px;
+        background: linear-gradient(135deg, #007bff, #0056b3);
+        -webkit-clip-path: polygon(0 0, 100% 0, 95% 100%, 5% 100%);
+        clip-path: polygon(0 0, 100% 0, 95% 100%, 5% 100%);
+    }
+    
+    .event-title {
+        font-size: 1.5em;
+        font-weight: bold;
+        margin-bottom: 10px;
+    }
+    
+    .event-details {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        flex-wrap: wrap;
+        gap: 10px;
+    }
+    
+    .ticket-body {
+        padding: 30px 20px 20px;
+    }
+    
+    .ticket-info {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: 15px;
+        margin-bottom: 20px;
+    }
+    
+    .info-item {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+    }
+    
+    .info-icon {
+        font-size: 1.2em;
+        color: #007bff;
+    }
+    
+    .ticket-actions {
+        display: flex;
+        gap: 15px;
+        flex-wrap: wrap;
+        justify-content: center;
+        margin-top: 20px;
+        padding-top: 20px;
+        border-top: 1px solid #eee;
+    }
+    
+    .btn-download {
+        background: linear-gradient(45deg, #28a745, #20c997);
+        color: white;
+        border: none;
+        padding: 12px 25px;
+        border-radius: 25px;
+        text-decoration: none;
+        font-weight: bold;
+        transition: all 0.3s;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+    }
+    
+    .btn-download:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 15px rgba(40,167,69,0.3);
+        color: white;
+        text-decoration: none;
+    }
+    
+    .btn-view-event {
+        background: linear-gradient(45deg, #17a2b8, #138496);
+        color: white;
+        border: none;
+        padding: 12px 25px;
+        border-radius: 25px;
+        text-decoration: none;
+        font-weight: bold;
+        transition: all 0.3s;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+    }
+    
+    .btn-view-event:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 15px rgba(23,162,184,0.3);
+        color: white;
+        text-decoration: none;
+    }
+    
+    .no-tickets {
+        text-align: center;
+        padding: 60px 20px;
+        background: #f8f9fa;
+        border-radius: 15px;
+        margin: 40px 0;
+    }
+    
+    .no-tickets h3 {
+        color: #6c757d;
+        margin-bottom: 20px;
+    }
+    
+    .ticket-status {
+        position: absolute;
+        top: 15px;
+        right: 15px;
+        padding: 5px 12px;
+        border-radius: 15px;
+        font-size: 0.8em;
+        font-weight: bold;
+    }
+    
+    .status-active {
+        background: #d4edda;
+        color: #155724;
+    }
+    
+    .status-upcoming {
+        background: #cce5ff;
+        color: #004085;
+    }
+    
+    .status-past {
+        background: #f8d7da;
+        color: #721c24;
+    }
+    
+    .ticket-qr-info {
+        background: #f8f9fa;
+        border: 2px dashed #007bff;
+        border-radius: 10px;
+        padding: 15px;
+        text-align: center;
+        margin: 15px 0;
+        font-size: 0.9em;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="tickets-container">
+    <h1>🎟️ My Tickets</h1>
+    <p class="text-muted">Download and manage your event tickets</p>
+    
+    {% if tickets_data %}
+    {% for ticket_data in tickets_data %}
+    {% set event = ticket_data.event %}
+    {% set booking = ticket_data.booking %}
+    <div class="ticket-card">
+        <div class="ticket-header">
+            <div class="ticket-status status-{% if event.date > today %}upcoming{% elif event.date == today %}active{% else %}past{% endif %}">
+                {% if event.date > today %}Upcoming{% elif event.date == today %}Today{% else %}Past{% endif %}
+            </div>
+            
+            <!-- EventSync Logo -->
+            <div style="display: flex; align-items: center; gap: 15px; margin-bottom: 15px;">
+                <img src="{{ url_for('static', filename='images/eventsync-logo.svg') }}" alt="EventSync" style="height: 30px; filter: brightness(0) invert(1);">
+                <div style="color: rgba(255,255,255,0.8); font-size: 0.9em;">Powered by EventSync</div>
+            </div>
+            
+            <div class="event-title">{{ event.title }}</div>
+            <div class="event-details">
+                <div>📅 {{ event.date.strftime('%B %d, %Y') }}</div>
+                <div>🕐 {{ event.time.strftime('%I:%M %p') if event.time else 'Time TBD' }}</div>
+                <div>📍 {{ event.location or 'Location TBD' }}</div>
+            </div>
+        </div>
+        
+        <div class="ticket-body">
+            <div class="ticket-info">
+                <div class="info-item">
+                    <span class="info-icon">🎫</span>
+                    <div>
+                        <strong>Tickets:</strong><br>
+                        {{ booking.ticket_quantity }} ticket{{ 's' if booking.ticket_quantity != 1 else '' }}
+                    </div>
+                </div>
+                
+                <div class="info-item">
+                    <span class="info-icon">💰</span>
+                    <div>
+                        <strong>Total Paid:</strong><br>
+                        ${{ "%.2f"|format(booking.total_price) }}
+                    </div>
+                </div>
+                
+                <div class="info-item">
+                    <span class="info-icon">📋</span>
+                    <div>
+                        <strong>Booking ID:</strong><br>
+                        #{{ booking.id }}
+                    </div>
+                </div>
+                
+                <div class="info-item">
+                    <span class="info-icon">📅</span>
+                    <div>
+                        <strong>Booked:</strong><br>
+                        {{ booking.booking_timestamp.strftime('%b %d, %Y') }}
+                    </div>
+                </div>
+            </div>
+            
+            {% if event.description %}
+            <div class="event-description">
+                <strong>Event Description:</strong>
+                <p>{{ event.description[:200] }}{% if event.description|length > 200 %}...{% endif %}</p>
+            </div>
+            {% endif %}
+            
+            <div class="ticket-qr-info">
+                <strong>📱 Digital Ticket Available</strong><br>
+                Your PDF ticket contains a QR code for easy check-in at the venue
+            </div>
+            
+            <div class="ticket-actions">
+                {% if ticket_data.can_download %}
+                <a href="{{ url_for('tickets.download_ticket', booking_id=booking.id) }}" class="btn-download">
+                    📄 Download PDF Ticket
+                </a>
+                {% endif %}
+                
+                <a href="{{ url_for('main.event_detail', event_id=event.id) }}" class="btn-view-event">
+                    👁️ View Event Details
+                </a>
+            </div>
+        </div>
+    </div>
+    {% endfor %}
+    
+    {% else %}
+    <div class="no-tickets">
+        <h3>🎭 No Tickets Yet</h3>
+        <p>You haven't registered for any events yet.</p>
+        <a href="{{ url_for('main.events') }}" class="btn btn-primary btn-lg">
+            🔍 Browse Events
+        </a>
+    </div>
+    {% endif %}
+</div>
+
+<script>
+// Add today's date for status comparison
+{% if tickets_data %}
+const today = new Date().toISOString().split('T')[0];
+{% endif %}
+
+// Add click animation to download buttons
+document.querySelectorAll('.btn-download').forEach(btn => {
+    btn.addEventListener('click', function(e) {
+        // Add visual feedback
+        this.style.transform = 'scale(0.95)';
+        setTimeout(() => {
+            this.style.transform = 'translateY(-2px)';
+        }, 150);
+        
+        // Show download message
+        const originalText = this.innerHTML;
+        this.innerHTML = '⏳ Generating PDF...';
+        
+        setTimeout(() => {
+            this.innerHTML = originalText;
+        }, 2000);
+    });
+});
+
+// Add hover effects for ticket cards
+document.querySelectorAll('.ticket-card').forEach(card => {
+    card.addEventListener('mouseenter', function() {
+        this.style.transform = 'translateY(-5px) scale(1.02)';
+    });
+    
+    card.addEventListener('mouseleave', function() {
+        this.style.transform = 'translateY(0) scale(1)';
+    });
+});
+</script>
+{% endblock %}

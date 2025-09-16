@@ -1,0 +1,612 @@
+{% extends "base.html" %}
+
+{% block title %}Assessment Dashboard{% endblock %}
+
+{% block extra_css %}
+<style>
+    .assessment-card {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        border-radius: 15px;
+        padding: 2rem;
+        margin-bottom: 1.5rem;
+        box-shadow: 0 10px 30px rgba(0,0,0,0.15);
+        transition: transform 0.3s ease;
+    }
+    .assessment-card:hover {
+        transform: translateY(-5px);
+    }
+    .progress-card {
+        background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);
+    }
+    .stats-card {
+        background: white;
+        border-radius: 10px;
+        padding: 1.5rem;
+        margin-bottom: 1.5rem;
+        box-shadow: 0 5px 15px rgba(0,0,0,0.08);
+        border-left: 4px solid #3498db;
+    }
+    .assessment-item {
+        background: white;
+        border-radius: 10px;
+        padding: 1.5rem;
+        margin-bottom: 1rem;
+        box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+        border: 1px solid #e9ecef;
+        transition: all 0.3s ease;
+    }
+    .assessment-item:hover {
+        box-shadow: 0 5px 20px rgba(0,0,0,0.1);
+        transform: translateY(-2px);
+    }
+    .btn-assessment {
+        background: linear-gradient(135deg, #3498db 0%, #2980b9 100%);
+        border: none;
+        color: white;
+        padding: 0.75rem 1.5rem;
+        border-radius: 25px;
+        font-weight: 600;
+        transition: all 0.3s ease;
+    }
+    .btn-assessment:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 5px 15px rgba(52, 152, 219, 0.3);
+        color: white;
+    }
+    .score-circle {
+        width: 80px;
+        height: 80px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: bold;
+        color: white;
+        font-size: 1.1rem;
+        margin: 0 auto;
+    }
+    .score-excellent { background: linear-gradient(135deg, #27ae60 0%, #2ecc71 100%); }
+    .score-good { background: linear-gradient(135deg, #f39c12 0%, #e67e22 100%); }
+    .score-needs-work { background: linear-gradient(135deg, #e74c3c 0%, #c0392b 100%); }
+    .difficulty-badge {
+        padding: 0.25rem 0.75rem;
+        border-radius: 15px;
+        font-size: 0.8rem;
+        font-weight: 600;
+    }
+    .difficulty-beginner { background-color: #2ecc71; color: white; }
+    .difficulty-intermediate { background-color: #f39c12; color: white; }
+    .difficulty-advanced { background-color: #e74c3c; color: white; }
+    .achievement-badge {
+        background: linear-gradient(135deg, #f1c40f 0%, #f39c12 100%);
+        color: white;
+        border-radius: 15px;
+        padding: 0.5rem 1rem;
+        margin: 0.25rem;
+        display: inline-block;
+        font-size: 0.85rem;
+        font-weight: 600;
+    }
+    .progress-bar-custom {
+        height: 8px;
+        border-radius: 10px;
+        background: #ecf0f1;
+        overflow: hidden;
+    }
+    .progress-fill {
+        height: 100%;
+        background: linear-gradient(90deg, #3498db 0%, #2ecc71 100%);
+        border-radius: 10px;
+        transition: width 1s ease-in-out;
+    }
+    .metric-value {
+        font-size: 2.5rem;
+        font-weight: 700;
+        color: #2c3e50;
+    }
+    .metric-label {
+        font-size: 0.9rem;
+        color: #7f8c8d;
+        font-weight: 500;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <!-- Header Section -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center">
+                <div>
+                    <h1 class="display-4 text-dark font-weight-bold">
+                        <i class="fas fa-graduation-cap text-primary mr-3"></i>
+                        Assessment Dashboard
+                    </h1>
+                    <p class="lead text-muted">Improve your event planning skills through practical assessments</p>
+                </div>
+                <div>
+                    <a href="{{ url_for('assessments.create_assessment') }}" class="btn btn-assessment mr-2">
+                        <i class="fas fa-plus mr-2"></i>New Assessment
+                    </a>
+                    <button class="btn btn-outline-primary" onclick="refreshProgress()">
+                        <i class="fas fa-sync-alt mr-2"></i>Refresh
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Stats Row -->
+    <div class="row mb-4">
+        <div class="col-lg-3 col-md-6 mb-3">
+            <div class="assessment-card text-center">
+                <i class="fas fa-chart-line fa-2x mb-3"></i>
+                <div class="metric-value text-white">{{ assessment_stats.total_completed }}</div>
+                <div class="metric-label text-white-50">Completed Assessments</div>
+            </div>
+        </div>
+        <div class="col-lg-3 col-md-6 mb-3">
+            <div class="assessment-card text-center">
+                <i class="fas fa-star fa-2x mb-3"></i>
+                <div class="metric-value text-white">{{ "%.0f"|format(assessment_stats.average_score) }}</div>
+                <div class="metric-label text-white-50">Average Score</div>
+            </div>
+        </div>
+        <div class="col-lg-3 col-md-6 mb-3">
+            <div class="assessment-card text-center">
+                <i class="fas fa-medal fa-2x mb-3"></i>
+                <div class="metric-value text-white">{{ assessment_stats.achievements_earned }}</div>
+                <div class="metric-label text-white-50">Achievements Earned</div>
+            </div>
+        </div>
+        <div class="col-lg-3 col-md-6 mb-3">
+            <div class="assessment-card text-center">
+                <i class="fas fa-clock fa-2x mb-3"></i>
+                <div class="metric-value text-white">{{ "%.1f"|format(assessment_stats.hours_practiced) }}</div>
+                <div class="metric-label text-white-50">Hours Practiced</div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <!-- Left Column - Active & Recent Assessments -->
+        <div class="col-lg-8">
+            <!-- Active Assessment -->
+            {% if progress %}
+            <div class="stats-card">
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <h4 class="text-dark font-weight-bold mb-0">
+                        <i class="fas fa-play-circle text-success mr-2"></i>
+                        Active Assessment
+                    </h4>
+                    <span class="badge badge-success">In Progress</span>
+                </div>
+                
+                <div class="assessment-item bg-light">
+                    <div class="row align-items-center">
+                        <div class="col-md-8">
+                            <h6 class="font-weight-bold text-dark mb-1">{{ progress.title or "Assessment in Progress" }}</h6>
+                            <p class="text-muted mb-2">{{ progress.description or "Complete the current scenario to continue" }}</p>
+                            
+                            <!-- Progress Bar -->
+                            <div class="progress-bar-custom mb-2">
+                                <div class="progress-fill" style="width: {{ progress.completion_percentage or 25 }}%"></div>
+                            </div>
+                            <small class="text-muted">
+                                Progress: {{ progress.completion_percentage or 25 }}% 
+                                ({{ progress.completed_decisions or 1 }}/{{ progress.total_decisions or 4 }} decisions)
+                            </small>
+                        </div>
+                        <div class="col-md-4 text-center">
+                            <a href="{{ url_for('assessments.take_assessment', assessment_id=progress.assessment_id or 'current') }}" 
+                               class="btn btn-assessment">
+                                <i class="fas fa-arrow-right mr-2"></i>Continue
+                            </a>
+                            <div class="mt-2">
+                                <small class="text-muted">Started: {{ progress.start_time or "Today" }}</small>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            {% endif %}
+
+            <!-- Recent Assessments -->
+            <div class="stats-card">
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <h4 class="text-dark font-weight-bold mb-0">
+                        <i class="fas fa-history text-info mr-2"></i>
+                        Recent Assessments
+                    </h4>
+                    <span class="badge badge-secondary">Last {{ completed_assessments|length }} completed</span>
+                </div>
+
+                {% if completed_assessments %}
+                    {% for assessment in completed_assessments %}
+                    <div class="assessment-item">
+                        <div class="row align-items-center">
+                            <div class="col-md-6">
+                                <h6 class="font-weight-bold text-dark mb-1">{{ assessment.title }}</h6>
+                                <div class="mb-2">
+                                    <span class="badge badge-outline-primary mr-2">{{ assessment.category }}</span>
+                                    <span class="difficulty-badge difficulty-{{ assessment.difficulty.lower() }}">
+                                        {{ assessment.difficulty }}
+                                    </span>
+                                </div>
+                                <small class="text-muted">
+                                    <i class="fas fa-calendar mr-1"></i>
+                                    Completed: {{ assessment.completed_date }}
+                                </small>
+                            </div>
+                            <div class="col-md-3 text-center">
+                                <div class="score-circle 
+                                    {% if assessment.score >= 85 %}score-excellent
+                                    {% elif assessment.score >= 70 %}score-good
+                                    {% else %}score-needs-work{% endif %}">
+                                    {{ assessment.score }}%
+                                </div>
+                            </div>
+                            <div class="col-md-3">
+                                <div class="text-center mb-2">
+                                    <a href="{{ url_for('assessments.view_results', assessment_id=assessment.id) }}" 
+                                       class="btn btn-sm btn-outline-primary">
+                                        <i class="fas fa-eye mr-1"></i>View Results
+                                    </a>
+                                </div>
+                                {% if assessment.achievements %}
+                                <div class="text-center">
+                                    {% for achievement in assessment.achievements[:2] %}
+                                    <span class="achievement-badge">
+                                        <i class="fas fa-trophy mr-1"></i>{{ achievement }}
+                                    </span>
+                                    {% endfor %}
+                                    {% if assessment.achievements|length > 2 %}
+                                    <small class="text-muted">+{{ assessment.achievements|length - 2 }} more</small>
+                                    {% endif %}
+                                </div>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                    {% endfor %}
+                {% else %}
+                    <div class="text-center py-5">
+                        <i class="fas fa-clipboard-list fa-3x text-muted mb-3"></i>
+                        <h5 class="text-muted">No assessments completed yet</h5>
+                        <p class="text-muted">Start your first assessment to begin improving your skills</p>
+                        <a href="{{ url_for('assessments.create_assessment') }}" class="btn btn-assessment">
+                            <i class="fas fa-plus mr-2"></i>Start First Assessment
+                        </a>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- Right Column - Performance & Actions -->
+        <div class="col-lg-4">
+            <!-- Performance Overview -->
+            <div class="stats-card text-center mb-4">
+                <h5 class="font-weight-bold text-dark mb-3">
+                    <i class="fas fa-chart-pie text-primary mr-2"></i>Performance Overview
+                </h5>
+                
+                <!-- Overall Score Circle -->
+                <div class="mb-4">
+                    <div class="score-circle mx-auto 
+                        {% if assessment_stats.average_score >= 85 %}score-excellent
+                        {% elif assessment_stats.average_score >= 70 %}score-good
+                        {% else %}score-needs-work{% endif %}">
+                        {{ "%.0f"|format(assessment_stats.average_score) }}%
+                    </div>
+                    <p class="mt-2 text-muted">
+                        {% if assessment_stats.average_score >= 85 %}
+                            <i class="fas fa-star text-warning"></i> Outstanding Performance!
+                        {% elif assessment_stats.average_score >= 70 %}
+                            <i class="fas fa-thumbs-up text-info"></i> Great Progress!
+                        {% else %}
+                            <i class="fas fa-arrow-up text-primary"></i> Keep Learning!
+                        {% endif %}
+                    </p>
+                </div>
+
+                <!-- Skill Breakdown -->
+                <div class="text-left">
+                    <h6 class="font-weight-bold mb-3">Skill Areas</h6>
+                    
+                    <div class="mb-3">
+                        <div class="d-flex justify-content-between mb-1">
+                            <small class="text-muted">Event Planning</small>
+                            <small class="text-muted">88%</small>
+                        </div>
+                        <div class="progress-bar-custom">
+                            <div class="progress-fill" style="width: 88%"></div>
+                        </div>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <div class="d-flex justify-content-between mb-1">
+                            <small class="text-muted">Crisis Management</small>
+                            <small class="text-muted">75%</small>
+                        </div>
+                        <div class="progress-bar-custom">
+                            <div class="progress-fill" style="width: 75%"></div>
+                        </div>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <div class="d-flex justify-content-between mb-1">
+                            <small class="text-muted">Budget Management</small>
+                            <small class="text-muted">65%</small>
+                        </div>
+                        <div class="progress-bar-custom">
+                            <div class="progress-fill" style="width: 65%"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Quick Actions -->
+            <div class="stats-card">
+                <h5 class="font-weight-bold text-dark mb-3">
+                    <i class="fas fa-bolt text-warning mr-2"></i>Quick Actions
+                </h5>
+                <div class="list-group list-group-flush">
+                    <a href="{{ url_for('assessments.create_assessment') }}" 
+                       class="list-group-item list-group-item-action border-0 px-0">
+                        <i class="fas fa-plus text-success mr-3"></i>
+                        <span>Start New Assessment</span>
+                        <i class="fas fa-chevron-right float-right text-muted"></i>
+                    </a>
+                    <a href="#" onclick="showRecommendedAssessments()" 
+                       class="list-group-item list-group-item-action border-0 px-0">
+                        <i class="fas fa-lightbulb text-info mr-3"></i>
+                        <span>Recommended Challenges</span>
+                        <i class="fas fa-chevron-right float-right text-muted"></i>
+                    </a>
+                    <a href="#" onclick="viewAllAchievements()" 
+                       class="list-group-item list-group-item-action border-0 px-0">
+                        <i class="fas fa-trophy text-warning mr-3"></i>
+                        <span>View All Achievements</span>
+                        <i class="fas fa-chevron-right float-right text-muted"></i>
+                    </a>
+                    <a href="{{ url_for('sustainability.dashboard') }}" 
+                       class="list-group-item list-group-item-action border-0 px-0">
+                        <i class="fas fa-leaf text-success mr-3"></i>
+                        <span>Sustainability Dashboard</span>
+                        <i class="fas fa-chevron-right float-right text-muted"></i>
+                    </a>
+                </div>
+            </div>
+
+            <!-- Recent Achievements -->
+            <div class="stats-card">
+                <h5 class="font-weight-bold text-dark mb-3">
+                    <i class="fas fa-star text-warning mr-2"></i>Recent Achievements
+                </h5>
+                <div class="text-center">
+                    <div class="achievement-badge mb-2">
+                        <i class="fas fa-brain mr-1"></i>Quick Thinker
+                    </div>
+                    <div class="achievement-badge mb-2">
+                        <i class="fas fa-users mr-1"></i>Team Player
+                    </div>
+                    <div class="achievement-badge mb-2">
+                        <i class="fas fa-chart-line mr-1"></i>Strategic Planner
+                    </div>
+                    <p class="text-muted mt-3">
+                        <small>Complete more assessments to earn new badges!</small>
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Loading Modal -->
+<div class="modal fade" id="loadingModal" tabindex="-1" role="dialog">
+    <div class="modal-dialog modal-sm modal-dialog-centered" role="document">
+        <div class="modal-content">
+            <div class="modal-body text-center py-4">
+                <div class="spinner-border text-primary mb-3" role="status"></div>
+                <p class="mb-0">Loading assessment data...</p>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    function refreshProgress() {
+        $('#loadingModal').modal('show');
+        setTimeout(() => {
+            location.reload();
+        }, 1500);
+    }
+
+    function showRecommendedAssessments() {
+        const modalContent = `
+            <div class="modal fade" id="recommendedModal" tabindex="-1" role="dialog">
+                <div class="modal-dialog modal-lg" role="document">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <h5 class="modal-title">
+                                <i class="fas fa-lightbulb text-info mr-2"></i>
+                                Recommended Assessments
+                            </h5>
+                            <button type="button" class="close" data-dismiss="modal">
+                                <span>&times;</span>
+                            </button>
+                        </div>
+                        <div class="modal-body">
+                            <p class="text-muted mb-3">Based on your performance, here are some assessments to help you grow:</p>
+                            <div class="row">
+                                <div class="col-md-6 mb-3">
+                                    <div class="card border-info">
+                                        <div class="card-body">
+                                            <h6 class="card-title">
+                                                <i class="fas fa-dollar-sign text-success mr-2"></i>
+                                                Budget Management Challenge
+                                            </h6>
+                                            <p class="card-text small text-muted">
+                                                Practice managing event budgets under constraints
+                                            </p>
+                                            <span class="difficulty-badge difficulty-intermediate">Intermediate</span>
+                                            <button class="btn btn-sm btn-info float-right" onclick="startAssessment('budget')">
+                                                Start
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-md-6 mb-3">
+                                    <div class="card border-warning">
+                                        <div class="card-body">
+                                            <h6 class="card-title">
+                                                <i class="fas fa-exclamation-triangle text-danger mr-2"></i>
+                                                Crisis Management Simulation
+                                            </h6>
+                                            <p class="card-text small text-muted">
+                                                Handle unexpected situations during events
+                                            </p>
+                                            <span class="difficulty-badge difficulty-advanced">Advanced</span>
+                                            <button class="btn btn-sm btn-warning float-right" onclick="startAssessment('crisis')">
+                                                Start
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        `;
+        $('body').append(modalContent);
+        $('#recommendedModal').modal('show');
+        $('#recommendedModal').on('hidden.bs.modal', function () {
+            $(this).remove();
+        });
+    }
+
+    function viewAllAchievements() {
+        const modalContent = `
+            <div class="modal fade" id="achievementsModal" tabindex="-1" role="dialog">
+                <div class="modal-dialog modal-lg" role="document">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <h5 class="modal-title">
+                                <i class="fas fa-trophy text-warning mr-2"></i>
+                                All Achievements
+                            </h5>
+                            <button type="button" class="close" data-dismiss="modal">
+                                <span>&times;</span>
+                            </button>
+                        </div>
+                        <div class="modal-body">
+                            <div class="row text-center">
+                                <div class="col-md-4 mb-3">
+                                    <div class="p-3 border rounded">
+                                        <i class="fas fa-brain fa-3x text-primary mb-2"></i>
+                                        <h6>Quick Thinker</h6>
+                                        <small class="text-success">✓ Earned</small>
+                                        <p class="small text-muted">Made decisions under time pressure</p>
+                                    </div>
+                                </div>
+                                <div class="col-md-4 mb-3">
+                                    <div class="p-3 border rounded">
+                                        <i class="fas fa-users fa-3x text-info mb-2"></i>
+                                        <h6>Team Player</h6>
+                                        <small class="text-success">✓ Earned</small>
+                                        <p class="small text-muted">Demonstrated excellent collaboration</p>
+                                    </div>
+                                </div>
+                                <div class="col-md-4 mb-3">
+                                    <div class="p-3 border rounded">
+                                        <i class="fas fa-chart-line fa-3x text-warning mb-2"></i>
+                                        <h6>Strategic Planner</h6>
+                                        <small class="text-success">✓ Earned</small>
+                                        <p class="small text-muted">Showed long-term planning skills</p>
+                                    </div>
+                                </div>
+                                <div class="col-md-4 mb-3">
+                                    <div class="p-3 border rounded opacity-50">
+                                        <i class="fas fa-fire fa-3x text-danger mb-2"></i>
+                                        <h6>Crisis Manager</h6>
+                                        <small class="text-muted">Not Earned</small>
+                                        <p class="small text-muted">Master crisis management scenarios</p>
+                                    </div>
+                                </div>
+                                <div class="col-md-4 mb-3">
+                                    <div class="p-3 border rounded opacity-50">
+                                        <i class="fas fa-dollar-sign fa-3x text-success mb-2"></i>
+                                        <h6>Budget Master</h6>
+                                        <small class="text-muted">Not Earned</small>
+                                        <p class="small text-muted">Excel at budget management</p>
+                                    </div>
+                                </div>
+                                <div class="col-md-4 mb-3">
+                                    <div class="p-3 border rounded opacity-50">
+                                        <i class="fas fa-leaf fa-3x text-success mb-2"></i>
+                                        <h6>Eco Champion</h6>
+                                        <small class="text-muted">Not Earned</small>
+                                        <p class="small text-muted">Promote sustainable event practices</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        `;
+        $('body').append(modalContent);
+        $('#achievementsModal').modal('show');
+        $('#achievementsModal').on('hidden.bs.modal', function () {
+            $(this).remove();
+        });
+    }
+
+    function startAssessment(type) {
+        // Navigate to assessment creation with pre-filled category
+        const params = new URLSearchParams();
+        if (type === 'budget') {
+            params.set('category', 'budget_management');
+            params.set('difficulty', 'intermediate');
+        } else if (type === 'crisis') {
+            params.set('category', 'crisis_management');
+            params.set('difficulty', 'advanced');
+        }
+        window.location.href = '{{ url_for("assessments.create_assessment") }}?' + params.toString();
+    }
+
+    // Initialize progress bars animation
+    document.addEventListener('DOMContentLoaded', function() {
+        const progressBars = document.querySelectorAll('.progress-fill');
+        progressBars.forEach(bar => {
+            const width = bar.style.width;
+            bar.style.width = '0%';
+            setTimeout(() => {
+                bar.style.width = width;
+            }, 500);
+        });
+    });
+
+    // Auto-refresh progress every 30 seconds if there's an active assessment
+    {% if progress %}
+    setInterval(() => {
+        fetch('/assessments/api/progress')
+            .then(response => response.json())
+            .then(data => {
+                if (data.success && data.progress) {
+                    const progressBar = document.querySelector('.progress-fill');
+                    if (progressBar) {
+                        progressBar.style.width = data.progress.completion_percentage + '%';
+                    }
+                }
+            })
+            .catch(error => console.log('Progress update failed:', error));
+    }, 30000);
+    {% endif %}
+</script>
+{% endblock %}

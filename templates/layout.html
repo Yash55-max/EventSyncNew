@@ -3,7 +3,24 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>{% block title %}EventHub - Event Management System{% endblock %}</title>
+  <title>{% block title %}EventSync - Event Management System{% endblock %}</title>
+  
+  <!-- PWA Meta Tags -->
+  <meta name="theme-color" content="#6f42c1">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="default">
+  <meta name="apple-mobile-web-app-title" content="EventSync">
+  <meta name="description" content="EventSync - Simplifying event management for organizers and attendees. Create, discover, and experience amazing events.">
+  
+  <!-- PWA Icons -->
+  <link rel="icon" type="image/png" sizes="32x32" href="{{ url_for('static', filename='icons/favicon-32x32.png') }}">
+  <link rel="icon" type="image/png" sizes="16x16" href="{{ url_for('static', filename='icons/favicon-16x16.png') }}">
+  <link rel="apple-touch-icon" sizes="180x180" href="{{ url_for('static', filename='icons/apple-touch-icon.png') }}">
+  <link rel="mask-icon" href="{{ url_for('static', filename='icons/safari-pinned-tab.svg') }}" color="#6f42c1">
+  
+  <!-- PWA Manifest -->
+  <link rel="manifest" href="{{ url_for('manifest') }}">
   
   <!-- Bootstrap CSS -->
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/css/bootstrap.min.css" rel="stylesheet">
@@ -17,6 +34,10 @@
   <!-- Main CSS -->
   <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}">
   
+  <!-- PWA CSS -->
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/pwa.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/webrtc-calling.css') }}">
+  
   <!-- Role-specific CSS -->
   {% if current_user.is_authenticated and current_user.is_organizer() %}
   <link rel="stylesheet" href="{{ url_for('static', filename='css/organizer.css') }}">
@@ -27,14 +48,24 @@
   <!-- Chart.js -->
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   
+  <!-- Theme Initialization Script (prevent flash) -->
+  <script>
+    // Initialize theme before page renders to prevent flash
+    (function() {
+      const savedTheme = localStorage.getItem('theme') || 'light';
+      document.documentElement.setAttribute('data-theme', savedTheme);
+    })();
+  </script>
+  
   {% block extra_css %}{% endblock %}
 </head>
 <body>
   <!-- Navbar -->
-  <nav class="navbar navbar-expand-lg sticky-top">
+  <nav class="navbar navbar-expand-lg navbar-light bg-white shadow-sm">
     <div class="container">
-      <a class="navbar-brand" href="{{ url_for('index') }}">
-        <img src="{{ url_for('static', filename='images/logo.svg') }}" alt="EventHub Logo" height="40">
+<a class="navbar-brand d-flex align-items-center" href="{{ url_for('index') }}">
+        <img src="{{ url_for('static', filename='images/eventsync-logo.svg') }}" alt="EventSync Logo" style="height: 40px;">
+        <span class="ms-2 fw-bold" style="font-size: 1.5rem; color: #4F46E5;">EventSync</span>
       </a>
       
       <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarContent" aria-controls="navbarContent" aria-expanded="false" aria-label="Toggle navigation">
@@ -51,6 +82,16 @@
             <a class="nav-link {% if request.endpoint == 'attendee_events' %}active{% endif %}" href="{{ url_for('attendee_events') }}">Explore Events</a>
           </li>
           
+          <li class="nav-item">
+            <a class="nav-link {% if request.endpoint == 'calendar.calendar' %}active{% endif %}" href="{{ url_for('calendar.calendar') }}">📅 Calendar</a>
+          </li>
+          
+          {% if current_user.is_authenticated %}
+          <li class="nav-item">
+            <a class="nav-link {% if request.endpoint == 'chat_index' %}active{% endif %}" href="{{ url_for('chat_index') }}">Chat</a>
+          </li>
+          {% endif %}
+          
           {% if current_user.is_authenticated %}
             {% if current_user.is_organizer() %}
               <li class="nav-item">
@@ -62,15 +103,37 @@
               <li class="nav-item">
                 <a class="nav-link {% if request.endpoint == 'create_event' %}active{% endif %}" href="{{ url_for('create_event') }}">Create Event</a>
               </li>
+              <li class="nav-item">
+                <a class="nav-link {% if request.endpoint == 'admin_dashboard' %}active{% endif %}" href="{{ url_for('admin_dashboard') }}">Admin</a>
+              </li>
+              <li class="nav-item">
+                <a class="nav-link {% if request.endpoint == 'pwa_test' %}active{% endif %}" href="{{ url_for('pwa_test') }}">PWA Test</a>
+              </li>
+              <li class="nav-item">
+                <a class="nav-link {% if request.endpoint == 'webrtc_demo' %}active{% endif %}" href="{{ url_for('webrtc_demo') }}">Video Calls</a>
+              </li>
+              <li class="nav-item">
+                <a class="nav-link {% if request.endpoint == 'tickets.check_in_page' %}active{% endif %}" href="{{ url_for('tickets.check_in_page') }}">🎫 Check-in</a>
+              </li>
+              <li class="nav-item">
+                <a class="nav-link {% if request.endpoint == 'analytics.analytics_dashboard' %}active{% endif %}" href="{{ url_for('analytics.analytics_dashboard') }}">📊 Analytics</a>
+              </li>
             {% elif current_user.is_attendee() %}
               <li class="nav-item">
-                <a class="nav-link {% if request.endpoint == 'my_tickets' %}active{% endif %}" href="{{ url_for('my_tickets') }}">My Tickets</a>
+                <a class="nav-link {% if request.endpoint == 'tickets.my_tickets' %}active{% endif %}" href="{{ url_for('tickets.my_tickets') }}">🎟️ My Tickets</a>
               </li>
             {% endif %}
           {% endif %}
         </ul>
         
         <ul class="navbar-nav ms-auto mb-2 mb-lg-0">
+          <!-- Theme Toggle Button -->
+          <li class="nav-item d-flex align-items-center">
+            <button class="theme-toggle" id="theme-toggle" aria-label="Toggle theme">
+              <i class="fas fa-sun" id="theme-icon"></i>
+            </button>
+          </li>
+          
           {% if current_user.is_authenticated %}
             <li class="nav-item dropdown">
               <a class="nav-link dropdown-toggle" href="#" id="userDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
@@ -123,7 +186,7 @@
     <div class="container">
       <div class="row">
         <div class="col-lg-4 mb-4">
-          <h5>EventHub</h5>
+          <h5>EventSync</h5>
           <p class="text-muted">Simplifying event management for organizers and attendees. Create, discover, and experience amazing events.</p>
           <div class="footer-social">
             <a href="#" aria-label="Facebook"><i class="fab fa-facebook-f"></i></a>
@@ -175,7 +238,7 @@
       </div>
       
       <div class="footer-bottom">
-        <p>&copy; 2023 EventHub. All rights reserved.</p>
+        <p>&copy; 2023 EventSync. All rights reserved.</p>
       </div>
     </div>
   </footer>
@@ -186,7 +249,60 @@
   <!-- Main JS -->
   <script src="{{ url_for('static', filename='js/main.js') }}"></script>
   
+  <!-- PWA JS -->
+    <script src="{{ url_for('static', filename='js/pwa.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/webrtc-calling.js') }}"></script>
+    {% if current_user.is_authenticated %}
+    <script>
+        // Make current user ID available for WebRTC
+        window.currentUserId = {{ current_user.id }};
+        window.currentUsername = '{{ current_user.username }}';
+    </script>
+    {% endif %}
+  
   <!-- Page-specific JS -->
   {% block extra_js %}{% endblock %}
+  
+  <!-- PWA Install Banner -->
+  <div id="pwa-install-banner" class="pwa-install-banner" style="display: none;">
+    <div class="pwa-banner-content">
+      <div class="pwa-banner-icon">
+        <i class="fas fa-mobile-alt"></i>
+      </div>
+      <div class="pwa-banner-text">
+        <h6>Install EventSync</h6>
+        <p>Get the full app experience with offline access</p>
+      </div>
+      <div class="pwa-banner-actions">
+        <button id="pwa-install-btn" class="btn btn-primary btn-sm">
+          <i class="fas fa-download"></i> Install
+        </button>
+        <button id="pwa-dismiss-btn" class="btn btn-outline-secondary btn-sm">
+          <i class="fas fa-times"></i>
+        </button>
+      </div>
+    </div>
+  </div>
+  
+  <!-- PWA Update Banner -->
+  <div id="pwa-update-banner" class="pwa-update-banner" style="display: none;">
+    <div class="pwa-banner-content">
+      <div class="pwa-banner-icon">
+        <i class="fas fa-sync-alt"></i>
+      </div>
+      <div class="pwa-banner-text">
+        <h6>Update Available</h6>
+        <p>A new version of EventSync is ready to install</p>
+      </div>
+      <div class="pwa-banner-actions">
+        <button id="pwa-update-btn" class="btn btn-primary btn-sm">
+          <i class="fas fa-download"></i> Update
+        </button>
+        <button id="pwa-update-dismiss-btn" class="btn btn-outline-secondary btn-sm">
+          <i class="fas fa-times"></i>
+        </button>
+      </div>
+    </div>
+  </div>
 </body>
 </html>

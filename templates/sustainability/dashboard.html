@@ -1,0 +1,362 @@
+{% extends "base.html" %}
+
+{% block title %}Sustainability Dashboard{% endblock %}
+
+{% block extra_css %}
+<style>
+    .sustainability-card {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        border-radius: 15px;
+        padding: 1.5rem;
+        margin-bottom: 1.5rem;
+        box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+        transition: transform 0.3s ease;
+    }
+    .sustainability-card:hover {
+        transform: translateY(-5px);
+    }
+    .carbon-metric {
+        background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);
+    }
+    .impact-high { color: #e74c3c; }
+    .impact-medium { color: #f39c12; }
+    .impact-low { color: #27ae60; }
+    .chart-container {
+        background: white;
+        border-radius: 10px;
+        padding: 1.5rem;
+        box-shadow: 0 5px 15px rgba(0,0,0,0.08);
+        margin-bottom: 1.5rem;
+    }
+    .event-item {
+        background: white;
+        border-left: 4px solid #27ae60;
+        padding: 1rem;
+        margin-bottom: 0.5rem;
+        border-radius: 5px;
+        box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+    }
+    .btn-eco {
+        background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);
+        border: none;
+        color: white;
+        padding: 0.75rem 1.5rem;
+        border-radius: 25px;
+        font-weight: 500;
+        transition: all 0.3s ease;
+    }
+    .btn-eco:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 5px 15px rgba(17, 153, 142, 0.3);
+        color: white;
+    }
+    .metric-value {
+        font-size: 2.5rem;
+        font-weight: 700;
+        color: #2c3e50;
+    }
+    .metric-label {
+        font-size: 0.9rem;
+        color: #7f8c8d;
+        font-weight: 500;
+    }
+    .progress-circle {
+        width: 100px;
+        height: 100px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: bold;
+        font-size: 1.2rem;
+        color: white;
+        margin: 0 auto;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <!-- Header Section -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center">
+                <div>
+                    <h1 class="display-4 text-dark font-weight-bold">
+                        <i class="fas fa-leaf text-success mr-3"></i>
+                        Sustainability Dashboard
+                    </h1>
+                    <p class="lead text-muted">Track your events' environmental impact and improve sustainability</p>
+                </div>
+                <div>
+                    <a href="{{ url_for('sustainability.calculator') }}" class="btn btn-eco mr-2">
+                        <i class="fas fa-calculator mr-2"></i>Carbon Calculator
+                    </a>
+                    <button class="btn btn-outline-success" onclick="refreshData()">
+                        <i class="fas fa-sync-alt mr-2"></i>Refresh
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Key Metrics Row -->
+    <div class="row mb-4">
+        <div class="col-lg-3 col-md-6 mb-3">
+            <div class="sustainability-card text-center">
+                <i class="fas fa-chart-line fa-2x mb-3"></i>
+                <div class="metric-value text-white">{{ sustainability_stats.total_events_analyzed }}</div>
+                <div class="metric-label text-white-50">Events Analyzed</div>
+            </div>
+        </div>
+        <div class="col-lg-3 col-md-6 mb-3">
+            <div class="sustainability-card carbon-metric text-center">
+                <i class="fas fa-cloud fa-2x mb-3"></i>
+                <div class="metric-value text-white">{{ "%.1f"|format(sustainability_stats.total_carbon_footprint) }}</div>
+                <div class="metric-label text-white-50">Total CO₂ (kg)</div>
+            </div>
+        </div>
+        <div class="col-lg-3 col-md-6 mb-3">
+            <div class="sustainability-card text-center">
+                <i class="fas fa-user-friends fa-2x mb-3"></i>
+                <div class="metric-value text-white">{{ "%.1f"|format(sustainability_stats.average_per_attendee) }}</div>
+                <div class="metric-label text-white-50">Avg CO₂/Attendee (kg)</div>
+            </div>
+        </div>
+        <div class="col-lg-3 col-md-6 mb-3">
+            <div class="sustainability-card text-center">
+                <i class="fas fa-seedling fa-2x mb-3"></i>
+                <div class="metric-value text-white">{{ "%.0f"|format(sustainability_stats.sustainability_score) }}%</div>
+                <div class="metric-label text-white-50">Sustainability Score</div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <!-- Left Column - Recent Events -->
+        <div class="col-lg-8">
+            <div class="chart-container">
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <h4 class="text-dark font-weight-bold mb-0">
+                        <i class="fas fa-calendar-alt text-primary mr-2"></i>
+                        Recent Events Analysis
+                    </h4>
+                    <span class="badge badge-secondary">Last 5 Events</span>
+                </div>
+                
+                {% if sustainability_data %}
+                    {% for event in sustainability_data %}
+                    <div class="event-item">
+                        <div class="row align-items-center">
+                            <div class="col-md-6">
+                                <h6 class="font-weight-bold text-dark mb-1">{{ event.event_title }}</h6>
+                                <small class="text-muted">Event ID: #{{ event.event_id }}</small>
+                            </div>
+                            <div class="col-md-2 text-center">
+                                <div class="metric-value text-primary" style="font-size: 1.5rem;">
+                                    {{ "%.1f"|format(event.carbon_footprint) }}
+                                </div>
+                                <div class="metric-label">Total CO₂ (kg)</div>
+                            </div>
+                            <div class="col-md-2 text-center">
+                                <div class="metric-value text-info" style="font-size: 1.5rem;">
+                                    {{ "%.2f"|format(event.per_attendee) }}
+                                </div>
+                                <div class="metric-label">Per Person (kg)</div>
+                            </div>
+                            <div class="col-md-2 text-center">
+                                <span class="badge badge-pill 
+                                    {% if event.impact_level == 'high' %}badge-danger
+                                    {% elif event.impact_level == 'medium' %}badge-warning
+                                    {% else %}badge-success{% endif %}">
+                                    {{ event.impact_level.title() }} Impact
+                                </span>
+                                <div class="mt-2">
+                                    <a href="{{ url_for('sustainability.analyze_event', event_id=event.event_id) }}" 
+                                       class="btn btn-sm btn-outline-primary">
+                                        <i class="fas fa-search mr-1"></i>Analyze
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    {% endfor %}
+                {% else %}
+                    <div class="text-center py-5">
+                        <i class="fas fa-chart-line fa-3x text-muted mb-3"></i>
+                        <h5 class="text-muted">No events analyzed yet</h5>
+                        <p class="text-muted">Create an event and analyze its sustainability impact</p>
+                        <a href="{{ url_for('events.create') }}" class="btn btn-eco">
+                            <i class="fas fa-plus mr-2"></i>Create Event
+                        </a>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- Right Column - Insights & Actions -->
+        <div class="col-lg-4">
+            <!-- Sustainability Score Circle -->
+            <div class="chart-container text-center mb-4">
+                <h5 class="font-weight-bold text-dark mb-3">
+                    <i class="fas fa-award text-warning mr-2"></i>Sustainability Score
+                </h5>
+                <div class="progress-circle mx-auto" 
+                     style="background: conic-gradient(#27ae60 0deg {{ sustainability_stats.sustainability_score * 3.6 }}deg, #ecf0f1 {{ sustainability_stats.sustainability_score * 3.6 }}deg 360deg);">
+                    {{ "%.0f"|format(sustainability_stats.sustainability_score) }}%
+                </div>
+                <p class="mt-3 text-muted">
+                    {% if sustainability_stats.sustainability_score >= 80 %}
+                        <i class="fas fa-star text-warning"></i> Excellent! Keep up the great work!
+                    {% elif sustainability_stats.sustainability_score >= 60 %}
+                        <i class="fas fa-thumbs-up text-info"></i> Good progress! Room for improvement.
+                    {% else %}
+                        <i class="fas fa-arrow-up text-primary"></i> Let's work on improving sustainability!
+                    {% endif %}
+                </p>
+            </div>
+
+            <!-- Carbon Savings Potential -->
+            <div class="chart-container text-center mb-4">
+                <h5 class="font-weight-bold text-dark mb-3">
+                    <i class="fas fa-leaf text-success mr-2"></i>Carbon Savings Potential
+                </h5>
+                <div class="metric-value text-success">
+                    {{ "%.1f"|format(sustainability_stats.total_carbon_saved_potential) }}
+                </div>
+                <div class="metric-label mb-3">kg CO₂ can be saved</div>
+                <p class="text-muted small">
+                    By implementing our recommendations, you could reduce your events' carbon footprint significantly.
+                </p>
+            </div>
+
+            <!-- Quick Actions -->
+            <div class="chart-container">
+                <h5 class="font-weight-bold text-dark mb-3">
+                    <i class="fas fa-bolt text-warning mr-2"></i>Quick Actions
+                </h5>
+                <div class="list-group list-group-flush">
+                    <a href="{{ url_for('sustainability.calculator') }}" 
+                       class="list-group-item list-group-item-action border-0 px-0">
+                        <i class="fas fa-calculator text-primary mr-3"></i>
+                        <span>Calculate Event Footprint</span>
+                        <i class="fas fa-chevron-right float-right text-muted"></i>
+                    </a>
+                    <a href="#" onclick="generateReport()" 
+                       class="list-group-item list-group-item-action border-0 px-0">
+                        <i class="fas fa-file-download text-success mr-3"></i>
+                        <span>Download Sustainability Report</span>
+                        <i class="fas fa-chevron-right float-right text-muted"></i>
+                    </a>
+                    <a href="{{ url_for('assessments.dashboard') }}" 
+                       class="list-group-item list-group-item-action border-0 px-0">
+                        <i class="fas fa-graduation-cap text-info mr-3"></i>
+                        <span>Take Assessment</span>
+                        <i class="fas fa-chevron-right float-right text-muted"></i>
+                    </a>
+                    <a href="#" onclick="viewBadges()" 
+                       class="list-group-item list-group-item-action border-0 px-0">
+                        <i class="fas fa-medal text-warning mr-3"></i>
+                        <span>View Achievements</span>
+                        <i class="fas fa-chevron-right float-right text-muted"></i>
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Loading Modal -->
+<div class="modal fade" id="loadingModal" tabindex="-1" role="dialog">
+    <div class="modal-dialog modal-sm modal-dialog-centered" role="document">
+        <div class="modal-content">
+            <div class="modal-body text-center py-4">
+                <div class="spinner-border text-success mb-3" role="status"></div>
+                <p class="mb-0">Calculating sustainability metrics...</p>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    function refreshData() {
+        $('#loadingModal').modal('show');
+        setTimeout(() => {
+            location.reload();
+        }, 1500);
+    }
+
+    function generateReport() {
+        // Simulate report generation
+        const toast = `
+            <div class="toast" role="alert" style="position: fixed; top: 20px; right: 20px; z-index: 1050;">
+                <div class="toast-header">
+                    <i class="fas fa-file-download text-success mr-2"></i>
+                    <strong class="mr-auto">Sustainability Report</strong>
+                    <button type="button" class="ml-2 mb-1 close" data-dismiss="toast">
+                        <span>&times;</span>
+                    </button>
+                </div>
+                <div class="toast-body">
+                    Your sustainability report is being generated and will be emailed to you shortly.
+                </div>
+            </div>
+        `;
+        $('body').append(toast);
+        $('.toast').toast({delay: 4000}).toast('show');
+    }
+
+    function viewBadges() {
+        // Show badges modal
+        const modalContent = `
+            <div class="modal fade" id="badgesModal" tabindex="-1" role="dialog">
+                <div class="modal-dialog" role="document">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <h5 class="modal-title">
+                                <i class="fas fa-medal text-warning mr-2"></i>
+                                Sustainability Achievements
+                            </h5>
+                            <button type="button" class="close" data-dismiss="modal">
+                                <span>&times;</span>
+                            </button>
+                        </div>
+                        <div class="modal-body">
+                            <div class="row text-center">
+                                <div class="col-md-4 mb-3">
+                                    <i class="fas fa-seedling fa-3x text-success mb-2"></i>
+                                    <h6>Eco Warrior</h6>
+                                    <small class="text-muted">Reduced CO₂ by 100kg</small>
+                                </div>
+                                <div class="col-md-4 mb-3">
+                                    <i class="fas fa-recycle fa-3x text-info mb-2"></i>
+                                    <h6>Waste Reducer</h6>
+                                    <small class="text-muted">Implemented recycling</small>
+                                </div>
+                                <div class="col-md-4 mb-3">
+                                    <i class="fas fa-leaf fa-3x text-warning mb-2"></i>
+                                    <h6>Green Planner</h6>
+                                    <small class="text-muted">5 sustainable events</small>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        `;
+        $('body').append(modalContent);
+        $('#badgesModal').modal('show');
+        $('#badgesModal').on('hidden.bs.modal', function () {
+            $(this).remove();
+        });
+    }
+
+    // Initialize tooltips
+    $(document).ready(function() {
+        $('[data-toggle="tooltip"]').tooltip();
+    });
+</script>
+{% endblock %}

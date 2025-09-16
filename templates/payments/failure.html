@@ -1,0 +1,501 @@
+{% extends "layout.html" %}
+
+{% block title %}Payment Failed - EventSync{% endblock %}
+
+{% block extra_css %}
+<style>
+    /* Dark theme CSS variables */
+    :root {
+        --bg-primary: #ffffff;
+        --bg-secondary: #f8f9fa;
+        --text-primary: #333333;
+        --text-secondary: #666666;
+        --border-color: #e9ecef;
+        --card-bg: #ffffff;
+        --shadow: rgba(0,0,0,0.1);
+    }
+    
+    [data-theme="dark"] {
+        --bg-primary: #1a1a1a;
+        --bg-secondary: #2d2d2d;
+        --text-primary: #ffffff;
+        --text-secondary: #b0b0b0;
+        --border-color: #404040;
+        --card-bg: #2d2d2d;
+        --shadow: rgba(0,0,0,0.3);
+    }
+    
+    body {
+        background-color: var(--bg-primary);
+        color: var(--text-primary);
+    }
+    
+    .failure-container {
+        max-width: 600px;
+        margin: 50px auto;
+        padding: 20px;
+        text-align: center;
+    }
+    
+    .failure-icon {
+        width: 120px;
+        height: 120px;
+        background: linear-gradient(135deg, #dc3545, #c82333);
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin: 0 auto 30px;
+        animation: failurePulse 2s ease-in-out;
+    }
+    
+    .failure-icon i {
+        font-size: 60px;
+        color: white;
+    }
+    
+    @keyframes failurePulse {
+        0% {
+            transform: scale(0.8);
+            opacity: 0;
+        }
+        50% {
+            transform: scale(1.1);
+        }
+        100% {
+            transform: scale(1);
+            opacity: 1;
+        }
+    }
+    
+    .failure-header {
+        background: var(--card-bg);
+        border-radius: 15px;
+        padding: 40px 30px;
+        box-shadow: 0 4px 20px var(--shadow);
+        margin-bottom: 30px;
+        border: 1px solid var(--border-color);
+    }
+    
+    .failure-header h1 {
+        color: #dc3545;
+        margin-bottom: 15px;
+        font-size: 2.5em;
+    }
+    
+    .failure-header p {
+        color: var(--text-secondary);
+        font-size: 1.1em;
+        margin-bottom: 0;
+    }
+    
+    .error-details {
+        background: #f8d7da;
+        border: 1px solid #f5c6cb;
+        color: #721c24;
+        border-radius: 10px;
+        padding: 20px;
+        margin-bottom: 30px;
+    }
+    
+    .error-details h3 {
+        margin: 0 0 10px 0;
+        font-size: 1.2em;
+    }
+    
+    .payment-info {
+        background: #f8f9fa;
+        border-radius: 15px;
+        padding: 30px;
+        margin-bottom: 30px;
+        text-align: left;
+    }
+    
+    .payment-header {
+        display: flex;
+        align-items: center;
+        margin-bottom: 25px;
+        padding-bottom: 15px;
+        border-bottom: 2px solid #e9ecef;
+    }
+    
+    .payment-icon {
+        width: 60px;
+        height: 60px;
+        background: #667eea;
+        border-radius: 10px;
+        margin-right: 20px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: white;
+        font-size: 24px;
+    }
+    
+    .payment-details {
+        flex: 1;
+    }
+    
+    .payment-details h3 {
+        margin: 0 0 5px 0;
+        color: #333;
+        font-size: 1.4em;
+    }
+    
+    .payment-id {
+        color: #666;
+        font-size: 0.9em;
+    }
+    
+    .payment-summary {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: 20px;
+    }
+    
+    .summary-item {
+        display: flex;
+        align-items: center;
+        padding: 15px;
+        background: white;
+        border-radius: 10px;
+    }
+    
+    .summary-icon {
+        width: 40px;
+        height: 40px;
+        background: rgba(220, 53, 69, 0.1);
+        border-radius: 8px;
+        margin-right: 15px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: #dc3545;
+        font-size: 16px;
+    }
+    
+    .summary-content h4 {
+        margin: 0 0 5px 0;
+        font-size: 0.9em;
+        color: #666;
+        font-weight: normal;
+    }
+    
+    .summary-content p {
+        margin: 0;
+        font-weight: 600;
+        color: #333;
+    }
+    
+    .action-buttons {
+        display: flex;
+        gap: 15px;
+        justify-content: center;
+        flex-wrap: wrap;
+        margin-bottom: 30px;
+    }
+    
+    .btn-primary {
+        background: linear-gradient(45deg, #667eea, #764ba2);
+        color: white;
+        border: none;
+        padding: 12px 30px;
+        border-radius: 25px;
+        font-weight: 600;
+        text-decoration: none;
+        transition: all 0.3s;
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+    }
+    
+    .btn-primary:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 8px 25px rgba(102, 126, 234, 0.3);
+        color: white;
+        text-decoration: none;
+    }
+    
+    .btn-secondary {
+        background: white;
+        color: #667eea;
+        border: 2px solid #667eea;
+        padding: 10px 30px;
+        border-radius: 25px;
+        font-weight: 600;
+        text-decoration: none;
+        transition: all 0.3s;
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+    }
+    
+    .btn-secondary:hover {
+        background: #667eea;
+        color: white;
+        text-decoration: none;
+    }
+    
+    .btn-danger {
+        background: linear-gradient(45deg, #dc3545, #c82333);
+        color: white;
+        border: none;
+        padding: 12px 30px;
+        border-radius: 25px;
+        font-weight: 600;
+        text-decoration: none;
+        transition: all 0.3s;
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+    }
+    
+    .btn-danger:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 8px 25px rgba(220, 53, 69, 0.3);
+        color: white;
+        text-decoration: none;
+    }
+    
+    .help-section {
+        background: white;
+        border-radius: 15px;
+        padding: 30px;
+        box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+        text-align: left;
+    }
+    
+    .help-list {
+        list-style: none;
+        padding: 0;
+        margin: 20px 0;
+    }
+    
+    .help-list li {
+        display: flex;
+        align-items: flex-start;
+        margin-bottom: 15px;
+        padding: 15px;
+        background: #f8f9fa;
+        border-radius: 10px;
+    }
+    
+    .help-icon {
+        background: #667eea;
+        color: white;
+        width: 25px;
+        height: 25px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 12px;
+        margin-right: 15px;
+        flex-shrink: 0;
+    }
+    
+    .help-content {
+        flex: 1;
+    }
+    
+    .help-content h4 {
+        margin: 0 0 5px 0;
+        color: #333;
+        font-size: 1em;
+    }
+    
+    .help-content p {
+        margin: 0;
+        color: #666;
+        font-size: 0.9em;
+    }
+    
+    /* Mobile Responsive */
+    @media (max-width: 768px) {
+        .failure-container {
+            margin: 20px auto;
+            padding: 15px;
+        }
+        
+        .failure-header {
+            padding: 30px 20px;
+        }
+        
+        .failure-header h1 {
+            font-size: 2em;
+        }
+        
+        .payment-info,
+        .help-section {
+            padding: 20px;
+        }
+        
+        .payment-summary {
+            grid-template-columns: 1fr;
+        }
+        
+        .payment-header {
+            flex-direction: column;
+            text-align: center;
+        }
+        
+        .payment-icon {
+            margin: 0 0 15px 0;
+        }
+        
+        .action-buttons {
+            flex-direction: column;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="failure-container">
+    <!-- Failure Header -->
+    <div class="failure-header">
+        <div class="failure-icon">
+            <i class="fas fa-times"></i>
+        </div>
+        <h1>Payment Failed</h1>
+        <p>Unfortunately, we couldn't process your payment. Please review the details below and try again.</p>
+    </div>
+    
+    <!-- Error Details -->
+    {% if payment.failure_reason %}
+    <div class="error-details">
+        <h3>❌ Error Details</h3>
+        <p>{{ payment.failure_reason }}</p>
+    </div>
+    {% endif %}
+    
+    <!-- Payment Information -->
+    <div class="payment-info">
+        <div class="payment-header">
+            <div class="payment-icon">
+                💳
+            </div>
+            <div class="payment-details">
+                <h3>{{ payment.event.title }}</h3>
+                <div class="payment-id">Payment ID: {{ payment.payment_id }}</div>
+            </div>
+        </div>
+        
+        <!-- Payment Summary -->
+        <div class="payment-summary">
+            <div class="summary-item">
+                <div class="summary-icon">
+                    💰
+                </div>
+                <div class="summary-content">
+                    <h4>Amount</h4>
+                    <p>${{ "%.2f"|format(payment.amount) }} {{ payment.currency.value }}</p>
+                </div>
+            </div>
+            
+            <div class="summary-item">
+                <div class="summary-icon">
+                    💳
+                </div>
+                <div class="summary-content">
+                    <h4>Payment Method</h4>
+                    <p>{{ payment.payment_method.value|title }}</p>
+                </div>
+            </div>
+            
+            <div class="summary-item">
+                <div class="summary-icon">
+                    📅
+                </div>
+                <div class="summary-content">
+                    <h4>Attempted</h4>
+                    <p>{{ payment.created_at.strftime('%B %d, %Y at %I:%M %p') }}</p>
+                </div>
+            </div>
+            
+            <div class="summary-item">
+                <div class="summary-icon">
+                    ❌
+                </div>
+                <div class="summary-content">
+                    <h4>Status</h4>
+                    <p>{{ payment.status.value|title }}</p>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Action Buttons -->
+    <div class="action-buttons">
+        <a href="{{ url_for('payments.checkout', event_id=payment.event.id) }}" class="btn-danger">
+            <i class="fas fa-redo"></i> Try Again
+        </a>
+        <a href="{{ url_for('event_detail', id=payment.event.id) }}" class="btn-secondary">
+            <i class="fas fa-eye"></i> View Event
+        </a>
+        <a href="{{ url_for('payments.payment_history') }}" class="btn-secondary">
+            <i class="fas fa-history"></i> Payment History
+        </a>
+    </div>
+    
+    <!-- Help Section -->
+    <div class="help-section">
+        <h2>🤔 Need Help?</h2>
+        <p>Here are some common reasons why payments fail and what you can do:</p>
+        
+        <ul class="help-list">
+            <li>
+                <div class="help-icon">
+                    <i class="fas fa-credit-card"></i>
+                </div>
+                <div class="help-content">
+                    <h4>Check Your Card Details</h4>
+                    <p>Ensure your card number, expiry date, and security code are correct. Check that your card hasn't expired.</p>
+                </div>
+            </li>
+            <li>
+                <div class="help-icon">
+                    <i class="fas fa-wallet"></i>
+                </div>
+                <div class="help-content">
+                    <h4>Insufficient Funds</h4>
+                    <p>Make sure you have enough balance in your account or available credit on your card.</p>
+                </div>
+            </li>
+            <li>
+                <div class="help-icon">
+                    <i class="fas fa-shield-alt"></i>
+                </div>
+                <div class="help-content">
+                    <h4>Bank Security</h4>
+                    <p>Your bank might have blocked the transaction for security reasons. Contact your bank to authorize online payments.</p>
+                </div>
+            </li>
+            <li>
+                <div class="help-icon">
+                    <i class="fas fa-globe"></i>
+                </div>
+                <div class="help-content">
+                    <h4>International Cards</h4>
+                    <p>Some cards have restrictions on international or online transactions. Check with your bank.</p>
+                </div>
+            </li>
+            <li>
+                <div class="help-icon">
+                    <i class="fas fa-phone"></i>
+                </div>
+                <div class="help-content">
+                    <h4>Contact Support</h4>
+                    <p>If you continue to have issues, please contact our support team at support@EVENTSYNC.com</p>
+                </div>
+            </li>
+        </ul>
+        
+        <div class="text-center" style="margin-top: 30px;">
+            <a href="mailto:support@EVENTSYNC.com" class="btn-primary">
+                <i class="fas fa-envelope"></i> Contact Support
+            </a>
+        </div>
+    </div>
+</div>
+{% endblock %}

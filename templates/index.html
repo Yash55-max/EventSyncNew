@@ -1,6 +1,6 @@
 {% extends "layout.html" %}
 
-{% block title %}EventHub - Discover Amazing Events{% endblock %}
+{% block title %}EventSync - Discover Amazing Events{% endblock %}
 
 {% block content %}
 <!-- Hero Section -->
@@ -22,7 +22,7 @@
         </div>
       </div>
       <div class="col-lg-6 d-none d-lg-block animate-on-scroll">
-        <img src="https://pixabay.com/get/gab65d49b27d25e5d28944b7aca9fe4337a763d5993eb380556d8146bac58dd3fa07ebd4f12a3dfe1a76ccf4d5a20b4dd2a7516ed4a8fc79ec45c94f0f6ab0f05_1280.jpg" alt="Event Management" class="img-fluid rounded-lg shadow-lg">
+        <img src="https://images.unsplash.com/photo-1540575467063-178a50c2df87?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1000&q=80" alt="Event Management" class="img-fluid rounded-lg shadow-lg">
       </div>
     </div>
   </div>
@@ -32,16 +32,19 @@
 <section class="py-5">
   <div class="container">
     <div class="section-heading">
-      <h2>Why Choose EventHub</h2>
+      <h2>Why Choose EventSync</h2>
       <p>The all-in-one platform for event management, ticketing, and promotion</p>
     </div>
     
     <div class="row g-4">
       <div class="col-md-4 animate-on-scroll">
-        <div class="card h-100">
+        <div class="card h-100 feature-card">
+          <div class="feature-image">
+            <img src="https://images.unsplash.com/photo-1559136555-9303baea8ebd?ixlib=rb-4.0.3&auto=format&fit=crop&w=400&q=80" alt="Event Creation" class="card-img-top" style="height: 200px; object-fit: cover;">
+          </div>
           <div class="card-body text-center p-4">
             <div class="mb-3 text-primary">
-              <i class="fas fa-calendar-plus fa-3x"></i>
+              <i class="fas fa-calendar-plus fa-2x"></i>
             </div>
             <h3 class="card-title h5">Easy Event Creation</h3>
             <p class="card-text">Create and manage events with our intuitive interface. Set up tickets, manage registrations, and track attendees all in one place.</p>
@@ -50,10 +53,13 @@
       </div>
       
       <div class="col-md-4 animate-on-scroll">
-        <div class="card h-100">
+        <div class="card h-100 feature-card">
+          <div class="feature-image">
+            <img src="https://images.unsplash.com/photo-1586953208448-b95a79798f07?ixlib=rb-4.0.3&auto=format&fit=crop&w=400&q=80" alt="Digital Tickets" class="card-img-top" style="height: 200px; object-fit: cover;">
+          </div>
           <div class="card-body text-center p-4">
             <div class="mb-3 text-secondary">
-              <i class="fas fa-ticket-alt fa-3x"></i>
+              <i class="fas fa-ticket-alt fa-2x"></i>
             </div>
             <h3 class="card-title h5">Seamless Ticketing</h3>
             <p class="card-text">Sell tickets with ease. Our platform handles registration and provides digital tickets for your attendees. No more paper tickets!</p>
@@ -62,10 +68,13 @@
       </div>
       
       <div class="col-md-4 animate-on-scroll">
-        <div class="card h-100">
+        <div class="card h-100 feature-card">
+          <div class="feature-image">
+            <img src="https://images.unsplash.com/photo-1551288049-bebda4e38f71?ixlib=rb-4.0.3&auto=format&fit=crop&w=400&q=80" alt="Analytics Dashboard" class="card-img-top" style="height: 200px; object-fit: cover;">
+          </div>
           <div class="card-body text-center p-4">
             <div class="mb-3 text-accent">
-              <i class="fas fa-chart-line fa-3x"></i>
+              <i class="fas fa-chart-line fa-2x"></i>
             </div>
             <h3 class="card-title h5">Detailed Analytics</h3>
             <p class="card-text">Get insights into your event performance. Track registrations, attendance, and engagement to improve future events.</p>
@@ -89,7 +98,7 @@
         {% for event in upcoming_events %}
           <div class="col-lg-4 col-md-6 animate-on-scroll">
             <div class="event-card card">
-              <img src="{{ event.image_url or 'https://pixabay.com/get/g3d6de78ec0d3ff8a2f15cf84c29e13c650c5109ce75d16c59a260335b9813dae2969e117bd9b891fc9922109e5c38bb83ff6771ac276fbeef0292b8ea9f0f44f_1280.jpg' }}" 
+              <img src="{{ event.image_url or 'https://images.unsplash.com/photo-1492684223066-81342ee5ff30?ixlib=rb-4.0.3&auto=format&fit=crop&w=600&q=80' }}" 
                    class="card-img-top" alt="{{ event.title }}">
               
               <div class="card-body">
@@ -147,7 +156,7 @@
         {% for event in popular_events %}
           <div class="col-lg-4 col-md-6 animate-on-scroll">
             <div class="event-card card">
-              <img src="{{ event.image_url or 'https://pixabay.com/get/g91f5db21d1f9f0a49f061ef27de9819c4f7c61e5bbd43cd78e73d948126a00e0dd4661bb44c01b334cec41197154627f247089119b591132d9665edc51061fed_1280.jpg' }}" 
+              <img src="{{ event.image_url or 'https://images.unsplash.com/photo-1511578314322-379afb476865?ixlib=rb-4.0.3&auto=format&fit=crop&w=600&q=80' }}" 
                    class="card-img-top" alt="{{ event.title }}">
               
               <div class="card-body">
@@ -201,13 +210,14 @@
     <div class="row align-items-center">
       <div class="col-lg-6 mb-4 mb-lg-0">
         <h2>Ready to create your own event?</h2>
-        <p class="lead">Join thousands of organizers using EventHub to create and manage successful events. Our platform makes it easy to set up registration, sell tickets, and track attendance.</p>
+        <p class="lead">Join thousands of organizers using EventSync to create and manage successful events. Our platform makes it easy to set up registration, sell tickets, and track attendance.</p>
         <a href="{{ url_for('register', user_type='organizer') }}" class="btn btn-light">Become an Organizer</a>
       </div>
       <div class="col-lg-6">
-        <div class="card bg-white p-4 text-dark">
-          <div class="card-body">
-            <h3>Why Organize with EventHub?</h3>
+        <div class="card bg-white text-dark overflow-hidden">
+          <img src="https://images.unsplash.com/photo-1517457373958-b7bdd4587205?ixlib=rb-4.0.3&auto=format&fit=crop&w=600&q=80" alt="Event Organization" class="card-img-top" style="height: 200px; object-fit: cover;">
+          <div class="card-body p-4">
+            <h3>Why Organize with EventSync?</h3>
             <ul class="list-unstyled mt-4">
               <li class="mb-3 d-flex align-items-center">
                 <i class="fas fa-check-circle text-success me-3 fa-lg"></i>
@@ -242,7 +252,7 @@
   <div class="container">
     <div class="section-heading">
       <h2>What Our Users Say</h2>
-      <p>Hear from organizers and attendees who love using EventHub</p>
+      <p>Hear from organizers and attendees who love using EventSync</p>
     </div>
     
     <div class="row">
@@ -258,8 +268,9 @@
                 <i class="fas fa-star"></i>
               </div>
             </div>
-            <p class="card-text fst-italic">"EventHub made organizing my conference a breeze. The ticketing system is intuitive and the attendee management tools are incredibly helpful. Highly recommended!"</p>
+            <p class="card-text fst-italic">"EventSync made organizing my conference a breeze. The ticketing system is intuitive and the attendee management tools are incredibly helpful. Highly recommended!"</p>
             <div class="d-flex align-items-center">
+              <img src="https://images.unsplash.com/photo-1494790108755-2616b612b0e5?ixlib=rb-4.0.3&auto=format&fit=crop&w=150&q=80" alt="Sarah Johnson" class="rounded-circle me-3" width="50" height="50" style="object-fit: cover;">
               <div>
                 <h6 class="card-title mb-0">Sarah Johnson</h6>
                 <small class="text-muted">Tech Conference Organizer</small>
@@ -281,8 +292,9 @@
                 <i class="fas fa-star"></i>
               </div>
             </div>
-            <p class="card-text fst-italic">"I've been using EventHub to find networking events in my industry. The platform is so easy to use and I love the digital tickets feature. No more printing tickets!"</p>
+            <p class="card-text fst-italic">"I've been using EventSync to find networking events in my industry. The platform is so easy to use and I love the digital tickets feature. No more printing tickets!"</p>
             <div class="d-flex align-items-center">
+              <img src="https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?ixlib=rb-4.0.3&auto=format&fit=crop&w=150&q=80" alt="Michael Chen" class="rounded-circle me-3" width="50" height="50" style="object-fit: cover;">
               <div>
                 <h6 class="card-title mb-0">Michael Chen</h6>
                 <small class="text-muted">Regular Event Attendee</small>
@@ -304,8 +316,9 @@
                 <i class="fas fa-star-half-alt"></i>
               </div>
             </div>
-            <p class="card-text fst-italic">"As an event organizer, I appreciate the detailed analytics EventHub provides. It helps me understand my audience better and improve my workshops. The support team is also amazing!"</p>
+            <p class="card-text fst-italic">"As an event organizer, I appreciate the detailed analytics EventSync provides. It helps me understand my audience better and improve my workshops. The support team is also amazing!"</p>
             <div class="d-flex align-items-center">
+              <img src="https://images.unsplash.com/photo-1438761681033-6461ffad8d80?ixlib=rb-4.0.3&auto=format&fit=crop&w=150&q=80" alt="Olivia Martinez" class="rounded-circle me-3" width="50" height="50" style="object-fit: cover;">
               <div>
                 <h6 class="card-title mb-0">Olivia Martinez</h6>
                 <small class="text-muted">Workshop Host</small>

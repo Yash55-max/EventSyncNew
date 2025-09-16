@@ -1,0 +1,634 @@
+{% extends "base.html" %}
+
+{% block title %}Carbon Footprint Calculator{% endblock %}
+
+{% block extra_css %}
+<style>
+    .calculator-card {
+        background: white;
+        border-radius: 15px;
+        box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+        padding: 2rem;
+        margin-bottom: 2rem;
+        border-left: 5px solid #27ae60;
+    }
+    .form-section {
+        background: #f8f9fa;
+        border-radius: 10px;
+        padding: 1.5rem;
+        margin-bottom: 1.5rem;
+        border: 1px solid #e9ecef;
+    }
+    .section-header {
+        color: #2c3e50;
+        font-weight: 600;
+        margin-bottom: 1rem;
+        padding-bottom: 0.5rem;
+        border-bottom: 2px solid #27ae60;
+    }
+    .btn-calculate {
+        background: linear-gradient(135deg, #27ae60 0%, #2ecc71 100%);
+        border: none;
+        color: white;
+        padding: 1rem 2rem;
+        border-radius: 50px;
+        font-weight: 600;
+        font-size: 1.1rem;
+        transition: all 0.3s ease;
+    }
+    .btn-calculate:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 5px 20px rgba(39, 174, 96, 0.3);
+        color: white;
+    }
+    .result-card {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        border-radius: 15px;
+        padding: 2rem;
+        margin-top: 2rem;
+        display: none;
+    }
+    .co2-value {
+        font-size: 3rem;
+        font-weight: 700;
+        text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+    }
+    .breakdown-item {
+        background: rgba(255,255,255,0.1);
+        border-radius: 10px;
+        padding: 1rem;
+        margin-bottom: 0.5rem;
+        backdrop-filter: blur(10px);
+    }
+    .recommendation-card {
+        background: white;
+        border-radius: 10px;
+        padding: 1.5rem;
+        margin-bottom: 1rem;
+        border-left: 4px solid #3498db;
+        box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+    }
+    .impact-high { border-left-color: #e74c3c; }
+    .impact-medium { border-left-color: #f39c12; }
+    .impact-low { border-left-color: #27ae60; }
+    .progress-bar-animated {
+        animation: progress-animation 2s ease-in-out;
+    }
+    @keyframes progress-animation {
+        0% { width: 0%; }
+        100% { width: var(--progress-width); }
+    }
+    .slider-container {
+        margin: 1rem 0;
+    }
+    .slider-value {
+        background: #27ae60;
+        color: white;
+        padding: 0.25rem 0.75rem;
+        border-radius: 15px;
+        font-weight: 600;
+        font-size: 0.9rem;
+        margin-left: 0.5rem;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <!-- Header -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="text-center">
+                <h1 class="display-4 text-dark font-weight-bold">
+                    <i class="fas fa-calculator text-success mr-3"></i>
+                    Carbon Footprint Calculator
+                </h1>
+                <p class="lead text-muted">Calculate your event's environmental impact and get personalized recommendations</p>
+            </div>
+        </div>
+    </div>
+
+    <form id="calculatorForm">
+        <div class="row">
+            <!-- Left Column - Event Details -->
+            <div class="col-lg-8">
+                <!-- Basic Event Information -->
+                <div class="calculator-card">
+                    <div class="form-section">
+                        <h4 class="section-header">
+                            <i class="fas fa-info-circle text-primary mr-2"></i>
+                            Basic Event Information
+                        </h4>
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label for="eventName" class="font-weight-semibold">Event Name</label>
+                                    <input type="text" class="form-control" id="eventName" placeholder="Enter event name">
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label for="eventType" class="font-weight-semibold">Event Type</label>
+                                    <select class="form-control" id="eventType">
+                                        <option value="conference">Conference</option>
+                                        <option value="workshop">Workshop</option>
+                                        <option value="seminar">Seminar</option>
+                                        <option value="trade_show">Trade Show</option>
+                                        <option value="networking">Networking Event</option>
+                                        <option value="other">Other</option>
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label for="attendees" class="font-weight-semibold">Expected Attendees</label>
+                                    <input type="number" class="form-control" id="attendees" min="1" max="10000" value="100">
+                                    <small class="text-muted">Number of people expected to attend</small>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label for="duration" class="font-weight-semibold">Duration (hours)</label>
+                                    <input type="number" class="form-control" id="duration" min="1" max="168" value="8">
+                                    <small class="text-muted">Total event duration in hours</small>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Transportation -->
+                <div class="calculator-card">
+                    <div class="form-section">
+                        <h4 class="section-header">
+                            <i class="fas fa-car text-info mr-2"></i>
+                            Transportation
+                        </h4>
+                        <p class="text-muted mb-3">Estimate how attendees will arrive at your event</p>
+                        
+                        <div class="row">
+                            <div class="col-md-4">
+                                <label class="font-weight-semibold">Car/Private Vehicle</label>
+                                <div class="slider-container">
+                                    <input type="range" class="form-range w-100" id="carPercent" min="0" max="100" value="40" oninput="updateSliderValue('car', this.value)">
+                                    <span class="slider-value" id="carValue">40%</span>
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <label class="font-weight-semibold">Public Transport</label>
+                                <div class="slider-container">
+                                    <input type="range" class="form-range w-100" id="publicPercent" min="0" max="100" value="35" oninput="updateSliderValue('public', this.value)">
+                                    <span class="slider-value" id="publicValue">35%</span>
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <label class="font-weight-semibold">Walking/Cycling</label>
+                                <div class="slider-container">
+                                    <input type="range" class="form-range w-100" id="walkingPercent" min="0" max="100" value="25" oninput="updateSliderValue('walking', this.value)">
+                                    <span class="slider-value" id="walkingValue">25%</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Venue & Energy -->
+                <div class="calculator-card">
+                    <div class="form-section">
+                        <h4 class="section-header">
+                            <i class="fas fa-building text-warning mr-2"></i>
+                            Venue & Energy
+                        </h4>
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label for="venueSize" class="font-weight-semibold">Venue Size (sq meters)</label>
+                                    <input type="number" class="form-control" id="venueSize" min="10" max="100000" value="500">
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label for="energySource" class="font-weight-semibold">Primary Energy Source</label>
+                                    <select class="form-control" id="energySource">
+                                        <option value="renewable">100% Renewable</option>
+                                        <option value="mixed" selected>Mixed (Grid Standard)</option>
+                                        <option value="fossil">Primarily Fossil Fuels</option>
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Catering -->
+                <div class="calculator-card">
+                    <div class="form-section">
+                        <h4 class="section-header">
+                            <i class="fas fa-utensils text-danger mr-2"></i>
+                            Catering & Food
+                        </h4>
+                        <div class="row">
+                            <div class="col-md-4">
+                                <label class="font-weight-semibold">Vegetarian/Vegan</label>
+                                <div class="slider-container">
+                                    <input type="range" class="form-range w-100" id="vegetarianPercent" min="0" max="100" value="40" oninput="updateSliderValue('vegetarian', this.value)">
+                                    <span class="slider-value" id="vegetarianValue">40%</span>
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <label class="font-weight-semibold">Moderate Meat</label>
+                                <div class="slider-container">
+                                    <input type="range" class="form-range w-100" id="moderateMeatPercent" min="0" max="100" value="45" oninput="updateSliderValue('moderateMeat', this.value)">
+                                    <span class="slider-value" id="moderateMeatValue">45%</span>
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <label class="font-weight-semibold">Heavy Meat</label>
+                                <div class="slider-container">
+                                    <input type="range" class="form-range w-100" id="heavyMeatPercent" min="0" max="100" value="15" oninput="updateSliderValue('heavyMeat', this.value)">
+                                    <span class="slider-value" id="heavyMeatValue">15%</span>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="mt-3">
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" id="localSourcing">
+                                <label class="form-check-label font-weight-semibold" for="localSourcing">
+                                    Local sourcing (within 50km)
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Materials & Waste -->
+                <div class="calculator-card">
+                    <div class="form-section">
+                        <h4 class="section-header">
+                            <i class="fas fa-recycle text-success mr-2"></i>
+                            Materials & Waste Management
+                        </h4>
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label for="digitalRatio" class="font-weight-semibold">Digital Adoption Ratio</label>
+                                    <input type="range" class="form-range" id="digitalRatio" min="0" max="100" value="70" oninput="updateSliderValue('digital', this.value)">
+                                    <span class="slider-value" id="digitalValue">70%</span>
+                                    <small class="text-muted d-block">Percentage of materials provided digitally</small>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label for="wasteManagement" class="font-weight-semibold">Waste Management System</label>
+                                    <select class="form-control" id="wasteManagement">
+                                        <option value="advanced">Advanced (Recycling + Composting)</option>
+                                        <option value="moderate" selected>Moderate (Basic Recycling)</option>
+                                        <option value="basic">Basic (Minimal Recycling)</option>
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Right Column - Quick Stats & Actions -->
+            <div class="col-lg-4">
+                <div class="calculator-card sticky-top">
+                    <h4 class="text-center text-dark mb-4">
+                        <i class="fas fa-chart-pie text-primary mr-2"></i>
+                        Quick Preview
+                    </h4>
+                    
+                    <!-- Quick Stats -->
+                    <div class="text-center mb-4">
+                        <div class="row">
+                            <div class="col-6">
+                                <div class="text-primary">
+                                    <i class="fas fa-users fa-2x mb-2"></i>
+                                    <div class="h5 mb-0" id="previewAttendees">100</div>
+                                    <small class="text-muted">Attendees</small>
+                                </div>
+                            </div>
+                            <div class="col-6">
+                                <div class="text-info">
+                                    <i class="fas fa-clock fa-2x mb-2"></i>
+                                    <div class="h5 mb-0" id="previewDuration">8h</div>
+                                    <small class="text-muted">Duration</small>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Calculate Button -->
+                    <div class="text-center mb-4">
+                        <button type="button" class="btn btn-calculate w-100" onclick="calculateFootprint()">
+                            <i class="fas fa-calculator mr-2"></i>
+                            Calculate Carbon Footprint
+                        </button>
+                    </div>
+
+                    <!-- Loading Spinner -->
+                    <div id="loadingSpinner" class="text-center py-3" style="display: none;">
+                        <div class="spinner-border text-success" role="status"></div>
+                        <p class="mt-2 text-muted">Calculating environmental impact...</p>
+                    </div>
+
+                    <!-- Quick Tips -->
+                    <div class="mt-4">
+                        <h6 class="font-weight-bold text-dark mb-3">
+                            <i class="fas fa-lightbulb text-warning mr-2"></i>
+                            Quick Tips
+                        </h6>
+                        <div class="list-group list-group-flush">
+                            <div class="list-group-item border-0 px-0 py-2">
+                                <i class="fas fa-leaf text-success mr-2"></i>
+                                <small>Encourage public transportation</small>
+                            </div>
+                            <div class="list-group-item border-0 px-0 py-2">
+                                <i class="fas fa-utensils text-danger mr-2"></i>
+                                <small>Offer more vegetarian options</small>
+                            </div>
+                            <div class="list-group-item border-0 px-0 py-2">
+                                <i class="fas fa-mobile-alt text-primary mr-2"></i>
+                                <small>Go digital with materials</small>
+                            </div>
+                            <div class="list-group-item border-0 px-0 py-2">
+                                <i class="fas fa-recycle text-info mr-2"></i>
+                                <small>Set up proper waste sorting</small>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </form>
+
+    <!-- Results Section -->
+    <div id="resultsSection" class="result-card">
+        <div class="text-center mb-4">
+            <h2 class="mb-3">Carbon Footprint Results</h2>
+            <div class="co2-value" id="totalCO2">0</div>
+            <p class="lead">kg CO₂ equivalent</p>
+            <p class="mb-0"><span id="perAttendeeCO2">0</span> kg CO₂ per attendee</p>
+        </div>
+
+        <!-- Impact Level -->
+        <div class="text-center mb-4">
+            <div class="badge badge-pill badge-light p-3" id="impactBadge" style="font-size: 1.1rem;">
+                <i class="fas fa-info-circle mr-2"></i>
+                <span id="impactLevel">Calculating...</span>
+            </div>
+        </div>
+
+        <!-- Category Breakdown -->
+        <div class="row">
+            <div class="col-12">
+                <h5 class="mb-3">Impact Breakdown</h5>
+                <div id="categoryBreakdown">
+                    <!-- Will be populated by JavaScript -->
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Recommendations Section -->
+    <div id="recommendationsSection" style="display: none;">
+        <div class="row mt-4">
+            <div class="col-12">
+                <h3 class="text-dark font-weight-bold mb-4">
+                    <i class="fas fa-lightbulb text-warning mr-3"></i>
+                    Sustainability Recommendations
+                </h3>
+                <div id="recommendationsList">
+                    <!-- Will be populated by JavaScript -->
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    // Update slider values
+    function updateSliderValue(type, value) {
+        document.getElementById(type + 'Value').textContent = value + '%';
+        updatePreview();
+        
+        // Auto-adjust other sliders to maintain 100% total where applicable
+        if (['car', 'public', 'walking'].includes(type)) {
+            adjustTransportSliders(type, parseInt(value));
+        }
+        if (['vegetarian', 'moderateMeat', 'heavyMeat'].includes(type)) {
+            adjustFoodSliders(type, parseInt(value));
+        }
+    }
+
+    function adjustTransportSliders(changedType, newValue) {
+        const types = ['car', 'public', 'walking'];
+        const others = types.filter(t => t !== changedType);
+        const remaining = 100 - newValue;
+        
+        // Distribute remaining percentage proportionally
+        const currentSum = others.reduce((sum, type) => sum + parseInt(document.getElementById(type + 'Percent').value), 0);
+        
+        if (currentSum > 0) {
+            others.forEach(type => {
+                const currentValue = parseInt(document.getElementById(type + 'Percent').value);
+                const newVal = Math.round((currentValue / currentSum) * remaining);
+                document.getElementById(type + 'Percent').value = newVal;
+                document.getElementById(type + 'Value').textContent = newVal + '%';
+            });
+        }
+    }
+
+    function adjustFoodSliders(changedType, newValue) {
+        const types = ['vegetarian', 'moderateMeat', 'heavyMeat'];
+        const others = types.filter(t => t !== changedType);
+        const remaining = 100 - newValue;
+        
+        // Distribute remaining percentage proportionally
+        const currentSum = others.reduce((sum, type) => sum + parseInt(document.getElementById(type + 'Percent').value), 0);
+        
+        if (currentSum > 0) {
+            others.forEach(type => {
+                const currentValue = parseInt(document.getElementById(type + 'Percent').value);
+                const newVal = Math.round((currentValue / currentSum) * remaining);
+                document.getElementById(type + 'Percent').value = newVal;
+                document.getElementById(type + 'Value').textContent = newVal + '%';
+            });
+        }
+    }
+
+    function updatePreview() {
+        const attendees = document.getElementById('attendees').value;
+        const duration = document.getElementById('duration').value;
+        
+        document.getElementById('previewAttendees').textContent = attendees;
+        document.getElementById('previewDuration').textContent = duration + 'h';
+    }
+
+    function calculateFootprint() {
+        // Show loading spinner
+        document.getElementById('loadingSpinner').style.display = 'block';
+        
+        // Collect form data
+        const eventData = {
+            event_name: document.getElementById('eventName').value,
+            event_type: document.getElementById('eventType').value,
+            expected_attendees: parseInt(document.getElementById('attendees').value),
+            duration_hours: parseInt(document.getElementById('duration').value),
+            venue_size_sqm: parseInt(document.getElementById('venueSize').value),
+            energy_source: document.getElementById('energySource').value,
+            transport_modes: {
+                car: parseInt(document.getElementById('carPercent').value) / 100,
+                public_transport: parseInt(document.getElementById('publicPercent').value) / 100,
+                walking_cycling: parseInt(document.getElementById('walkingPercent').value) / 100
+            },
+            meal_distribution: {
+                vegetarian: parseInt(document.getElementById('vegetarianPercent').value) / 100,
+                meat_moderate: parseInt(document.getElementById('moderateMeatPercent').value) / 100,
+                meat_heavy: parseInt(document.getElementById('heavyMeatPercent').value) / 100
+            },
+            digital_adoption_ratio: parseInt(document.getElementById('digitalRatio').value) / 100,
+            waste_management_type: document.getElementById('wasteManagement').value,
+            local_sourcing: document.getElementById('localSourcing').checked
+        };
+
+        // Make API call
+        fetch('/sustainability/api/calculate', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify(eventData)
+        })
+        .then(response => response.json())
+        .then(data => {
+            // Hide loading spinner
+            document.getElementById('loadingSpinner').style.display = 'none';
+            
+            if (data.success) {
+                displayResults(data.footprint, data.recommendations);
+            } else {
+                alert('Error calculating footprint: ' + data.error);
+            }
+        })
+        .catch(error => {
+            document.getElementById('loadingSpinner').style.display = 'none';
+            console.error('Error:', error);
+            alert('Network error occurred. Please try again.');
+        });
+    }
+
+    function displayResults(footprint, recommendations) {
+        // Update result values
+        document.getElementById('totalCO2').textContent = footprint.total_co2_kg.toFixed(1);
+        document.getElementById('perAttendeeCO2').textContent = footprint.per_attendee_kg.toFixed(2);
+        
+        // Update impact level
+        const impactLevel = footprint.impact_level;
+        const impactBadge = document.getElementById('impactBadge');
+        const impactText = document.getElementById('impactLevel');
+        
+        impactText.textContent = impactLevel.charAt(0).toUpperCase() + impactLevel.slice(1) + ' Impact';
+        
+        // Style impact badge
+        impactBadge.className = 'badge badge-pill p-3';
+        if (impactLevel === 'high') {
+            impactBadge.classList.add('badge-danger');
+        } else if (impactLevel === 'medium') {
+            impactBadge.classList.add('badge-warning');
+        } else {
+            impactBadge.classList.add('badge-success');
+        }
+
+        // Display category breakdown
+        const breakdownDiv = document.getElementById('categoryBreakdown');
+        breakdownDiv.innerHTML = '';
+        
+        Object.entries(footprint.category_breakdown).forEach(([category, value]) => {
+            const percentage = ((value / footprint.total_co2_kg) * 100).toFixed(1);
+            breakdownDiv.innerHTML += `
+                <div class="breakdown-item">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <span class="font-weight-semibold">${category.replace('_', ' ').toUpperCase()}</span>
+                        <span>${value.toFixed(1)} kg (${percentage}%)</span>
+                    </div>
+                    <div class="progress mt-2" style="height: 6px;">
+                        <div class="progress-bar bg-light progress-bar-animated" 
+                             style="--progress-width: ${percentage}%; width: ${percentage}%"></div>
+                    </div>
+                </div>
+            `;
+        });
+
+        // Display recommendations
+        displayRecommendations(recommendations);
+
+        // Show results
+        document.getElementById('resultsSection').style.display = 'block';
+        document.getElementById('recommendationsSection').style.display = 'block';
+
+        // Scroll to results
+        document.getElementById('resultsSection').scrollIntoView({
+            behavior: 'smooth'
+        });
+    }
+
+    function displayRecommendations(recommendations) {
+        const recommendationsDiv = document.getElementById('recommendationsList');
+        recommendationsDiv.innerHTML = '';
+
+        recommendations.forEach((rec, index) => {
+            const impactClass = rec.impact_reduction > 20 ? 'impact-high' : 
+                              rec.impact_reduction > 10 ? 'impact-medium' : 'impact-low';
+            
+            recommendationsDiv.innerHTML += `
+                <div class="recommendation-card ${impactClass}">
+                    <div class="d-flex justify-content-between align-items-start mb-2">
+                        <h6 class="font-weight-bold mb-0">${rec.title}</h6>
+                        <span class="badge badge-success">${rec.impact_reduction}% reduction</span>
+                    </div>
+                    <p class="text-muted mb-2">${rec.description}</p>
+                    <div class="row">
+                        <div class="col-md-6">
+                            <small class="text-muted">
+                                <i class="fas fa-tag mr-1"></i>
+                                <strong>Category:</strong> ${rec.category}
+                            </small>
+                        </div>
+                        <div class="col-md-6">
+                            <small class="text-muted">
+                                <i class="fas fa-chart-bar mr-1"></i>
+                                <strong>Difficulty:</strong> ${rec.difficulty}
+                            </small>
+                        </div>
+                    </div>
+                    ${rec.cost_impact ? `
+                        <div class="mt-2">
+                            <small class="text-muted">
+                                <i class="fas fa-dollar-sign mr-1"></i>
+                                <strong>Cost Impact:</strong> ${rec.cost_impact}
+                            </small>
+                        </div>
+                    ` : ''}
+                </div>
+            `;
+        });
+    }
+
+    // Initialize form
+    document.addEventListener('DOMContentLoaded', function() {
+        updatePreview();
+        
+        // Add event listeners for real-time updates
+        document.getElementById('attendees').addEventListener('input', updatePreview);
+        document.getElementById('duration').addEventListener('input', updatePreview);
+    });
+</script>
+{% endblock %}

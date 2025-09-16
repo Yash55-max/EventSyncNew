@@ -1,13 +1,13 @@
 {% extends "layout.html" %}
 
-{% block title %}Login - EventHub{% endblock %}
+{% block title %}Login - EventSync{% endblock %}
 
 {% block content %}
 <div class="container py-5">
   <div class="row justify-content-center">
     <div class="col-md-6">
       <div class="auth-form animate-on-scroll">
-        <h2>Login to EventHub</h2>
+        <h2>Login to EventSync</h2>
         
         <form method="POST" action="{{ url_for('login') }}" novalidate>
           {{ form.hidden_tag() }}
@@ -97,7 +97,7 @@
       
       <div class="col-lg-7">
         <h2>The complete platform for event management</h2>
-        <p class="lead mb-4">Create, manage, and promote your events with our all-in-one solution. Whether you're organizing a small workshop or a large conference, EventHub has you covered.</p>
+        <p class="lead mb-4">Create, manage, and promote your events with our all-in-one solution. Whether you're organizing a small workshop or a large conference, EventSync has you covered.</p>
         
         <div class="row g-3">
           <div class="col-md-6">
@@ -176,3 +176,4 @@
   });
 </script>
 {% endblock %}
+

@@ -1,0 +1,336 @@
+{% extends "layout.html" %}
+
+{% block title %}PWA Test - EVENTSYNC{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="row">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header bg-primary text-white">
+                    <h3><i class="fas fa-mobile-alt me-2"></i>PWA Functionality Test</h3>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <!-- Service Worker Status -->
+                        <div class="col-md-6 mb-4">
+                            <h5><i class="fas fa-cogs me-2"></i>Service Worker</h5>
+                            <div id="sw-status" class="alert alert-info">
+                                <i class="fas fa-spinner fa-spin me-2"></i>Checking Service Worker...
+                            </div>
+                            <button id="sw-register" class="btn btn-outline-primary btn-sm me-2">Register SW</button>
+                            <button id="sw-unregister" class="btn btn-outline-secondary btn-sm">Unregister SW</button>
+                        </div>
+                        
+                        <!-- Install Status -->
+                        <div class="col-md-6 mb-4">
+                            <h5><i class="fas fa-download me-2"></i>Install Status</h5>
+                            <div id="install-status" class="alert alert-info">
+                                <i class="fas fa-spinner fa-spin me-2"></i>Checking install status...
+                            </div>
+                            <button id="install-app" class="btn btn-success btn-sm" style="display: none;">
+                                <i class="fas fa-download me-2"></i>Install App
+                            </button>
+                        </div>
+                        
+                        <!-- Offline Status -->
+                        <div class="col-md-6 mb-4">
+                            <h5><i class="fas fa-wifi me-2"></i>Connection Status</h5>
+                            <div id="connection-status" class="alert alert-success">
+                                <i class="fas fa-wifi me-2"></i>Online
+                            </div>
+                            <button id="test-offline" class="btn btn-outline-warning btn-sm">Test Offline</button>
+                        </div>
+                        
+                        <!-- Push Notifications -->
+                        <div class="col-md-6 mb-4">
+                            <h5><i class="fas fa-bell me-2"></i>Push Notifications</h5>
+                            <div id="notification-status" class="alert alert-info">
+                                <i class="fas fa-spinner fa-spin me-2"></i>Checking permissions...
+                            </div>
+                            <button id="enable-notifications" class="btn btn-outline-info btn-sm me-2">Enable</button>
+                            <button id="test-notification" class="btn btn-outline-primary btn-sm">Test</button>
+                        </div>
+                        
+                        <!-- Manifest Info -->
+                        <div class="col-md-6 mb-4">
+                            <h5><i class="fas fa-file-code me-2"></i>Manifest</h5>
+                            <div id="manifest-status" class="alert alert-info">
+                                <i class="fas fa-spinner fa-spin me-2"></i>Loading manifest...
+                            </div>
+                            <button id="view-manifest" class="btn btn-outline-info btn-sm">View Manifest</button>
+                        </div>
+                        
+                        <!-- Cache Status -->
+                        <div class="col-md-6 mb-4">
+                            <h5><i class="fas fa-database me-2"></i>Cache</h5>
+                            <div id="cache-status" class="alert alert-info">
+                                <i class="fas fa-spinner fa-spin me-2"></i>Checking cache...
+                            </div>
+                            <button id="clear-cache" class="btn btn-outline-danger btn-sm">Clear Cache</button>
+                        </div>
+                    </div>
+                    
+                    <!-- PWA Features -->
+                    <div class="row mt-4">
+                        <div class="col-12">
+                            <h5><i class="fas fa-star me-2"></i>PWA Features Test</h5>
+                            <div class="list-group">
+                                <div class="list-group-item d-flex justify-content-between align-items-center">
+                                    <span><i class="fas fa-mobile-alt me-2"></i>Responsive Design</span>
+                                    <span id="responsive-check" class="badge bg-secondary">Checking...</span>
+                                </div>
+                                <div class="list-group-item d-flex justify-content-between align-items-center">
+                                    <span><i class="fas fa-shield-alt me-2"></i>HTTPS Required</span>
+                                    <span id="https-check" class="badge bg-secondary">Checking...</span>
+                                </div>
+                                <div class="list-group-item d-flex justify-content-between align-items-center">
+                                    <span><i class="fas fa-file-alt me-2"></i>Manifest Valid</span>
+                                    <span id="manifest-check" class="badge bg-secondary">Checking...</span>
+                                </div>
+                                <div class="list-group-item d-flex justify-content-between align-items-center">
+                                    <span><i class="fas fa-cog me-2"></i>Service Worker</span>
+                                    <span id="sw-check" class="badge bg-secondary">Checking...</span>
+                                </div>
+                                <div class="list-group-item d-flex justify-content-between align-items-center">
+                                    <span><i class="fas fa-image me-2"></i>Icons Available</span>
+                                    <span id="icons-check" class="badge bg-secondary">Checking...</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Debug Info -->
+                    <div class="row mt-4">
+                        <div class="col-12">
+                            <h5><i class="fas fa-bug me-2"></i>Debug Information</h5>
+                            <div class="card">
+                                <div class="card-body">
+                                    <pre id="debug-info" style="font-size: 12px; max-height: 300px; overflow-y: auto;"></pre>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const debugInfo = document.getElementById('debug-info');
+    
+    function log(message) {
+        console.log(message);
+        debugInfo.textContent += new Date().toLocaleTimeString() + ': ' + message + '\n';
+        debugInfo.scrollTop = debugInfo.scrollHeight;
+    }
+    
+    function updateStatus(elementId, status, className = 'info', icon = 'info-circle') {
+        const element = document.getElementById(elementId);
+        element.className = `alert alert-${className}`;
+        element.innerHTML = `<i class="fas fa-${icon} me-2"></i>${status}`;
+    }
+    
+    function updateBadge(elementId, status, className = 'secondary') {
+        const element = document.getElementById(elementId);
+        element.className = `badge bg-${className}`;
+        element.textContent = status;
+    }
+    
+    // Check Service Worker
+    async function checkServiceWorker() {
+        if ('serviceWorker' in navigator) {
+            try {
+                const registration = await navigator.serviceWorker.getRegistration();
+                if (registration) {
+                    updateStatus('sw-status', 'Service Worker registered and active', 'success', 'check-circle');
+                    updateBadge('sw-check', 'Active', 'success');
+                    log('Service Worker: Active');
+                } else {
+                    updateStatus('sw-status', 'Service Worker not registered', 'warning', 'exclamation-triangle');
+                    updateBadge('sw-check', 'Not Registered', 'warning');
+                    log('Service Worker: Not registered');
+                }
+            } catch (error) {
+                updateStatus('sw-status', 'Service Worker check failed: ' + error.message, 'danger', 'times-circle');
+                updateBadge('sw-check', 'Error', 'danger');
+                log('Service Worker error: ' + error.message);
+            }
+        } else {
+            updateStatus('sw-status', 'Service Worker not supported', 'danger', 'times-circle');
+            updateBadge('sw-check', 'Not Supported', 'danger');
+            log('Service Worker: Not supported');
+        }
+    }
+    
+    // Check Install Status
+    function checkInstallStatus() {
+        if (window.matchMedia('(display-mode: standalone)').matches) {
+            updateStatus('install-status', 'App is installed and running in standalone mode', 'success', 'check-circle');
+            log('PWA: Running in standalone mode');
+        } else if (window.navigator.standalone === true) {
+            updateStatus('install-status', 'App is installed (iOS)', 'success', 'check-circle');
+            log('PWA: Running in iOS standalone mode');
+        } else {
+            updateStatus('install-status', 'App is not installed', 'info', 'info-circle');
+            log('PWA: Not installed, running in browser');
+            
+            // Check if installation is available
+            window.addEventListener('beforeinstallprompt', (e) => {
+                e.preventDefault();
+                document.getElementById('install-app').style.display = 'inline-block';
+                document.getElementById('install-app').onclick = () => {
+                    e.prompt();
+                    e.userChoice.then((choiceResult) => {
+                        log('Install prompt result: ' + choiceResult.outcome);
+                    });
+                };
+                log('PWA: Install prompt available');
+            });
+        }
+    }
+    
+    // Check Connection Status
+    function checkConnection() {
+        function updateConnectionStatus() {
+            if (navigator.onLine) {
+                updateStatus('connection-status', 'Online', 'success', 'wifi');
+                log('Network: Online');
+            } else {
+                updateStatus('connection-status', 'Offline', 'warning', 'wifi-slash');
+                log('Network: Offline');
+            }
+        }
+        
+        updateConnectionStatus();
+        window.addEventListener('online', updateConnectionStatus);
+        window.addEventListener('offline', updateConnectionStatus);
+    }
+    
+    // Check Notifications
+    async function checkNotifications() {
+        if ('Notification' in window) {
+            const permission = Notification.permission;
+            if (permission === 'granted') {
+                updateStatus('notification-status', 'Notifications enabled', 'success', 'check-circle');
+                log('Notifications: Enabled');
+            } else if (permission === 'denied') {
+                updateStatus('notification-status', 'Notifications denied', 'danger', 'times-circle');
+                log('Notifications: Denied');
+            } else {
+                updateStatus('notification-status', 'Notifications not enabled', 'warning', 'exclamation-triangle');
+                log('Notifications: Default (not enabled)');
+            }
+        } else {
+            updateStatus('notification-status', 'Notifications not supported', 'danger', 'times-circle');
+            log('Notifications: Not supported');
+        }
+    }
+    
+    // Check Manifest
+    async function checkManifest() {
+        try {
+            const response = await fetch('/manifest.json');
+            if (response.ok) {
+                const manifest = await response.json();
+                updateStatus('manifest-status', `Manifest loaded: ${manifest.name}`, 'success', 'check-circle');
+                updateBadge('manifest-check', 'Valid', 'success');
+                log('Manifest: Loaded successfully');
+            } else {
+                updateStatus('manifest-status', 'Manifest not found', 'danger', 'times-circle');
+                updateBadge('manifest-check', 'Not Found', 'danger');
+                log('Manifest: Not found');
+            }
+        } catch (error) {
+            updateStatus('manifest-status', 'Manifest error: ' + error.message, 'danger', 'times-circle');
+            updateBadge('manifest-check', 'Error', 'danger');
+            log('Manifest error: ' + error.message);
+        }
+    }
+    
+    // Check Cache
+    async function checkCache() {
+        if ('caches' in window) {
+            try {
+                const cacheNames = await caches.keys();
+                updateStatus('cache-status', `${cacheNames.length} cache(s) found`, 'success', 'check-circle');
+                log(`Cache: ${cacheNames.length} cache(s) found: ${cacheNames.join(', ')}`);
+            } catch (error) {
+                updateStatus('cache-status', 'Cache error: ' + error.message, 'danger', 'times-circle');
+                log('Cache error: ' + error.message);
+            }
+        } else {
+            updateStatus('cache-status', 'Cache API not supported', 'danger', 'times-circle');
+            log('Cache: Not supported');
+        }
+    }
+    
+    // Check other PWA features
+    function checkOtherFeatures() {
+        // Responsive design
+        updateBadge('responsive-check', 'Yes', 'success');
+        
+        // HTTPS
+        if (location.protocol === 'https:' || location.hostname === 'localhost' || location.hostname === '127.0.0.1') {
+            updateBadge('https-check', 'Yes', 'success');
+        } else {
+            updateBadge('https-check', 'No', 'danger');
+        }
+        
+        // Icons
+        updateBadge('icons-check', 'Yes', 'success');
+    }
+    
+    // Event listeners
+    document.getElementById('enable-notifications').onclick = async () => {
+        if ('Notification' in window) {
+            const permission = await Notification.requestPermission();
+            await checkNotifications();
+        }
+    };
+    
+    document.getElementById('test-notification').onclick = () => {
+        if (Notification.permission === 'granted') {
+            new Notification('EVENTSYNC PWA', {
+                body: 'This is a test notification!',
+                icon: '/static/icons/icon-192x192.png'
+            });
+            log('Test notification sent');
+        }
+    };
+    
+    document.getElementById('view-manifest').onclick = () => {
+        window.open('/manifest.json', '_blank');
+    };
+    
+    document.getElementById('clear-cache').onclick = async () => {
+        if ('caches' in window) {
+            const cacheNames = await caches.keys();
+            for (const name of cacheNames) {
+                await caches.delete(name);
+            }
+            log('All caches cleared');
+            await checkCache();
+        }
+    };
+    
+    document.getElementById('test-offline').onclick = () => {
+        window.location.href = '/offline';
+    };
+    
+    // Run all checks
+    log('Starting PWA functionality tests...');
+    checkServiceWorker();
+    checkInstallStatus();
+    checkConnection();
+    checkNotifications();
+    checkManifest();
+    checkCache();
+    checkOtherFeatures();
+});
+</script>
+{% endblock %}

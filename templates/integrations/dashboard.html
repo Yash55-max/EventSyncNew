@@ -1,0 +1,722 @@
+{% extends 'base.html' %}
+
+{% block title %}Integration Dashboard - EVENTSYNC{% endblock %}
+
+{% block extra_css %}
+<link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+<style>
+    .integration-card {
+        border: 1px solid #e3e6f0;
+        border-radius: 10px;
+        padding: 1.5rem;
+        margin-bottom: 1.5rem;
+        transition: all 0.3s ease;
+        background: white;
+        box-shadow: 0 0.15rem 1.75rem 0 rgba(58, 59, 69, 0.15);
+    }
+
+    .integration-card:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 0.25rem 2rem 0 rgba(58, 59, 69, 0.25);
+    }
+
+    .integration-icon {
+        font-size: 2.5rem;
+        margin-bottom: 1rem;
+    }
+
+    .integration-status {
+        padding: 0.25rem 0.75rem;
+        border-radius: 20px;
+        font-size: 0.8rem;
+        font-weight: 600;
+        text-transform: uppercase;
+    }
+
+    .status-active {
+        background: #d4edda;
+        color: #155724;
+        border: 1px solid #c3e6cb;
+    }
+
+    .status-inactive {
+        background: #f8d7da;
+        color: #721c24;
+        border: 1px solid #f5c6cb;
+    }
+
+    .status-error {
+        background: #fff3cd;
+        color: #856404;
+        border: 1px solid #ffeaa7;
+    }
+
+    .status-pending {
+        background: #d1ecf1;
+        color: #0c5460;
+        border: 1px solid #bee5eb;
+    }
+
+    .integration-actions {
+        display: flex;
+        gap: 0.5rem;
+        flex-wrap: wrap;
+    }
+
+    .btn-integration {
+        padding: 0.5rem 1rem;
+        border-radius: 5px;
+        border: none;
+        cursor: pointer;
+        font-size: 0.85rem;
+        transition: all 0.3s ease;
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+
+    .btn-test {
+        background: #007bff;
+        color: white;
+    }
+
+    .btn-test:hover {
+        background: #0056b3;
+    }
+
+    .btn-sync {
+        background: #28a745;
+        color: white;
+    }
+
+    .btn-sync:hover {
+        background: #1e7e34;
+    }
+
+    .btn-disable {
+        background: #ffc107;
+        color: #212529;
+    }
+
+    .btn-disable:hover {
+        background: #e0a800;
+    }
+
+    .btn-enable {
+        background: #28a745;
+        color: white;
+    }
+
+    .btn-enable:hover {
+        background: #1e7e34;
+    }
+
+    .btn-delete {
+        background: #dc3545;
+        color: white;
+    }
+
+    .btn-delete:hover {
+        background: #c82333;
+    }
+
+    .setup-card {
+        border: 2px dashed #e3e6f0;
+        border-radius: 10px;
+        padding: 2rem;
+        text-align: center;
+        margin-bottom: 1.5rem;
+        transition: all 0.3s ease;
+    }
+
+    .setup-card:hover {
+        border-color: #007bff;
+        background: #f8f9fc;
+    }
+
+    .error-message {
+        background: #f8d7da;
+        color: #721c24;
+        padding: 0.75rem;
+        border-radius: 5px;
+        border: 1px solid #f5c6cb;
+        margin-top: 0.5rem;
+        font-size: 0.85rem;
+    }
+
+    .integration-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+        gap: 1.5rem;
+    }
+
+    .integration-header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        margin-bottom: 1rem;
+    }
+
+    .last-sync {
+        font-size: 0.8rem;
+        color: #6c757d;
+        margin-top: 0.5rem;
+    }
+
+    .modal {
+        display: none;
+        position: fixed;
+        z-index: 1000;
+        left: 0;
+        top: 0;
+        width: 100%;
+        height: 100%;
+        overflow: auto;
+        background-color: rgba(0,0,0,0.4);
+    }
+
+    .modal-content {
+        background-color: #fefefe;
+        margin: 15% auto;
+        padding: 20px;
+        border: none;
+        border-radius: 10px;
+        width: 80%;
+        max-width: 500px;
+        position: relative;
+    }
+
+    .close {
+        color: #aaa;
+        float: right;
+        font-size: 28px;
+        font-weight: bold;
+        position: absolute;
+        right: 20px;
+        top: 15px;
+    }
+
+    .close:hover,
+    .close:focus {
+        color: black;
+        text-decoration: none;
+        cursor: pointer;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-12">
+            <div class="d-sm-flex align-items-center justify-content-between mb-4">
+                <h1 class="h3 mb-0 text-gray-800">Integration Dashboard</h1>
+                <button class="d-none d-sm-inline-block btn btn-sm btn-primary shadow-sm" onclick="refreshIntegrations()">
+                    <i class="fas fa-sync fa-sm text-white-50"></i> Refresh
+                </button>
+            </div>
+
+            <!-- Integration Stats -->
+            <div class="row mb-4">
+                <div class="col-xl-3 col-md-6 mb-4">
+                    <div class="card border-left-primary shadow h-100 py-2">
+                        <div class="card-body">
+                            <div class="row no-gutters align-items-center">
+                                <div class="col mr-2">
+                                    <div class="text-xs font-weight-bold text-primary text-uppercase mb-1">
+                                        Active Integrations</div>
+                                    <div class="h5 mb-0 font-weight-bold text-gray-800" id="active-count">
+                                        {{ integrations|selectattr("status", "equalto", "active")|list|length }}
+                                    </div>
+                                </div>
+                                <div class="col-auto">
+                                    <i class="fas fa-plug fa-2x text-gray-300"></i>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-xl-3 col-md-6 mb-4">
+                    <div class="card border-left-success shadow h-100 py-2">
+                        <div class="card-body">
+                            <div class="row no-gutters align-items-center">
+                                <div class="col mr-2">
+                                    <div class="text-xs font-weight-bold text-success text-uppercase mb-1">
+                                        Available Types</div>
+                                    <div class="h5 mb-0 font-weight-bold text-gray-800">
+                                        {{ available_integrations|length }}
+                                    </div>
+                                </div>
+                                <div class="col-auto">
+                                    <i class="fas fa-cogs fa-2x text-gray-300"></i>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-xl-3 col-md-6 mb-4">
+                    <div class="card border-left-warning shadow h-100 py-2">
+                        <div class="card-body">
+                            <div class="row no-gutters align-items-center">
+                                <div class="col mr-2">
+                                    <div class="text-xs font-weight-bold text-warning text-uppercase mb-1">
+                                        Errors</div>
+                                    <div class="h5 mb-0 font-weight-bold text-gray-800">
+                                        {{ integrations|selectattr("status", "equalto", "error")|list|length }}
+                                    </div>
+                                </div>
+                                <div class="col-auto">
+                                    <i class="fas fa-exclamation-triangle fa-2x text-gray-300"></i>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-xl-3 col-md-6 mb-4">
+                    <div class="card border-left-info shadow h-100 py-2">
+                        <div class="card-body">
+                            <div class="row no-gutters align-items-center">
+                                <div class="col mr-2">
+                                    <div class="text-xs font-weight-bold text-info text-uppercase mb-1">
+                                        Total Configured</div>
+                                    <div class="h5 mb-0 font-weight-bold text-gray-800">
+                                        {{ integrations|length }}
+                                    </div>
+                                </div>
+                                <div class="col-auto">
+                                    <i class="fas fa-network-wired fa-2x text-gray-300"></i>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Existing Integrations -->
+            {% if integrations %}
+            <div class="card shadow mb-4">
+                <div class="card-header py-3">
+                    <h6 class="m-0 font-weight-bold text-primary">Your Integrations</h6>
+                </div>
+                <div class="card-body">
+                    <div class="integration-grid">
+                        {% for integration in integrations %}
+                        <div class="integration-card" id="integration-{{ integration.id }}">
+                            <div class="integration-header">
+                                <div>
+                                    <i class="fas fa-{{ 'google' if integration.type == 'google_calendar' else 'github' if integration.type == 'github' else 'slack' if integration.type == 'slack' else 'credit-card' if 'payment' in integration.type else 'webhook' if integration.type == 'webhooks' else 'plug' }} integration-icon text-primary"></i>
+                                    <h5 class="mb-0">{{ integration.type.replace('_', ' ').title() }}</h5>
+                                </div>
+                                <span class="integration-status status-{{ integration.status }}">
+                                    {{ integration.status }}
+                                </span>
+                            </div>
+                            
+                            {% if integration.error_message %}
+                            <div class="error-message">
+                                <i class="fas fa-exclamation-circle"></i>
+                                {{ integration.error_message }}
+                            </div>
+                            {% endif %}
+
+                            {% if integration.last_sync %}
+                            <div class="last-sync">
+                                <i class="fas fa-clock"></i>
+                                Last synced: {{ integration.last_sync[:19] }}
+                            </div>
+                            {% endif %}
+
+                            <div class="integration-actions mt-3">
+                                <button class="btn-integration btn-test" onclick="testIntegration({{ integration.id }})">
+                                    <i class="fas fa-vial"></i> Test
+                                </button>
+                                
+                                {% if integration.status == 'active' %}
+                                <button class="btn-integration btn-disable" onclick="disableIntegration({{ integration.id }})">
+                                    <i class="fas fa-pause"></i> Disable
+                                </button>
+                                {% else %}
+                                <button class="btn-integration btn-enable" onclick="enableIntegration({{ integration.id }})">
+                                    <i class="fas fa-play"></i> Enable
+                                </button>
+                                {% endif %}
+                                
+                                {% if integration.type in ['google_calendar', 'outlook_calendar'] %}
+                                <button class="btn-integration btn-sync" onclick="showSyncModal({{ integration.id }})">
+                                    <i class="fas fa-sync"></i> Sync
+                                </button>
+                                {% endif %}
+                                
+                                <button class="btn-integration btn-delete" onclick="deleteIntegration({{ integration.id }})">
+                                    <i class="fas fa-trash"></i> Delete
+                                </button>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+            {% endif %}
+
+            <!-- Available Integrations -->
+            <div class="card shadow mb-4">
+                <div class="card-header py-3">
+                    <h6 class="m-0 font-weight-bold text-primary">Available Integrations</h6>
+                </div>
+                <div class="card-body">
+                    <div class="integration-grid">
+                        {% for integration in available_integrations %}
+                        {% set is_configured = integrations|selectattr("type", "equalto", integration.type)|list|length > 0 %}
+                        <div class="setup-card {% if is_configured %}opacity-50{% endif %}">
+                            <i class="{{ integration.icon }} integration-icon text-primary"></i>
+                            <h5 class="mb-2">{{ integration.name }}</h5>
+                            <p class="text-muted mb-3">{{ integration.description }}</p>
+                            {% if not is_configured %}
+                            <a href="{{ url_for('integrations.setup_integration', integration_type=integration.type) }}" 
+                               class="btn btn-primary">
+                                <i class="fas fa-plus"></i> Setup
+                            </a>
+                            {% else %}
+                            <span class="text-success">
+                                <i class="fas fa-check"></i> Already configured
+                            </span>
+                            {% endif %}
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Sync Modal -->
+<div id="syncModal" class="modal">
+    <div class="modal-content">
+        <span class="close">&times;</span>
+        <h4>Sync Events to Calendar</h4>
+        <p>Select events to sync with your calendar integration:</p>
+        <div id="syncEventsList"></div>
+        <div class="mt-3">
+            <button class="btn btn-primary" onclick="performSync()">
+                <i class="fas fa-sync"></i> Sync Selected Events
+            </button>
+            <button class="btn btn-secondary" onclick="closeSyncModal()">Cancel</button>
+        </div>
+    </div>
+</div>
+
+<!-- Loading Modal -->
+<div id="loadingModal" class="modal">
+    <div class="modal-content text-center">
+        <div class="spinner-border text-primary" role="status">
+            <span class="sr-only">Loading...</span>
+        </div>
+        <p class="mt-3" id="loadingMessage">Processing...</p>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+<script>
+let currentIntegrationId = null;
+
+function showLoading(message = 'Processing...') {
+    document.getElementById('loadingMessage').textContent = message;
+    document.getElementById('loadingModal').style.display = 'block';
+}
+
+function hideLoading() {
+    document.getElementById('loadingModal').style.display = 'none';
+}
+
+function testIntegration(integrationId) {
+    showLoading('Testing integration...');
+    
+    fetch(`/integrations/api/test/${integrationId}`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        }
+    })
+    .then(response => response.json())
+    .then(data => {
+        hideLoading();
+        if (data.success) {
+            Swal.fire({
+                icon: 'success',
+                title: 'Test Successful!',
+                text: data.message,
+                timer: 3000
+            });
+        } else {
+            Swal.fire({
+                icon: 'error',
+                title: 'Test Failed',
+                text: data.error
+            });
+        }
+    })
+    .catch(error => {
+        hideLoading();
+        Swal.fire({
+            icon: 'error',
+            title: 'Error',
+            text: 'Failed to test integration: ' + error.message
+        });
+    });
+}
+
+function enableIntegration(integrationId) {
+    showLoading('Enabling integration...');
+    
+    fetch(`/integrations/api/enable/${integrationId}`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        }
+    })
+    .then(response => response.json())
+    .then(data => {
+        hideLoading();
+        if (data.success) {
+            location.reload();
+        } else {
+            Swal.fire({
+                icon: 'error',
+                title: 'Error',
+                text: data.error
+            });
+        }
+    })
+    .catch(error => {
+        hideLoading();
+        Swal.fire({
+            icon: 'error',
+            title: 'Error',
+            text: 'Failed to enable integration: ' + error.message
+        });
+    });
+}
+
+function disableIntegration(integrationId) {
+    Swal.fire({
+        title: 'Disable Integration?',
+        text: "This will temporarily disable the integration. You can re-enable it later.",
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonColor: '#ffc107',
+        cancelButtonColor: '#6c757d',
+        confirmButtonText: 'Yes, disable it!'
+    }).then((result) => {
+        if (result.isConfirmed) {
+            showLoading('Disabling integration...');
+            
+            fetch(`/integrations/api/disable/${integrationId}`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                hideLoading();
+                if (data.success) {
+                    location.reload();
+                } else {
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Error',
+                        text: data.error
+                    });
+                }
+            })
+            .catch(error => {
+                hideLoading();
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Error',
+                    text: 'Failed to disable integration: ' + error.message
+                });
+            });
+        }
+    });
+}
+
+function deleteIntegration(integrationId) {
+    Swal.fire({
+        title: 'Delete Integration?',
+        text: "This action cannot be undone. You'll need to reconfigure the integration from scratch.",
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonColor: '#dc3545',
+        cancelButtonColor: '#6c757d',
+        confirmButtonText: 'Yes, delete it!'
+    }).then((result) => {
+        if (result.isConfirmed) {
+            showLoading('Deleting integration...');
+            
+            fetch(`/integrations/api/delete/${integrationId}`, {
+                method: 'DELETE',
+                headers: {
+                    'Content-Type': 'application/json',
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                hideLoading();
+                if (data.success) {
+                    document.getElementById(`integration-${integrationId}`).remove();
+                    Swal.fire({
+                        icon: 'success',
+                        title: 'Deleted!',
+                        text: 'Integration has been deleted.',
+                        timer: 2000
+                    });
+                } else {
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Error',
+                        text: data.error
+                    });
+                }
+            })
+            .catch(error => {
+                hideLoading();
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Error',
+                    text: 'Failed to delete integration: ' + error.message
+                });
+            });
+        }
+    });
+}
+
+function showSyncModal(integrationId) {
+    currentIntegrationId = integrationId;
+    
+    // Load user's events
+    fetch('/api/events/user')
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            const eventsList = document.getElementById('syncEventsList');
+            eventsList.innerHTML = '';
+            
+            if (data.events.length === 0) {
+                eventsList.innerHTML = '<p class="text-muted">No events available to sync.</p>';
+            } else {
+                data.events.forEach(event => {
+                    const checkbox = document.createElement('div');
+                    checkbox.className = 'form-check mb-2';
+                    checkbox.innerHTML = `
+                        <input class="form-check-input" type="checkbox" value="${event.id}" id="event-${event.id}">
+                        <label class="form-check-label" for="event-${event.id}">
+                            <strong>${event.title}</strong><br>
+                            <small class="text-muted">${event.start_date} - ${event.location || 'Virtual'}</small>
+                        </label>
+                    `;
+                    eventsList.appendChild(checkbox);
+                });
+            }
+            
+            document.getElementById('syncModal').style.display = 'block';
+        }
+    })
+    .catch(error => {
+        Swal.fire({
+            icon: 'error',
+            title: 'Error',
+            text: 'Failed to load events: ' + error.message
+        });
+    });
+}
+
+function closeSyncModal() {
+    document.getElementById('syncModal').style.display = 'none';
+    currentIntegrationId = null;
+}
+
+function performSync() {
+    const selectedEvents = Array.from(document.querySelectorAll('#syncEventsList input[type="checkbox"]:checked'))
+        .map(checkbox => checkbox.value);
+    
+    if (selectedEvents.length === 0) {
+        Swal.fire({
+            icon: 'warning',
+            title: 'No Events Selected',
+            text: 'Please select at least one event to sync.'
+        });
+        return;
+    }
+    
+    closeSyncModal();
+    showLoading(`Syncing ${selectedEvents.length} event(s)...`);
+    
+    // Sync each selected event
+    const syncPromises = selectedEvents.map(eventId => 
+        fetch(`/integrations/api/sync-event/${eventId}`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            }
+        }).then(response => response.json())
+    );
+    
+    Promise.all(syncPromises)
+    .then(results => {
+        hideLoading();
+        const successCount = results.filter(result => result.success).length;
+        const totalCount = results.length;
+        
+        if (successCount === totalCount) {
+            Swal.fire({
+                icon: 'success',
+                title: 'Sync Complete!',
+                text: `All ${totalCount} event(s) synced successfully.`,
+                timer: 3000
+            });
+        } else {
+            Swal.fire({
+                icon: 'warning',
+                title: 'Partial Sync',
+                text: `${successCount}/${totalCount} events synced successfully.`
+            });
+        }
+    })
+    .catch(error => {
+        hideLoading();
+        Swal.fire({
+            icon: 'error',
+            title: 'Sync Failed',
+            text: 'Failed to sync events: ' + error.message
+        });
+    });
+}
+
+function refreshIntegrations() {
+    showLoading('Refreshing integrations...');
+    location.reload();
+}
+
+// Close modals when clicking outside
+window.onclick = function(event) {
+    const syncModal = document.getElementById('syncModal');
+    const loadingModal = document.getElementById('loadingModal');
+    
+    if (event.target == syncModal) {
+        closeSyncModal();
+    }
+}
+
+// Close button for sync modal
+document.querySelector('.close').onclick = function() {
+    closeSyncModal();
+}
+</script>
+{% endblock %}

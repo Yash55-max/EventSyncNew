@@ -1,11 +1,19 @@
 {% extends "layout.html" %}
 
-{% block title %}My Tickets - EventHub{% endblock %}
+{% block title %}My Tickets - EventSync{% endblock %}
 
 {% block content %}
 <div class="container py-5">
+  <!-- EventSync Logo Header -->
+  <div style="text-align: center; margin-bottom: 30px; padding: 25px; background: linear-gradient(135deg, #007bff, #0056b3); border-radius: 15px; color: white; box-shadow: 0 4px 15px rgba(0,123,255,0.3);">
+    <div style="display: flex; align-items: center; justify-content: center; gap: 15px; margin-bottom: 15px;">
+      <img src="{{ url_for('static', filename='images/eventsync-logo.svg') }}" alt="EventSync" style="height: 45px; filter: brightness(0) invert(1);">
+      <h1 style="margin: 0; font-size: 2.2em;">🎟️ My Tickets</h1>
+    </div>
+    <p style="margin: 0; opacity: 0.9; font-size: 1.1em;">Manage and access your event tickets - Powered by EventSync</p>
+  </div>
+  
   <div class="management-heading">
-    <h1>My Tickets</h1>
     <a href="{{ url_for('attendee_events') }}" class="btn btn-primary">
       <i class="fas fa-calendar-alt me-2"></i> Explore Events
     </a>
@@ -36,6 +44,11 @@
                   data-attendee-name="{{ ticket.attendee.full_name }}"
                   data-ticket-number="{{ ticket.ticket_number }}">
                 <div class="ticket-card-header">
+                  <!-- EventSync Logo for Individual Ticket -->
+                  <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 10px; padding-bottom: 10px; border-bottom: 1px solid rgba(255,255,255,0.2);">
+                    <img src="{{ url_for('static', filename='images/eventsync-logo.svg') }}" alt="EventSync" style="height: 20px; filter: brightness(0) invert(1);">
+                    <span style="color: rgba(255,255,255,0.8); font-size: 0.75em;">EventSync Ticket</span>
+                  </div>
                   <div class="ticket-card-title">{{ ticket.event.title }}</div>
                   <div class="ticket-card-number">#{{ ticket.ticket_number }}</div>
                 </div>
@@ -122,6 +135,11 @@
                   data-attendee-name="{{ ticket.attendee.full_name }}"
                   data-ticket-number="{{ ticket.ticket_number }}">
                 <div class="ticket-card-header" style="background-color: #6c757d;">
+                  <!-- EventSync Logo for Individual Past Ticket -->
+                  <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 10px; padding-bottom: 10px; border-bottom: 1px solid rgba(255,255,255,0.2);">
+                    <img src="{{ url_for('static', filename='images/eventsync-logo.svg') }}" alt="EventSync" style="height: 20px; filter: brightness(0) invert(1);">
+                    <span style="color: rgba(255,255,255,0.8); font-size: 0.75em;">EventSync Ticket</span>
+                  </div>
                   <div class="ticket-card-title">{{ ticket.event.title }}</div>
                   <div class="ticket-card-number">#{{ ticket.ticket_number }}</div>
                 </div>
@@ -264,3 +282,4 @@
   });
 </script>
 {% endblock %}
+

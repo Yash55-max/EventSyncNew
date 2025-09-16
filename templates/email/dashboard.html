@@ -1,0 +1,563 @@
+{% extends "layout.html" %}
+
+{% block title %}{{ title }} - EVENTSYNC{% endblock %}
+
+{% block extra_css %}
+<style>
+    .email-dashboard {
+        padding: 20px 0;
+    }
+    
+    .dashboard-header {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        padding: 40px 20px;
+        border-radius: 15px;
+        margin-bottom: 30px;
+        text-align: center;
+    }
+    
+    .status-cards {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+        gap: 20px;
+        margin-bottom: 40px;
+    }
+    
+    .status-card {
+        background: white;
+        border-radius: 15px;
+        padding: 25px;
+        box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+        transition: transform 0.3s ease;
+    }
+    
+    .status-card:hover {
+        transform: translateY(-5px);
+    }
+    
+    .status-card h3 {
+        margin: 0 0 15px 0;
+        color: #333;
+        font-size: 1.2em;
+    }
+    
+    .status-indicator {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        margin: 10px 0;
+    }
+    
+    .status-dot {
+        width: 12px;
+        height: 12px;
+        border-radius: 50%;
+    }
+    
+    .status-dot.active { background: #28a745; }
+    .status-dot.inactive { background: #dc3545; }
+    .status-dot.pending { background: #ffc107; }
+    
+    .email-actions {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+        gap: 30px;
+        margin: 40px 0;
+    }
+    
+    .action-card {
+        background: white;
+        border-radius: 15px;
+        padding: 25px;
+        box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+    }
+    
+    .action-card h3 {
+        margin: 0 0 20px 0;
+        color: #333;
+        font-size: 1.3em;
+    }
+    
+    .form-group {
+        margin-bottom: 20px;
+    }
+    
+    .form-label {
+        display: block;
+        margin-bottom: 8px;
+        font-weight: 600;
+        color: #495057;
+    }
+    
+    .form-control {
+        width: 100%;
+        padding: 12px;
+        border: 2px solid #e9ecef;
+        border-radius: 8px;
+        font-size: 14px;
+        transition: border-color 0.3s;
+    }
+    
+    .form-control:focus {
+        outline: none;
+        border-color: #667eea;
+        box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+    }
+    
+    .btn-primary {
+        background: linear-gradient(45deg, #667eea, #764ba2);
+        color: white;
+        border: none;
+        padding: 12px 25px;
+        border-radius: 25px;
+        cursor: pointer;
+        font-weight: 600;
+        transition: transform 0.3s;
+    }
+    
+    .btn-primary:hover {
+        transform: translateY(-2px);
+    }
+    
+    .btn-secondary {
+        background: #6c757d;
+        color: white;
+        border: none;
+        padding: 12px 25px;
+        border-radius: 25px;
+        cursor: pointer;
+        margin: 0 5px;
+    }
+    
+    .btn-success {
+        background: #28a745;
+        color: white;
+        border: none;
+        padding: 12px 25px;
+        border-radius: 25px;
+        cursor: pointer;
+    }
+    
+    .btn-warning {
+        background: #ffc107;
+        color: #212529;
+        border: none;
+        padding: 12px 25px;
+        border-radius: 25px;
+        cursor: pointer;
+    }
+    
+    .loading {
+        opacity: 0.6;
+        pointer-events: none;
+    }
+    
+    .preview-section {
+        margin-top: 30px;
+    }
+    
+    .preview-buttons {
+        display: flex;
+        gap: 10px;
+        flex-wrap: wrap;
+        margin: 20px 0;
+    }
+    
+    .template-links {
+        display: flex;
+        gap: 10px;
+        margin: 15px 0;
+    }
+    
+    .template-link {
+        color: #667eea;
+        text-decoration: none;
+        padding: 8px 15px;
+        border: 1px solid #667eea;
+        border-radius: 20px;
+        font-size: 14px;
+        transition: all 0.3s;
+    }
+    
+    .template-link:hover {
+        background: #667eea;
+        color: white;
+        text-decoration: none;
+    }
+    
+    .alert {
+        padding: 15px;
+        margin-bottom: 20px;
+        border: 1px solid transparent;
+        border-radius: 8px;
+    }
+    
+    .alert-success {
+        color: #155724;
+        background-color: #d4edda;
+        border-color: #c3e6cb;
+    }
+    
+    .alert-danger {
+        color: #721c24;
+        background-color: #f8d7da;
+        border-color: #f5c6cb;
+    }
+    
+    .alert-warning {
+        color: #856404;
+        background-color: #fff3cd;
+        border-color: #ffeaa7;
+    }
+    
+    .settings-section {
+        background: white;
+        border-radius: 15px;
+        padding: 25px;
+        box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+        margin: 30px 0;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="email-dashboard">
+    <div class="container">
+        <div class="dashboard-header">
+            <h1>📧 Email Management</h1>
+            <p>Send notifications, reminders, and updates to your event attendees</p>
+        </div>
+        
+        <!-- Email Status Cards -->
+        <div class="status-cards">
+            <div class="status-card">
+                <h3>📊 Email System Status</h3>
+                <div id="email-status">
+                    <div class="loading">Loading email status...</div>
+                </div>
+            </div>
+            
+            <div class="status-card">
+                <h3>📅 Your Events</h3>
+                <p><strong>{{ user_events|length }}</strong> events available</p>
+                {% if user_events %}
+                    <div class="status-indicator">
+                        <div class="status-dot active"></div>
+                        <span>Ready to send notifications</span>
+                    </div>
+                {% else %}
+                    <div class="status-indicator">
+                        <div class="status-dot inactive"></div>
+                        <span>No events found</span>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+        
+        <!-- Email Actions -->
+        <div class="email-actions">
+            <!-- Send Reminders -->
+            <div class="action-card">
+                <h3>⏰ Send Event Reminders</h3>
+                
+                <div class="form-group">
+                    <label class="form-label">Select Event:</label>
+                    <select id="reminder-event" class="form-control">
+                        <option value="">Choose an event...</option>
+                        {% for event in user_events %}
+                        <option value="{{ event.id }}">{{ event.title }} - {{ event.start_date.strftime('%Y-%m-%d') }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                
+                <div class="form-group">
+                    <label class="form-label">Reminder Type:</label>
+                    <select id="reminder-days" class="form-control">
+                        <option value="1">1 day before (Tomorrow)</option>
+                        <option value="3">3 days before</option>
+                        <option value="7">1 week before</option>
+                    </select>
+                </div>
+                
+                <button onclick="sendReminders()" class="btn-primary">
+                    📨 Send Reminders
+                </button>
+            </div>
+            
+            <!-- Send Event Updates -->
+            <div class="action-card">
+                <h3>📢 Send Event Updates</h3>
+                
+                <div class="form-group">
+                    <label class="form-label">Select Event:</label>
+                    <select id="update-event" class="form-control">
+                        <option value="">Choose an event...</option>
+                        {% for event in user_events %}
+                        <option value="{{ event.id }}">{{ event.title }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                
+                <div class="form-group">
+                    <label class="form-label">Update Message:</label>
+                    <textarea id="update-message" class="form-control" rows="4" 
+                              placeholder="Enter your update message for attendees..."></textarea>
+                </div>
+                
+                <button onclick="sendUpdate()" class="btn-primary">
+                    📤 Send Update
+                </button>
+            </div>
+        </div>
+        
+        <!-- System Tools -->
+        <div class="settings-section">
+            <h3>🔧 System Tools</h3>
+            <div style="display: flex; gap: 15px; flex-wrap: wrap; margin: 20px 0;">
+                <button onclick="sendTestEmail()" class="btn-success">
+                    ✅ Send Test Email
+                </button>
+                <button onclick="runAutomatedReminders()" class="btn-warning">
+                    🤖 Run Automated Reminders
+                </button>
+            </div>
+            
+            <!-- Template Previews -->
+            <div class="preview-section">
+                <h4>📋 Preview Email Templates</h4>
+                <div class="template-links">
+                    <a href="/email/preview-template/confirmation" target="_blank" class="template-link">
+                        🎫 Ticket Confirmation
+                    </a>
+                    <a href="/email/preview-template/reminder" target="_blank" class="template-link">
+                        ⏰ Event Reminder
+                    </a>
+                    <a href="/email/preview-template/update" target="_blank" class="template-link">
+                        📢 Event Update
+                    </a>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Results Section -->
+        <div id="results-section" style="display: none;">
+            <div class="settings-section">
+                <h3>📋 Results</h3>
+                <div id="results-content"></div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    loadEmailStatus();
+});
+
+async function loadEmailStatus() {
+    try {
+        const response = await fetch('/email/api/email-status');
+        const result = await response.json();
+        
+        if (result.success) {
+            renderEmailStatus(result.data);
+        } else {
+            throw new Error(result.message);
+        }
+    } catch (error) {
+        document.getElementById('email-status').innerHTML = `
+            <div class="alert alert-danger">
+                Error loading email status: ${error.message}
+            </div>
+        `;
+    }
+}
+
+function renderEmailStatus(data) {
+    const statusHtml = `
+        <div class="status-indicator">
+            <div class="status-dot ${data.configured ? 'active' : 'inactive'}"></div>
+            <span>${data.configured ? 'Email Service Active' : 'Email Service Not Configured'}</span>
+        </div>
+        <div style="margin-top: 15px; font-size: 14px; color: #666;">
+            <div><strong>Server:</strong> ${data.mail_server}:${data.mail_port}</div>
+            <div><strong>Username:</strong> ${data.mail_username}</div>
+            <div><strong>TLS:</strong> ${data.use_tls ? 'Enabled' : 'Disabled'}</div>
+        </div>
+        ${!data.configured ? `
+        <div class="alert alert-warning" style="margin-top: 15px;">
+            <strong>Setup Required:</strong> Configure email settings in environment variables.
+        </div>
+        ` : ''}
+    `;
+    
+    document.getElementById('email-status').innerHTML = statusHtml;
+}
+
+async function sendReminders() {
+    const eventId = document.getElementById('reminder-event').value;
+    const daysBefore = parseInt(document.getElementById('reminder-days').value);
+    
+    if (!eventId) {
+        showResult('error', 'Please select an event first.');
+        return;
+    }
+    
+    showLoading('Sending reminder emails...');
+    
+    try {
+        const response = await fetch('/email/send-reminders', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+                event_id: eventId,
+                days_before: daysBefore
+            })
+        });
+        
+        const result = await response.json();
+        
+        if (result.success) {
+            showResult('success', result.message);
+        } else {
+            showResult('error', result.message);
+        }
+        
+    } catch (error) {
+        showResult('error', `Error: ${error.message}`);
+    } finally {
+        hideLoading();
+    }
+}
+
+async function sendUpdate() {
+    const eventId = document.getElementById('update-event').value;
+    const message = document.getElementById('update-message').value.trim();
+    
+    if (!eventId) {
+        showResult('error', 'Please select an event first.');
+        return;
+    }
+    
+    if (!message) {
+        showResult('error', 'Please enter an update message.');
+        return;
+    }
+    
+    showLoading('Sending update emails...');
+    
+    try {
+        const response = await fetch('/email/send-update', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+                event_id: eventId,
+                update_message: message
+            })
+        });
+        
+        const result = await response.json();
+        
+        if (result.success) {
+            showResult('success', result.message);
+            document.getElementById('update-message').value = '';
+        } else {
+            showResult('error', result.message);
+        }
+        
+    } catch (error) {
+        showResult('error', `Error: ${error.message}`);
+    } finally {
+        hideLoading();
+    }
+}
+
+async function sendTestEmail() {
+    showLoading('Sending test email...');
+    
+    try {
+        const response = await fetch('/email/test-email', {
+            method: 'POST'
+        });
+        
+        const result = await response.json();
+        
+        if (result.success) {
+            showResult('success', result.message);
+        } else {
+            showResult('error', result.message);
+        }
+        
+    } catch (error) {
+        showResult('error', `Error: ${error.message}`);
+    } finally {
+        hideLoading();
+    }
+}
+
+async function runAutomatedReminders() {
+    showLoading('Running automated reminders...');
+    
+    try {
+        const response = await fetch('/email/schedule-reminders', {
+            method: 'POST'
+        });
+        
+        const result = await response.json();
+        
+        if (result.success) {
+            showResult('success', result.message);
+        } else {
+            showResult('error', result.message);
+        }
+        
+    } catch (error) {
+        showResult('error', `Error: ${error.message}`);
+    } finally {
+        hideLoading();
+    }
+}
+
+function showResult(type, message) {
+    const alertClass = type === 'success' ? 'alert-success' : 'alert-danger';
+    const icon = type === 'success' ? '✅' : '❌';
+    
+    const resultHtml = `
+        <div class="alert ${alertClass}">
+            ${icon} ${message}
+        </div>
+    `;
+    
+    document.getElementById('results-content').innerHTML = resultHtml;
+    document.getElementById('results-section').style.display = 'block';
+    
+    // Auto-hide after 10 seconds
+    setTimeout(() => {
+        document.getElementById('results-section').style.display = 'none';
+    }, 10000);
+    
+    // Scroll to results
+    document.getElementById('results-section').scrollIntoView({ behavior: 'smooth' });
+}
+
+function showLoading(message) {
+    const resultHtml = `
+        <div class="alert alert-warning">
+            🔄 ${message}
+        </div>
+    `;
+    
+    document.getElementById('results-content').innerHTML = resultHtml;
+    document.getElementById('results-section').style.display = 'block';
+}
+
+function hideLoading() {
+    // Results will be updated by showResult, so this is just for cleanup if needed
+}
+</script>
+{% endblock %}

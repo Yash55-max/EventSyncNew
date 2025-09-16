@@ -1,11 +1,16 @@
 {% extends "layout.html" %}
 
 {% block title %}
-  {% if edit_mode %}Edit Event{% else %}Create Event{% endif %} - EventHub
+  {% if edit_mode %}Edit Event{% else %}Create Event{% endif %} - EVENTSYNC
 {% endblock %}
 
 {% block content %}
 <div class="container py-5">
+  <!-- EventSync Logo -->
+  <div class="text-center mb-4">
+    <img src="{{ url_for('static', filename='images/eventsync_logo.png') }}" alt="EventSync Logo" style="max-width:220px; height:auto;">
+  </div>
+  
   <div class="management-heading">
     <h1>{% if edit_mode %}Edit Event{% else %}Create New Event{% endif %}</h1>
     <a href="{{ url_for('attendee_events') }}" class="btn btn-outline-primary">

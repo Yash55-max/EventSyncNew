@@ -12,12 +12,13 @@
 
 /* Dashboard cards */
 .dashboard-card {
-  background-color: white;
+  background-color: var(--bg-card);
+  border: 1px solid var(--border-color);
   border-radius: var(--border-radius-md);
   box-shadow: var(--shadow-md);
   padding: var(--spacing-lg);
   margin-bottom: var(--spacing-lg);
-  transition: all var(--transition-speed);
+  transition: all var(--transition-speed), background-color 0.3s ease, border-color 0.3s ease;
 }
 
 .dashboard-card:hover {
@@ -96,12 +97,13 @@
 
 .event-item {
   display: flex;
-  background-color: white;
+  background-color: var(--bg-card);
+  border: 1px solid var(--border-color);
   border-radius: var(--border-radius-md);
   box-shadow: var(--shadow-md);
   margin-bottom: var(--spacing-md);
   overflow: hidden;
-  transition: all var(--transition-speed);
+  transition: all var(--transition-speed), background-color 0.3s ease, border-color 0.3s ease;
 }
 
 .event-item:hover {
@@ -158,11 +160,13 @@
 
 /* Create/Edit event form */
 .event-form-container {
-  background-color: white;
+  background-color: var(--bg-card);
+  border: 1px solid var(--border-color);
   border-radius: var(--border-radius-lg);
   box-shadow: var(--shadow-lg);
   padding: var(--spacing-xl);
   margin-bottom: var(--spacing-xl);
+  transition: background-color 0.3s ease, border-color 0.3s ease;
 }
 
 .event-form-section {
@@ -394,4 +398,127 @@
   .dashboard-card {
     margin-bottom: var(--spacing-md);
   }
+}
+
+/* Dark theme enhancements for organizer */
+[data-theme="dark"] .dashboard-card:hover {
+  transform: translateY(-5px);
+  box-shadow: var(--shadow-xl);
+}
+
+[data-theme="dark"] .event-item:hover {
+  transform: translateY(-3px);
+  box-shadow: var(--shadow-lg);
+}
+
+[data-theme="dark"] .event-form-container {
+  box-shadow: var(--shadow-xl);
+}
+
+[data-theme="dark"] .event-stat-card:hover {
+  transform: translateY(-3px);
+  box-shadow: var(--shadow-lg);
+}
+
+[data-theme="dark"] .chart-container {
+  background-color: var(--bg-card);
+  border: 1px solid var(--border-color);
+  box-shadow: var(--shadow-md);
+}
+
+[data-theme="dark"] .event-stat-card {
+  background-color: var(--bg-card);
+  border: 1px solid var(--border-color);
+}
+
+/* Additional Dark Theme Text Visibility for Organizer Pages */
+[data-theme="dark"] .dashboard-card-title {
+  color: var(--text-light) !important;
+}
+
+[data-theme="dark"] .dashboard-card-value {
+  color: var(--text-light) !important;
+}
+
+[data-theme="dark"] .dashboard-card-label {
+  color: var(--text-secondary) !important;
+}
+
+[data-theme="dark"] .event-item-title {
+  color: var(--text-light) !important;
+}
+
+[data-theme="dark"] .event-item-detail {
+  color: var(--text-primary) !important;
+}
+
+[data-theme="dark"] .event-status {
+  color: var(--text-on-primary) !important;
+}
+
+[data-theme="dark"] .event-status.upcoming {
+  background-color: var(--success-color) !important;
+  color: var(--text-on-primary) !important;
+}
+
+[data-theme="dark"] .event-status.ongoing {
+  background-color: var(--warning-color) !important;
+  color: var(--text-on-primary) !important;
+}
+
+[data-theme="dark"] .event-status.past {
+  background-color: var(--text-secondary) !important;
+  color: var(--text-on-primary) !important;
+}
+
+[data-theme="dark"] .event-form-section-title {
+  color: var(--text-light) !important;
+}
+
+[data-theme="dark"] .event-detail-title {
+  color: var(--text-light) !important;
+}
+
+[data-theme="dark"] .event-detail-info {
+  color: var(--text-primary) !important;
+}
+
+[data-theme="dark"] .event-stat-value {
+  color: var(--text-light) !important;
+}
+
+[data-theme="dark"] .event-stat-label {
+  color: var(--text-secondary) !important;
+}
+
+[data-theme="dark"] .event-attendee-name {
+  color: var(--text-light) !important;
+}
+
+[data-theme="dark"] .event-attendee-email {
+  color: var(--text-secondary) !important;
+}
+
+[data-theme="dark"] .event-attendee-status {
+  color: var(--text-primary) !important;
+}
+
+[data-theme="dark"] .quick-action-title {
+  color: var(--text-light) !important;
+}
+
+[data-theme="dark"] .quick-action-desc {
+  color: var(--text-secondary) !important;
+}
+
+[data-theme="dark"] .chart-title {
+  color: var(--text-light) !important;
+}
+
+[data-theme="dark"] .invalid-feedback {
+  color: var(--danger-color) !important;
+}
+
+[data-theme="dark"] .form-text {
+  color: var(--text-secondary) !important;
 }

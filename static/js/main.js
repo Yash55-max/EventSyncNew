@@ -1,6 +1,48 @@
 // Main JavaScript for the Event Management System
 
 document.addEventListener('DOMContentLoaded', function() {
+  // Theme switching functionality
+  const themeToggle = document.getElementById('theme-toggle');
+  const themeIcon = document.getElementById('theme-icon');
+  
+  if (themeToggle && themeIcon) {
+    // Set initial icon based on current theme
+    const currentTheme = document.documentElement.getAttribute('data-theme') || 'light';
+    updateThemeIcon(currentTheme);
+    
+    themeToggle.addEventListener('click', function() {
+      const currentTheme = document.documentElement.getAttribute('data-theme') || 'light';
+      const newTheme = currentTheme === 'light' ? 'dark' : 'light';
+      
+      // Apply new theme
+      document.documentElement.setAttribute('data-theme', newTheme);
+      
+      // Save to localStorage
+      localStorage.setItem('theme', newTheme);
+      
+      // Update icon
+      updateThemeIcon(newTheme);
+      
+      // Add a slight animation to indicate the change
+      themeToggle.style.transform = 'scale(0.95)';
+      setTimeout(() => {
+        themeToggle.style.transform = 'scale(1)';
+      }, 100);
+    });
+  }
+  
+  function updateThemeIcon(theme) {
+    if (themeIcon) {
+      if (theme === 'dark') {
+        themeIcon.className = 'fas fa-moon';
+        themeToggle.setAttribute('aria-label', 'Switch to light mode');
+      } else {
+        themeIcon.className = 'fas fa-sun';
+        themeToggle.setAttribute('aria-label', 'Switch to dark mode');
+      }
+    }
+  }
+  
   // Initialize tooltips
   const tooltips = document.querySelectorAll('[data-bs-toggle="tooltip"]');
   if (tooltips.length > 0) {

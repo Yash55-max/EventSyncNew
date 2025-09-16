@@ -1,0 +1,30 @@
+# Payment System Dependencies
+# These are additional requirements for the Payment Integration System
+
+# Stripe Payment Processing
+stripe>=5.5.0
+
+# PayPal SDK
+paypalrestsdk>=1.13.1
+
+# Requests for HTTP calls to PayPal API
+requests>=2.31.0
+
+# Decimal arithmetic for precise money calculations
+# (Built-in Python module, no installation required)
+
+# Additional security and validation
+cryptography>=41.0.0  # For encrypting stored API keys
+marshmallow>=3.20.0   # For input validation and serialization
+
+# Email notifications (if not already included)
+Flask-Mail>=0.9.1
+
+# Background task processing for webhooks
+celery>=5.3.0         # Optional: for async webhook processing
+redis>=4.6.0          # Optional: for Celery message broker
+
+# Development and testing
+pytest>=7.4.0         # For testing payment flows
+pytest-mock>=3.11.0   # For mocking external API calls
+responses>=0.23.0     # For testing HTTP requests

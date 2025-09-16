@@ -1,0 +1,770 @@
+{% extends "layout.html" %}
+
+{% block title %}Event Chat - EventSync{% endblock %}
+
+{% block extra_css %}
+<style>
+    /* Dark theme CSS variables */
+    :root {
+        --bg-primary: #ffffff;
+        --bg-secondary: #f8f9fa;
+        --text-primary: #333333;
+        --text-secondary: #666666;
+        --border-color: #ddd;
+        --chat-bg: #ffffff;
+        --message-bg: #e3f2fd;
+        --input-bg: #ffffff;
+    }
+    
+    [data-theme="dark"] {
+        --bg-primary: #1a1a1a;
+        --bg-secondary: #2d2d2d;
+        --text-primary: #ffffff;
+        --text-secondary: #b0b0b0;
+        --border-color: #404040;
+        --chat-bg: #2d2d2d;
+        --message-bg: #404040;
+        --input-bg: #2d2d2d;
+    }
+    
+    body {
+        background-color: var(--bg-primary);
+        color: var(--text-primary);
+    }
+    
+    .chat-container {
+        height: calc(100vh - 200px);
+        border: 1px solid var(--border-color);
+        border-radius: 8px;
+        display: flex;
+        flex-direction: column;
+        background: var(--chat-bg);
+    }
+    
+    .chat-header {
+        background: var(--primary-color, #6f42c1);
+        color: white;
+        padding: 15px 20px;
+        border-radius: 8px 8px 0 0;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+    
+    .chat-sidebar {
+        width: 300px;
+        border-right: 1px solid var(--border-color);
+        background: var(--bg-secondary);
+        height: 100%;
+        overflow-y: auto;
+    }
+    
+    .chat-main {
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+        height: 100%;
+    }
+    
+    .chat-messages {
+        flex: 1;
+        padding: 20px;
+        overflow-y: auto;
+        max-height: calc(100vh - 400px);
+    }
+    
+    .message {
+        margin-bottom: 15px;
+        display: flex;
+        align-items: flex-start;
+        animation: fadeIn 0.3s ease-in;
+    }
+    
+    .message.own {
+        justify-content: flex-end;
+    }
+    
+    .message-avatar {
+        width: 32px;
+        height: 32px;
+        border-radius: 50%;
+        background: var(--primary-color, #6f42c1);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: white;
+        font-size: 12px;
+        margin-right: 10px;
+        flex-shrink: 0;
+    }
+    
+    .message.own .message-avatar {
+        order: 2;
+        margin-left: 10px;
+        margin-right: 0;
+    }
+    
+    .message-content {
+        max-width: 70%;
+        padding: 10px 15px;
+        border-radius: 18px;
+        background: var(--message-bg);
+        position: relative;
+        color: var(--text-primary);
+    }
+    
+    .message.own .message-content {
+        background: var(--primary-color, #6f42c1);
+        color: white;
+    }
+    
+    .message-header {
+        font-size: 11px;
+        color: var(--text-secondary);
+        margin-bottom: 2px;
+    }
+    
+    .message.own .message-header {
+        color: rgba(255,255,255,0.8);
+    }
+    
+    .message-text {
+        line-height: 1.4;
+    }
+    
+    .message-time {
+        font-size: 10px;
+        color: #888;
+        margin-top: 2px;
+    }
+    
+    .message.own .message-time {
+        color: rgba(255,255,255,0.7);
+    }
+    
+    .chat-input-area {
+        border-top: 1px solid var(--border-color);
+        padding: 15px 20px;
+        background: var(--chat-bg);
+        border-radius: 0 0 8px 8px;
+    }
+    
+    .chat-input-wrapper {
+        display: flex;
+        align-items: flex-end;
+        gap: 10px;
+    }
+    
+    .chat-input {
+        flex: 1;
+        border: 1px solid var(--border-color);
+        border-radius: 20px;
+        padding: 8px 15px;
+        resize: none;
+        max-height: 100px;
+        min-height: 40px;
+        background: var(--input-bg);
+        color: var(--text-primary);
+    }
+    
+    .chat-send-btn {
+        background: var(--primary-color, #6f42c1);
+        border: none;
+        color: white;
+        padding: 8px 15px;
+        border-radius: 50%;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        width: 40px;
+        height: 40px;
+    }
+    
+    .chat-send-btn:hover {
+        background: var(--primary-dark, #5a2d91);
+    }
+    
+    .chat-send-btn:disabled {
+        background: #ccc;
+        cursor: not-allowed;
+    }
+    
+    .room-list {
+        padding: 0;
+    }
+    
+    .room-item {
+        padding: 15px 20px;
+        cursor: pointer;
+        border-bottom: 1px solid #eee;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        transition: background 0.2s;
+    }
+    
+    .room-item:hover {
+        background: #e9ecef;
+    }
+    
+    .room-item.active {
+        background: var(--primary-color, #6f42c1);
+        color: white;
+    }
+    
+    .room-name {
+        font-weight: 500;
+        margin-bottom: 4px;
+    }
+    
+    .room-info {
+        font-size: 12px;
+        color: var(--text-secondary);
+    }
+    
+    .room-item.active .room-info {
+        color: rgba(255,255,255,0.8);
+    }
+    
+    .create-room-btn {
+        background: var(--primary-color, #6f42c1);
+        color: white;
+        border: none;
+        padding: 8px 15px;
+        border-radius: 6px;
+        cursor: pointer;
+        font-size: 12px;
+        margin: 15px 20px;
+        width: calc(100% - 40px);
+    }
+    
+    .create-room-btn:hover {
+        background: var(--primary-dark, #5a2d91);
+    }
+    
+    .modal {
+        display: none;
+        position: fixed;
+        z-index: 1000;
+        left: 0;
+        top: 0;
+        width: 100%;
+        height: 100%;
+        background-color: rgba(0,0,0,0.5);
+    }
+    
+    .modal-content {
+        background-color: #fefefe;
+        margin: 10% auto;
+        padding: 0;
+        border: none;
+        border-radius: 8px;
+        width: 90%;
+        max-width: 500px;
+    }
+    
+    .modal-header {
+        padding: 20px 20px 0 20px;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+    
+    .modal-header h3 {
+        margin: 0;
+        color: #333;
+    }
+    
+    .close {
+        color: #aaa;
+        font-size: 28px;
+        font-weight: bold;
+        cursor: pointer;
+        line-height: 1;
+    }
+    
+    .close:hover {
+        color: black;
+    }
+    
+    .form-group {
+        margin-bottom: 15px;
+    }
+    
+    .form-group label {
+        display: block;
+        margin-bottom: 5px;
+        font-weight: 500;
+        color: #333;
+    }
+    
+    .form-group input, .form-group textarea, .form-group select {
+        width: 100%;
+        padding: 8px 12px;
+        border: 1px solid #ddd;
+        border-radius: 4px;
+        font-size: 14px;
+        box-sizing: border-box;
+    }
+    
+    .form-group textarea {
+        resize: vertical;
+        min-height: 80px;
+    }
+    
+    .form-group input[type="checkbox"] {
+        width: auto;
+        margin-right: 8px;
+    }
+    
+    .modal form {
+        padding: 20px;
+    }
+    
+    .modal-actions {
+        margin-top: 20px;
+        text-align: right;
+    }
+    
+    .btn-primary {
+        background: var(--primary-color, #6f42c1);
+        color: white;
+        border: none;
+        padding: 10px 20px;
+        border-radius: 6px;
+        cursor: pointer;
+        font-size: 14px;
+    }
+    
+    .btn-primary:hover {
+        background: var(--primary-dark, #5a2d91);
+    }
+    
+    .btn-primary:disabled {
+        background: #ccc;
+        cursor: not-allowed;
+    }
+    
+    .btn-secondary {
+        background: #6c757d;
+        color: white;
+        border: none;
+        padding: 10px 20px;
+        border-radius: 6px;
+        cursor: pointer;
+        font-size: 14px;
+        margin-left: 10px;
+    }
+    
+    .btn-secondary:hover {
+        background: #545b62;
+    }
+    
+    .alert {
+        padding: 10px 15px;
+        margin-bottom: 15px;
+        border-radius: 4px;
+        display: none;
+    }
+    
+    .alert-success {
+        background-color: #d4edda;
+        border-color: #c3e6cb;
+        color: #155724;
+    }
+    
+    .alert-danger {
+        background-color: #f8d7da;
+        border-color: #f5c6cb;
+        color: #721c24;
+    }
+    
+    .no-rooms-message {
+        text-align: center;
+        padding: 40px 20px;
+        color: #666;
+    }
+    
+    .loading {
+        text-align: center;
+        padding: 20px;
+        color: #666;
+    }
+    
+    @keyframes fadeIn {
+        from { opacity: 0; transform: translateY(10px); }
+        to { opacity: 1; transform: translateY(0); }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-12">
+            <div class="chat-container">
+                <div class="chat-header">
+                    <h4><i class="fas fa-comments"></i> Chat</h4>
+                    <div>
+                        <button class="btn btn-sm btn-light" onclick="showCreateRoomModal()">
+                            <i class="fas fa-plus"></i> Create Room
+                        </button>
+                        <button class="btn btn-sm btn-light" onclick="testCreateRoom()">
+                            <i class="fas fa-vial"></i> Test Create
+                        </button>
+                    </div>
+                </div>
+                
+                <div style="display: flex; height: calc(100vh - 260px);">
+                    <div class="chat-sidebar">
+                        <button class="create-room-btn" onclick="showCreateRoomModal()">
+                            <i class="fas fa-plus"></i> Create Room
+                        </button>
+                        
+                        <div class="room-list" id="roomList">
+                            <div class="loading">Loading rooms...</div>
+                        </div>
+                    </div>
+                    
+                    <div class="chat-main">
+                        <div id="welcome-message" class="text-center p-5">
+                            <h5>Welcome to EVENTSYNC Chat!</h5>
+                            <p class="text-muted">Select a room or create one to start chatting.</p>
+                        </div>
+                        
+                        <div id="chat-area" style="display: none;">
+                            <div class="chat-messages" id="messagesContainer">
+                                <!-- Messages will be loaded here -->
+                            </div>
+                            
+                            <div class="chat-input-area">
+                                <div class="chat-input-wrapper">
+                                    <textarea 
+                                        class="chat-input" 
+                                        id="messageInput" 
+                                        placeholder="Type your message..."
+                                        rows="1"></textarea>
+                                    <button class="chat-send-btn" id="sendButton">
+                                        <i class="fas fa-paper-plane"></i>
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Create Room Modal -->
+<div id="createRoomModal" class="modal">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h3>Create New Room</h3>
+            <span class="close" onclick="hideCreateRoomModal()">&times;</span>
+        </div>
+        
+        <form id="createRoomForm">
+            <div class="alert alert-success" id="success-alert"></div>
+            <div class="alert alert-danger" id="error-alert"></div>
+            
+            <div class="form-group">
+                <label for="roomName">Room Name *</label>
+                <input type="text" id="roomName" name="name" required placeholder="Enter room name">
+            </div>
+            
+            <div class="form-group">
+                <label for="roomDescription">Description</label>
+                <textarea id="roomDescription" name="description" placeholder="Optional room description"></textarea>
+            </div>
+            
+            <div class="form-group">
+                <label for="roomType">Room Type</label>
+                <select id="roomType" name="room_type">
+                    <option value="general">General</option>
+                    <option value="event">Event</option>
+                    <option value="group">Group</option>
+                    <option value="support">Support</option>
+                </select>
+            </div>
+            
+            <div class="form-group">
+                <label>
+                    <input type="checkbox" id="isPublic" name="is_public" checked>
+                    Public Room
+                </label>
+            </div>
+            
+            <div class="form-group">
+                <label>
+                    <input type="checkbox" id="allowFileSharing" name="allow_file_sharing" checked>
+                    Allow File Sharing
+                </label>
+            </div>
+            
+            <div class="modal-actions">
+                <button type="submit" class="btn-primary" id="createRoomBtn">Create Room</button>
+                <button type="button" class="btn-secondary" onclick="hideCreateRoomModal()">Cancel</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+// Chat functionality
+let currentRoom = null;
+
+// Initialize chat
+document.addEventListener('DOMContentLoaded', function() {
+    loadRooms();
+    setupFormHandler();
+});
+
+function loadRooms() {
+    fetch('/api/chat/rooms')
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                displayRooms(data.rooms);
+            } else {
+                console.error('Failed to load rooms:', data.error);
+                document.getElementById('roomList').innerHTML = '<div class="no-rooms-message">Failed to load rooms</div>';
+            }
+        })
+        .catch(error => {
+            console.error('Error loading rooms:', error);
+            document.getElementById('roomList').innerHTML = '<div class="no-rooms-message">Error loading rooms</div>';
+        });
+}
+
+function displayRooms(rooms) {
+    const roomList = document.getElementById('roomList');
+    
+    if (rooms.length === 0) {
+        roomList.innerHTML = '<div class="no-rooms-message">No rooms found.<br>Create your first room!</div>';
+        return;
+    }
+    
+    let html = '';
+    rooms.forEach(room => {
+        html += `
+            <div class="room-item" onclick="joinRoom(${room.id})" data-room-id="${room.id}">
+                <div>
+                    <div class="room-name">${room.name}</div>
+                    <div class="room-info">${room.participant_count} members • ${room.room_type}</div>
+                </div>
+                <div>
+                    ${room.unread_count > 0 ? `<span class="badge bg-primary">${room.unread_count}</span>` : ''}
+                </div>
+            </div>
+        `;
+    });
+    
+    roomList.innerHTML = html;
+}
+
+function joinRoom(roomId) {
+    // Remove active class from all rooms
+    document.querySelectorAll('.room-item').forEach(item => item.classList.remove('active'));
+    
+    // Add active class to selected room
+    document.querySelector(`[data-room-id="${roomId}"]`).classList.add('active');
+    
+    currentRoom = roomId;
+    
+    // Show chat area
+    document.getElementById('welcome-message').style.display = 'none';
+    document.getElementById('chat-area').style.display = 'flex';
+    
+    // Load messages for this room
+    loadMessages(roomId);
+}
+
+function loadMessages(roomId) {
+    fetch(`/api/chat/rooms/${roomId}/messages`)
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                displayMessages(data.messages);
+            } else {
+                console.error('Failed to load messages:', data.error);
+                document.getElementById('messagesContainer').innerHTML = '<div class="text-center p-3 text-muted">Failed to load messages</div>';
+            }
+        })
+        .catch(error => {
+            console.error('Error loading messages:', error);
+            document.getElementById('messagesContainer').innerHTML = '<div class="text-center p-3 text-muted">Error loading messages</div>';
+        });
+}
+
+function displayMessages(messages) {
+    const container = document.getElementById('messagesContainer');
+    let html = '';
+    
+    messages.forEach(message => {
+        const isOwn = message.user_id === {{ current_user.id }};
+        html += `
+            <div class="message ${isOwn ? 'own' : ''}">
+                ${!isOwn ? `<div class="message-avatar">${message.user.username.charAt(0).toUpperCase()}</div>` : ''}
+                <div class="message-content">
+                    ${!isOwn ? `<div class="message-header">${message.user.full_name || message.user.username}</div>` : ''}
+                    <div class="message-text">${message.content}</div>
+                    <div class="message-time">${new Date(message.created_at).toLocaleTimeString()}</div>
+                </div>
+                ${isOwn ? `<div class="message-avatar">${message.user.username.charAt(0).toUpperCase()}</div>` : ''}
+            </div>
+        `;
+    });
+    
+    container.innerHTML = html;
+    container.scrollTop = container.scrollHeight;
+}
+
+function sendMessage() {
+    const input = document.getElementById('messageInput');
+    const message = input.value.trim();
+    
+    if (message && currentRoom) {
+        fetch(`/api/chat/rooms/${currentRoom}/messages`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+                content: message,
+                message_type: 'text'
+            })
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                input.value = '';
+                // Reload messages to show the new one
+                loadMessages(currentRoom);
+            } else {
+                console.error('Failed to send message:', data.error);
+                alert('Failed to send message: ' + data.error);
+            }
+        })
+        .catch(error => {
+            console.error('Error sending message:', error);
+            alert('Error sending message');
+        });
+    }
+}
+
+// Modal functions
+function showCreateRoomModal() {
+    document.getElementById('createRoomModal').style.display = 'block';
+    hideAlerts();
+}
+
+function hideCreateRoomModal() {
+    document.getElementById('createRoomModal').style.display = 'none';
+    document.getElementById('createRoomForm').reset();
+    hideAlerts();
+}
+
+function hideAlerts() {
+    document.getElementById('success-alert').style.display = 'none';
+    document.getElementById('error-alert').style.display = 'none';
+}
+
+function showAlert(type, message) {
+    hideAlerts();
+    const alert = document.getElementById(type + '-alert');
+    alert.textContent = message;
+    alert.style.display = 'block';
+}
+
+function setupFormHandler() {
+    document.getElementById('createRoomForm').addEventListener('submit', function(e) {
+        e.preventDefault();
+        
+        const formData = new FormData(this);
+        const data = {
+            name: formData.get('name'),
+            description: formData.get('description'),
+            room_type: formData.get('room_type'),
+            is_public: formData.get('is_public') === 'on',
+            allow_file_sharing: formData.get('allow_file_sharing') === 'on'
+        };
+        
+        const button = document.getElementById('createRoomBtn');
+        button.disabled = true;
+        button.textContent = 'Creating...';
+        
+        fetch('/api/chat/rooms', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify(data)
+        })
+        .then(response => response.json())
+        .then(result => {
+            if (result.success) {
+                showAlert('success', 'Room created successfully!');
+                setTimeout(() => {
+                    hideCreateRoomModal();
+                    loadRooms(); // Refresh the room list
+                }, 1500);
+            } else {
+                showAlert('error', result.error || 'Failed to create room');
+            }
+        })
+        .catch(error => {
+            console.error('Error creating room:', error);
+            showAlert('error', 'Error creating room. Please try again.');
+        })
+        .finally(() => {
+            button.disabled = false;
+            button.textContent = 'Create Room';
+        });
+    });
+}
+
+// Test function for debugging
+function testCreateRoom() {
+    fetch('/api/chat/test-create', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        }
+    })
+    .then(response => response.json())
+    .then(result => {
+        console.log('Test result:', result);
+        if (result.success) {
+            alert('Test room created successfully!');
+            loadRooms();
+        } else {
+            alert('Test failed: ' + result.error);
+        }
+    })
+    .catch(error => {
+        console.error('Test error:', error);
+        alert('Test error: ' + error.message);
+    });
+}
+
+// Event listeners
+document.getElementById('sendButton').addEventListener('click', sendMessage);
+document.getElementById('messageInput').addEventListener('keypress', function(e) {
+    if (e.key === 'Enter' && !e.shiftKey) {
+        e.preventDefault();
+        sendMessage();
+    }
+});
+
+// Close modal when clicking outside of it
+window.onclick = function(event) {
+    const modal = document.getElementById('createRoomModal');
+    if (event.target == modal) {
+        hideCreateRoomModal();
+    }
+}
+</script>
+{% endblock %}

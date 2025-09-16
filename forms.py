@@ -50,6 +50,13 @@ class EventForm(FlaskForm):
     image_url = StringField('Image URL', validators=[Optional(), Length(max=255)])
     max_attendees = IntegerField('Maximum Attendees (0 for unlimited)', default=0, validators=[Optional()])
     price = FloatField('Ticket Price (0 for free)', default=0.0, validators=[Optional()])
+    
+    # UPI Payment Fields
+    accept_upi_payments = BooleanField('Accept UPI Payments')
+    upi_id = StringField('UPI ID (e.g., yourname@paytm)', validators=[Optional(), Length(max=255)])
+    payment_mobile = StringField('Payment Mobile Number', validators=[Optional(), Length(max=15)])
+    payment_instructions = TextAreaField('Payment Instructions', validators=[Optional()], render_kw={'placeholder': 'Additional instructions for attendees (e.g., "Send payment screenshot to WhatsApp")'})
+    
     submit = SubmitField('Create Event')
     
     def validate_end_date(self, end_date):
@@ -59,6 +66,24 @@ class EventForm(FlaskForm):
     def validate_start_date(self, start_date):
         if start_date.data < datetime.now():
             raise ValidationError('Start date cannot be in the past.')
+    
+    def validate_upi_id(self, upi_id):
+        if self.accept_upi_payments.data:
+            # Check if UPI is enabled for a free event (common mistake)
+            if not self.price.data or self.price.data == 0:
+                raise ValidationError('UPI payments are enabled but ticket price is ₹0. Set a price > ₹0 for paid events, or disable UPI payments for free events.')
+            
+            # Validate UPI requirements for paid events
+            if self.price.data > 0:
+                if not upi_id.data and not self.payment_mobile.data:
+                    raise ValidationError('UPI ID or Payment Mobile Number is required for paid events with UPI payments.')
+                if upi_id.data and '@' not in upi_id.data:
+                    raise ValidationError('Please enter a valid UPI ID (e.g., yourname@paytm)')
+    
+    def validate_payment_mobile(self, payment_mobile):
+        if self.accept_upi_payments.data and payment_mobile.data:
+            if not payment_mobile.data.isdigit() or len(payment_mobile.data) != 10:
+                raise ValidationError('Please enter a valid 10-digit mobile number.')
 
 class SearchForm(FlaskForm):
     query = StringField('Search events', validators=[Optional()])
