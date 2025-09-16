@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 # Event Management System
 
 A comprehensive Event Management System with separate interfaces for organizers and attendees. The system allows both user types to create and manage events, handle registrations, and process tickets through a colorful and intuitive web interface.
@@ -104,3 +105,7 @@ This project is licensed under the MIT License - see the LICENSE file for detail
 - FontAwesome for icons
 - Bootstrap for UI components
 - Chart.js for data visualization
+=======
+# EventSync
+A web-application for managing events
+>>>>>>> 59590de54fea62af6eb1206a4752b85feab8a80b
