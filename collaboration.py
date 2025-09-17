@@ -820,5 +820,5 @@ class VideoChatManager:
             return {'success': False, 'error': str(e)}
 
 
-# Global collaboration manager instance
+# Global,collaboration manager instance
 collaboration_manager = CollaborationManager()
